@@ -635,6 +635,7 @@ AC_CONFIG_FILES([Makefile
                  filters/delay/Makefile
                  filters/fua/Makefile
                  filters/log/Makefile
+                 filters/map/Makefile
                  filters/nozero/Makefile
                  filters/offset/Makefile
                  filters/partition/Makefile

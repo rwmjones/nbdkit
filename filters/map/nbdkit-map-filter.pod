@@ -1,0 +1,172 @@
+=head1 NAME
+
+nbdkit-map-filter - nbdkit map filter
+
+=head1 SYNOPSIS
+
+ nbdkit --filter=map plugin map=FILENAME [plugin-args...]
+
+=head1 DESCRIPTION
+
+C<nbdkit-map-filter> is a filter that can serve an arbitrary map of
+regions of the underlying plugin.
+
+It is driven by a map file that contains a list of regions from the
+plugin and where they should be served in the output.
+
+For example this map would divide the plugin data into two 16K halves
+and swap them over:
+
+ # map file
+ 0,16K   16K   # aaaaa
+ 16K,16K 0     # bbbbb
+
+When visualised, this map file looks like:
+
+                   ┌──────────────┬──────────────┬─── ─ ─ ─
+ Plugin serves ... │ aaaaaaaaaaaa │ bbbbbbbbbbbb │ (extra data)
+                   │    16K       │    16K       │
+                   └──────────────┴──────────────┴─── ─ ─ ─
+                         │              │
+ Filter                  │    ┌─────────┘
+ transforms ...          └──────────────┐
+                              │         │
+                   ┌──────────▼───┬─────▼────────┐
+ Client sees ...   │ bbbbbbbbbbbb │ aaaaaaaaaaaa │
+                   └──────────────┴──────────────┘
+
+This is how to simulate L<nbdkit-offset-filter(1)> C<offset> and
+C<range> parameters:
+
+ # offset,range
+ 1M,32M         0
+
+                   ┌─────┬─────────────────────┬─── ─ ─ ─
+ Plugin serves ... │     │ ccccccccccccccccccc │ (extra data)
+                   │ 1M  │        32M          │
+                   └─────┴─────────────────────┴─── ─ ─ ─
+ Filter                            │
+ transforms ...              ┌─────┘
+                             │
+                   ┌─────────▼───────────┐
+ Client sees ...   │ ccccccccccccccccccc │
+                   └─────────────────────┘
+
+You can also do obscure things like duplicating regions of the source:
+
+ # map file
+ 0,16K  0
+ 0,16K  16K
+
+                   ┌──────────────┬─── ─ ─ ─
+ Plugin serves ... │ aaaaaaaaaaaa │ (extra data)
+                   │    16K       │
+                   └──────────────┴─── ─ ─ ─
+ Filter                  │
+ transforms ...          └───┬──────────┐
+                             │          │
+                   ┌─────────▼────┬─────▼────────┐
+ Client sees ...   │ aaaaaaaaaaaa │ aaaaaaaaaaaa │
+                   └──────────────┴──────────────┘
+
+=head2 Map file format
+
+The map file describes how regions from the plugin are mapped to the
+output.  There is one line per mapping.  Blank lines are ignored.
+C<#> indicates a comment.
+
+Each line (mapping) has one of the following forms:
+
+ start,length  offset    # see "start,length" below
+ start-end     offset    # see "start-end" below
+ start-        offset    # see "start to end of plugin" below
+ start         offset    # see "start to end of plugin" below
+
+=head2 C<start,length>
+
+ start,length  offset
+
+means that the source region starting at byte C<start>, for C<length>
+bytes, is mapped to C<offset> to C<offset+length-1> in the output.
+
+For example:
+
+ 16K,8K        0
+
+maps the 8K-sized region starting at 16K in the source to the
+beginning (ie. from offset 0) of the output.
+
+=head2 C<start-end>
+
+ start-end     offset
+
+means that the source region starting at byte C<start> through to byte
+C<end> (inclusive) is mapped to C<offset> through to
+C<offset+(end-start)> in the output.
+
+For example:
+
+ 1024-2047     2048
+
+maps the region starting at byte 1024 and ending at byte 2047
+(inclusive) to bytes 2048-3071 in the output.
+
+=head2 C<start> to end of plugin
+
+ start-        offset
+ start         offset
+
+If the C<end> field is omitted it means "up to the end of the
+underlying plugin".
+
+=head2 Size modifiers
+
+You can use the usual power-of-2 size modifiers like C<K>, C<M> etc.
+
+=head2 Overlapping mappings
+
+If there are multiple mappings in the map file that may apply to a
+particular byte of the filter output then it is the last one in the
+file which applies.
+
+=head2 Virtual size
+
+The virtual size of the filter output finishes at the last byte of the
+final mapped region.  Note this is usually different from the size of
+the underlying plugin.
+
+=head2 Unmapped regions
+
+Any unmapped region (followed by a mapped region and therefore not
+beyond the virtual size) reads as zero and returns an error if
+written.
+
+Any mapping or part of a mapping where the source region refers beyond
+the end of the underlying plugin reads as zero and returns an error if
+written.
+
+=head1 PARAMETERS
+
+=over 4
+
+=item B<map=FILENAME>
+
+Specify the map filename (required).  See L</Map file format> above.
+
+=back
+
+=head1 SEE ALSO
+
+L<nbdkit(1)>,
+L<nbdkit-file-plugin(1)>,
+L<nbdkit-filter(3)>,
+L<nbdkit-offset-filter(1)>,
+L<nbdkit-partition-filter(1)>.
+
+=head1 AUTHORS
+
+Richard W.M. Jones
+
+=head1 COPYRIGHT
+
+Copyright (C) 2018 Red Hat Inc.

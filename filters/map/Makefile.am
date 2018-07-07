@@ -1,5 +1,5 @@
 # nbdkit
-# Copyright (C) 2013-2017 Red Hat Inc.
+# Copyright (C) 2018 Red Hat Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,48 +30,35 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-plugins = \
-	curl \
-	example1 \
-	example2 \
-	example3 \
-	example4 \
-	ext2 \
-	file \
-	guestfs \
-	gzip \
-	libvirt \
-	lua \
-	memory \
-	nbd \
-	null \
-	ocaml \
-	pattern \
-	perl \
-	python \
-	random \
-	ruby \
-	split \
-	streaming \
-	tar \
-	tcl \
-	vddk \
-	xz \
-	zero
+include $(top_srcdir)/common-rules.mk
 
-filters = \
-	blocksize \
-	cache \
-	cow \
-	delay \
-	fua \
-	log \
-	map \
-	nozero \
-	offset \
-	partition
+EXTRA_DIST = nbdkit-map-filter.pod
 
-plugindir = $(libdir)/nbdkit/plugins
-filterdir = $(libdir)/nbdkit/filters
+filter_LTLIBRARIES = nbdkit-map-filter.la
 
-CLEANFILES = *~ *.cmi *.cmx *.cmxa *.so
+nbdkit_map_filter_la_SOURCES = \
+	map.c \
+	$(top_srcdir)/common/avltree/avltree.h \
+	$(top_srcdir)/include/nbdkit-filter.h
+nbdkit_map_filter_la_CPPFLAGS = \
+	-I$(top_srcdir)/common/avltree \
+	-I$(top_srcdir)/include
+nbdkit_map_filter_la_CFLAGS = \
+	$(WARNINGS_CFLAGS)
+nbdkit_map_filter_la_LDFLAGS = \
+	-module -avoid-version -shared \
+	-L$(top_builddir)/common/avltree
+nbdkit_map_filter_la_LIBADD = \
+	-lavltree
+
+if HAVE_POD
+
+man_MANS = nbdkit-map-filter.1
+CLEANFILES += $(man_MANS)
+
+nbdkit-map-filter.1: nbdkit-map-filter.pod
+	$(PODWRAPPER) --section=1 --man $@ \
+	    --html $(top_builddir)/html/$@.html \
+	    $<
+
+endif HAVE_POD
