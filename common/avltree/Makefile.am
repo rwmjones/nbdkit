@@ -1,5 +1,5 @@
 # nbdkit
-# Copyright (C) 2013-2017 Red Hat Inc.
+# Copyright (C) 2018 Red Hat Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,50 +32,13 @@
 
 include $(top_srcdir)/common-rules.mk
 
-ACLOCAL_AMFLAGS = -I m4
+noinst_LIBRARIES = libavltree.a
 
-EXTRA_DIST = \
-	.dir-locals.el \
-	.gitignore \
-	html/pod.css \
-	LICENSE \
-	nbdkit.in \
-	OTHER_PLUGINS \
-	valgrind-suppressions \
-	m4/.gitignore
-
-noinst_SCRIPTS = nbdkit
-
-SUBDIRS = \
-	bash \
-	docs \
-	include \
-	src
-
-if HAVE_PLUGINS
-SUBDIRS += \
-	common/avltree \
-	plugins \
-	filters
-endif
-
-SUBDIRS += tests
-
-check-valgrind:
-	$(MAKE) -C tests check-valgrind
-
-# Maintainer only: check no files are missing from EXTRA_DIST rules,
-# and that all generated files have been included in the tarball.
-# (Note you must have done 'make dist')
-
-maintainer-check-extra-dist:
-	@zcat $(PACKAGE_NAME)-$(VERSION).tar.gz | tar tf - | sort | \
-	  sed 's,^$(PACKAGE_NAME)-$(VERSION)/,,' > tarfiles
-	@git ls-files | \
-	  sort > gitfiles
-	@comm -13 tarfiles gitfiles > comm-out
-	@echo Checking for differences between EXTRA_DIST and git ...
-	@cat comm-out
-	@[ ! -s comm-out ]
-	@rm tarfiles gitfiles comm-out
-	@echo PASS: EXTRA_DIST tests
+libavltree_a_SOURCES = \
+	avltree.c \
+	avltree.h
+libavltree_a_CPPFLAGS = \
+	-I$(srcdir)
+libavltree_a_CFLAGS = \
+	$(WARNINGS_CFLAGS) \
+	-fPIC
