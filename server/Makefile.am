@@ -88,6 +88,7 @@ libnbdkit_la_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common/include \
 	-I$(top_srcdir)/common/protocol \
+	-I$(top_srcdir)/common/replacements \
 	-I$(top_srcdir)/common/utils \
 	$(NULL)
 libnbdkit_la_CFLAGS = \
@@ -103,6 +104,7 @@ libnbdkit_la_LIBADD = \
 	$(DL_LIBS) \
 	$(top_builddir)/common/protocol/libprotocol.la \
 	$(top_builddir)/common/utils/libutils.la \
+	$(top_builddir)/common/replacements/libcompat.la \
 	$(NULL)
 libnbdkit_la_LDFLAGS = \
 	-shared $(NO_UNDEFINED_ON_WINDOWS) \
@@ -152,6 +154,7 @@ test_public_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common/include \
 	-I$(top_srcdir)/common/protocol \
+	-I$(top_srcdir)/common/replacements \
 	-I$(top_srcdir)/common/utils \
 	$(NULL)
 test_public_CFLAGS = $(WARNINGS_CFLAGS) $(VALGRIND_CFLAGS)
