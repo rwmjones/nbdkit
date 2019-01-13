@@ -32,7 +32,9 @@
 
 include $(top_srcdir)/common-rules.mk
 
-EXTRA_DIST = nbdkit.syms
+EXTRA_DIST = \
+	nbdkit.def \
+	nbdkit.syms
 
 sbin_PROGRAMS = nbdkit
 
@@ -91,6 +93,20 @@ nbdkit_LDFLAGS = \
 	$(DL_LDFLAGS)
 if USE_LINKER_SCRIPT_FOR_SERVER
 nbdkit_LDFLAGS += -Wl,--version-script=$(srcdir)/nbdkit.syms
+endif
+
+if IS_WINDOWS
+
+# On Windows, generate an import library so that plugins can link
+# against the executable.
+# https://stackoverflow.com/questions/15454968/dll-plugin-that-uses-functions-defined-in-the-main-executable
+
+lib_LIBRARIES = libnbdkit.a
+
+libnbdkit.a: nbdkit$(EXEEXT)
+	$(LIBTOOL) --mode=execute \
+	    $(DLLTOOL) -v $< -D nbdkit.exe -d nbdkit.def -l $@
+
 endif
 
 # protostrings.c is generated from the protocol.h header file where it

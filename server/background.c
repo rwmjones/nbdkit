@@ -45,6 +45,8 @@
 /* True if we forked into the background (used to control log messages). */
 bool forked_into_background;
 
+#ifndef WIN32
+
 /* Run as a background process.  If foreground is set (ie. -f or
  * equivalent) then this does nothing.  Otherwise it forks into the
  * background and sets forked_into_background.
@@ -84,3 +86,19 @@ fork_into_background (void)
   forked_into_background = true;
   debug ("forked into background (new pid = %d)", getpid ());
 }
+
+#else /* WIN32 */
+
+void
+fork_into_background (void)
+{
+  if (foreground)
+    return;
+
+  fprintf (stderr, "%s: cannot fork into background on Windows.\n"
+           "You must use -f or equivalent option.\n",
+           program_name);
+  exit (EXIT_FAILURE);
+}
+
+#endif /* WIN32 */

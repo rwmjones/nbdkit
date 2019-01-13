@@ -59,6 +59,13 @@
 #include <sys/endian.h>
 #endif
 
+#ifdef WIN32
+#include <stdlib.h>
+#define __bswap_16 _byteswap_ushort
+#define __bswap_32 _byteswap_ulong
+#define __bswap_64 _byteswap_uint64
+#endif
+
 #ifndef htobe32
 # if __BYTE_ORDER == __LITTLE_ENDIAN
 #  define htobe16(x) __bswap_16 (x)

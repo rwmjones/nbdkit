@@ -36,6 +36,8 @@
 # functions from nbdkit, so this script lists only the symbols we want
 # to export.
 
+# NOTE: If you edit this file you must also edit nbdkit.def.
+
 {
   # The functions we want plugins and filters to call.
   global:

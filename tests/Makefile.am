@@ -183,7 +183,11 @@ test_ansi_c_plugin_la_CFLAGS = \
 # For use of the -rpath option, see:
 # https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
 test_ansi_c_plugin_la_LDFLAGS = \
-	-module -avoid-version -shared -rpath /nowhere
+	-module -avoid-version -shared -rpath /nowhere -no-undefined
+if IS_WINDOWS
+test_ansi_c_plugin_la_LIBADD = \
+	-L$(top_builddir)/server -lnbdkit
+endif
 
 if HAVE_CXX
 # This builds a plugin and a filter using the C++ compiler.  They
@@ -205,7 +209,11 @@ test_cxx_plugin_la_CXXFLAGS = \
 # For use of the -rpath option, see:
 # https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
 test_cxx_plugin_la_LDFLAGS = \
-	-module -avoid-version -shared -rpath /nowhere
+	-module -avoid-version -shared -rpath /nowhere -no-undefined
+if IS_WINDOWS
+test_cxx_plugin_la_LIBADD = \
+	-L$(top_builddir)/server -lnbdkit
+endif
 
 test_cxx_filter_la_SOURCES = \
 	test-cxx-filter.cpp \
@@ -217,7 +225,11 @@ test_cxx_filter_la_CXXFLAGS = \
 # For use of the -rpath option, see:
 # https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
 test_cxx_filter_la_LDFLAGS = \
-	-module -avoid-version -shared -rpath /nowhere
+	-module -avoid-version -shared -rpath /nowhere -no-undefined
+if IS_WINDOWS
+test_cxx_filter_la_LIBADD = \
+	-L$(top_builddir)/server -lnbdkit
+endif
 endif HAVE_CXX
 
 # Exit with parent test.
@@ -533,7 +545,11 @@ libvixDiskLib_la_CXXFLAGS = \
 # For use of the -rpath option, see:
 # https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
 libvixDiskLib_la_LDFLAGS = \
-	-shared -version-number 6:0:0 -rpath /nowhere
+	-shared -version-number 6:0:0 -rpath /nowhere -no-undefined
+if IS_WINDOWS
+libvixDiskLib_la_LIBADD = \
+	-L$(top_builddir)/server -lnbdkit
+endif
 
 # zero plugin test.
 TESTS += test-zero.sh
@@ -695,7 +711,11 @@ test_layers_plugin_la_CFLAGS = $(WARNINGS_CFLAGS)
 # For use of the -rpath option, see:
 # https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
 test_layers_plugin_la_LDFLAGS = \
-	-module -avoid-version -shared -rpath /nowhere
+	-module -avoid-version -shared -rpath /nowhere -no-undefined
+if IS_WINDOWS
+test_layers_plugin_la_LIBADD = \
+	-L$(top_builddir)/server -lnbdkit
+endif
 
 test_layers_filter1_la_SOURCES = \
 	test-layers-filter.c \
@@ -705,7 +725,11 @@ test_layers_filter1_la_CFLAGS = $(WARNINGS_CFLAGS) -Dlayer='"filter1"'
 # For use of the -rpath option, see:
 # https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
 test_layers_filter1_la_LDFLAGS = \
-	-module -avoid-version -shared -rpath /nowhere
+	-module -avoid-version -shared -rpath /nowhere -no-undefined
+if IS_WINDOWS
+test_layers_filter1_la_LIBADD = \
+	-L$(top_builddir)/server -lnbdkit
+endif
 
 test_layers_filter2_la_SOURCES = \
 	test-layers-filter.c \
@@ -715,7 +739,11 @@ test_layers_filter2_la_CFLAGS = $(WARNINGS_CFLAGS) -Dlayer='"filter2"'
 # For use of the -rpath option, see:
 # https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
 test_layers_filter2_la_LDFLAGS = \
-	-module -avoid-version -shared -rpath /nowhere
+	-module -avoid-version -shared -rpath /nowhere -no-undefined
+if IS_WINDOWS
+test_layers_filter2_la_LIBADD = \
+	-L$(top_builddir)/server -lnbdkit
+endif
 
 test_layers_filter3_la_SOURCES = \
 	test-layers-filter.c \
@@ -725,7 +753,11 @@ test_layers_filter3_la_CFLAGS = $(WARNINGS_CFLAGS) -Dlayer='"filter3"'
 # For use of the -rpath option, see:
 # https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
 test_layers_filter3_la_LDFLAGS = \
-	-module -avoid-version -shared -rpath /nowhere
+	-module -avoid-version -shared -rpath /nowhere -no-undefined
+if IS_WINDOWS
+test_layers_filter3_la_LIBADD = \
+	-L$(top_builddir)/server -lnbdkit
+endif
 
 # blocksize filter test.
 TESTS += test-blocksize.sh

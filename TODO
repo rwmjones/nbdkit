@@ -141,3 +141,24 @@ nbdkit processes.
 The nbd plugin (plugins/nbd) already contains an NBD client, so we
 could factor this client out and make it available to other plugins to
 use.
+
+Windows support
+---------------
+
+The following features are not yet implemented on Windows:
+
+Because there is no fork(2) we cannot fork into background (ie. -f or
+equivalent must always be used).  --run does not work for a similar
+reason.
+
+-u/-g flags do not work.
+
+No socket activation.  Unclear if this makes sense on Windows, since
+there may not be a way to pass opened file descriptors to a newly
+created process.
+
+Unix domain sockets (ie. -U option) do not work, the clue being in the
+name.  However is there an equivalent filesystem sockets feature in
+Windows that we should be using instead?
+
+Many plugins and filters have not yet been ported to Windows.

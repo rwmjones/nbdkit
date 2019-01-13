@@ -127,7 +127,7 @@ struct nbdkit_plugin {
   int (*can_multi_conn) (void *handle);
 };
 
-extern void nbdkit_set_error (int err);
+extern NBDKIT_DLLEXPORT void nbdkit_set_error (int err);
 
 #define NBDKIT_REGISTER_PLUGIN(plugin)                                  \
   NBDKIT_CXX_LANG_C                                                     \

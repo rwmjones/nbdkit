@@ -37,7 +37,20 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <errno.h>
+
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+
+#ifdef HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+
 #include <pthread.h>
 
 #define NBDKIT_API_VERSION 2
@@ -56,6 +69,36 @@
 
 #ifndef SOCK_CLOEXEC
 #define SOCK_CLOEXEC 0
+#endif
+
+#ifndef O_NOCTTY
+#define O_NOCTTY 0
+#endif
+
+#ifdef WIN32
+
+/* Windows <errno.h> lacks certain errnos, so replace them here as
+ * best we can.
+ */
+#ifndef EBADMSG
+#define EBADMSG EPROTO
+#endif
+#ifndef ESHUTDOWN
+#define ESHUTDOWN ECONNABORTED
+#endif
+
+/* Windows doesn't have flockfile/funlockfile so messages may get
+ * split over threads.
+ */
+#define flockfile(fp)
+#define funlockfile(fp)
+
+#endif /* WIN32 */
+
+#ifndef WIN32
+#define HAVE_UNIX_SOCKETS 1
+#else
+#undef HAVE_UNIX_SOCKETS
 #endif
 
 #if HAVE_VALGRIND
@@ -114,7 +157,11 @@ extern struct backend *backend;
 
 /* quit.c */
 extern volatile int quit;
+#ifndef WIN32
 extern int quit_fd;
+#else
+extern HANDLE quit_fd;
+#endif
 extern void set_up_quit_pipe (void);
 extern void handle_quit (int sig);
 extern void set_quit (void);

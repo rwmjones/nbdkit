@@ -162,7 +162,12 @@ start_certificates (void)
     const char *home;
     CLEANUP_FREE char *path = NULL;
 
-    if (geteuid () != 0) {
+#ifndef WIN32
+#define RUNNING_AS_NON_ROOT_FOR_CERTIFICATES_DIR (geteuid () != 0)
+#else
+#define RUNNING_AS_NON_ROOT_FOR_CERTIFICATES_DIR 0
+#endif
+    if (RUNNING_AS_NON_ROOT_FOR_CERTIFICATES_DIR) {
       home = getenv ("HOME");
       if (home) {
         if (asprintf (&path, "%s/.pki/%s", home, PACKAGE_NAME) == -1) {

@@ -105,6 +105,14 @@ AS_IF([test "x$is_windows" = "xyes"],[
     AC_CHECK_TOOLS([MC],[windmc mc],[no])
     AS_IF([test "x$MC" = "xno"],
           [AC_MSG_ERROR([mc/windmc utility must be available when compiling for Windows])])
+
+    dnl On Windows look for dlltool.
+    AC_CHECK_TOOLS([DLLTOOL],[dlltool],[no])
+    AS_IF([test "x$DLLTOOL" = "xno"],
+          [AC_MSG_ERROR([dlltool utility must be available when compiling for Windows])])
+
+    dnl On Windows we require winsock2.
+    AC_CHECK_LIB([ws2_32], [socket])
 ])
 
 dnl On Haiku we must use BSD-compatibility headers to get the endian
@@ -199,9 +207,20 @@ AC_CHECK_HEADERS([\
 	alloca.h \
 	byteswap.h \
 	endian.h \
+	grp.h \
+	netdb.h \
+	poll.h \
+	pwd.h \
+	syslog.h \
 	sys/endian.h \
 	sys/prctl.h \
-	sys/procctl.h])
+	sys/procctl.h \
+	sys/socket.h \
+	sys/un.h \
+	sys/wait.h \
+	termios.h \
+	windows.h \
+	ws2tcpip.h])
 
 dnl Check for functions in libc, all optional.
 AC_CHECK_FUNCS([\

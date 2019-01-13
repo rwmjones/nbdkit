@@ -56,7 +56,6 @@
 #include "options.h"
 #include "exit-with-parent.h"
 
-static char *make_random_fifo (void);
 static struct backend *open_plugin_so (size_t i, const char *filename, int short_name);
 static struct backend *open_filter_so (struct backend *next, size_t i, const char *filename, int short_name);
 static void start_serving (void);
@@ -89,8 +88,12 @@ unsigned int socket_activation  /* $LISTEN_FDS and $LISTEN_PID set */;
 /* The currently loaded plugin. */
 struct backend *backend;
 
+#ifdef HAVE_UNIX_SOCKETS
+static char *make_random_fifo (void);
 static char *random_fifo_dir = NULL;
 static char *random_fifo = NULL;
+#endif
+static void free_random_fifo (void);
 
 static void
 usage (void)
@@ -149,6 +152,17 @@ main (int argc, char *argv[])
   } *filter_filenames = NULL;
   size_t i;
   const char *magic_config_key;
+
+#ifdef WIN32
+  /* Initialize winsock. 2.2 is the current & latest version. */
+  WSADATA wsaData;
+  int wsaresult;
+  wsaresult = WSAStartup (MAKEWORD (2, 2), &wsaData);
+  if (wsaresult != 0) {
+    fprintf (stderr, "WSAStartup: failed with error %d\n", wsaresult);
+    exit (EXIT_FAILURE);
+  }
+#endif
 
   threadlocal_init ();
 
@@ -390,6 +404,7 @@ main (int argc, char *argv[])
       }
       break;
 
+#ifdef HAVE_UNIX_SOCKETS
     case 'U':
       if (socket_activation) {
         fprintf (stderr, "%s: cannot use socket activation with -U flag\n",
@@ -403,6 +418,14 @@ main (int argc, char *argv[])
       if (unixsocket == NULL)
         exit (EXIT_FAILURE);
       break;
+
+#else /* !HAVE_UNIX_SOCKETS */
+    case 'U':
+      fprintf (stderr, "%s: -U option: Unix domain sockets "
+               "are not supported on this platform\n",
+               program_name);
+      exit (EXIT_FAILURE);
+#endif
 
     case 'u':
       user = optarg;
@@ -653,20 +676,14 @@ main (int argc, char *argv[])
   free (unixsocket);
   free (pidfile);
 
-  if (random_fifo) {
-    unlink (random_fifo);
-    free (random_fifo);
-  }
-
-  if (random_fifo_dir) {
-    rmdir (random_fifo_dir);
-    free (random_fifo_dir);
-  }
+  free_random_fifo ();
 
   crypto_free ();
 
   exit (EXIT_SUCCESS);
 }
+
+#ifdef HAVE_UNIX_SOCKETS
 
 /* Implementation of '-U -' */
 static char *
@@ -699,6 +716,29 @@ make_random_fifo (void)
 
   return unixsocket;
 }
+
+static void
+free_random_fifo (void)
+{
+  if (random_fifo) {
+    unlink (random_fifo);
+    free (random_fifo);
+  }
+
+  if (random_fifo_dir) {
+    rmdir (random_fifo_dir);
+    free (random_fifo_dir);
+  }
+}
+
+#else /* !HAVE_UNIX_SOCKETS */
+
+static void
+free_random_fifo (void)
+{
+}
+
+#endif /* !HAVE_UNIX_SOCKETS */
 
 static struct backend *
 open_plugin_so (size_t i, const char *name, int short_name)

@@ -38,12 +38,20 @@
 #include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
-#include <pwd.h>
-#include <grp.h>
 #include <errno.h>
 #include <sys/types.h>
 
+#ifdef HAVE_PWD_H
+#include <pwd.h>
+#endif
+
+#ifdef HAVE_GRP_H
+#include <grp.h>
+#endif
+
 #include "internal.h"
+
+#if defined(HAVE_PWD_H) && defined(HAVE_GRP_H)
 
 static uid_t parseuser (const char *);
 static gid_t parsegroup (const char *);
@@ -139,3 +147,18 @@ parsegroup (const char *id)
 
   return grp->gr_gid;
 }
+
+#else /* a platform like Windows which lacks pwd/grp functions */
+
+void
+change_user (void)
+{
+  if (user || group) {
+    fprintf (stderr, "%s: "
+             "-u and -g options are not available on this plaform\n",
+           program_name);
+    exit (EXIT_FAILURE);
+  }
+}
+
+#endif

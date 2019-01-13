@@ -53,6 +53,12 @@ extern "C" {
 #define ATTRIBUTE_FORMAT_PRINTF(fmtpos, argpos)
 #endif
 
+#ifdef WIN32
+#define NBDKIT_DLLEXPORT __declspec(dllexport)
+#else
+#define NBDKIT_DLLEXPORT
+#endif
+
 #define NBDKIT_THREAD_MODEL_SERIALIZE_CONNECTIONS     0
 #define NBDKIT_THREAD_MODEL_SERIALIZE_ALL_REQUESTS    1
 #define NBDKIT_THREAD_MODEL_SERIALIZE_REQUESTS        2
@@ -65,16 +71,16 @@ extern "C" {
 #define NBDKIT_FUA_EMULATE    1
 #define NBDKIT_FUA_NATIVE     2
 
-extern void nbdkit_error (const char *msg, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2);
-extern void nbdkit_verror (const char *msg, va_list args);
-extern void nbdkit_debug (const char *msg, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2);
-extern void nbdkit_vdebug (const char *msg, va_list args);
+extern NBDKIT_DLLEXPORT void nbdkit_error (const char *msg, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2);
+extern NBDKIT_DLLEXPORT void nbdkit_verror (const char *msg, va_list args);
+extern NBDKIT_DLLEXPORT void nbdkit_debug (const char *msg, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2);
+extern NBDKIT_DLLEXPORT void nbdkit_vdebug (const char *msg, va_list args);
 
-extern char *nbdkit_absolute_path (const char *path);
-extern int64_t nbdkit_parse_size (const char *str);
-extern int nbdkit_parse_bool (const char *str);
-extern int nbdkit_read_password (const char *value, char **password);
-extern char *nbdkit_realpath (const char *path);
+extern NBDKIT_DLLEXPORT char *nbdkit_absolute_path (const char *path);
+extern NBDKIT_DLLEXPORT int64_t nbdkit_parse_size (const char *str);
+extern NBDKIT_DLLEXPORT int nbdkit_parse_bool (const char *str);
+extern NBDKIT_DLLEXPORT int nbdkit_read_password (const char *value, char **password);
+extern NBDKIT_DLLEXPORT char *nbdkit_realpath (const char *path);
 
 /* A static non-NULL pointer which can be used when you don't need a
  * per-connection handle.

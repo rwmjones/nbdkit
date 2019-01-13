@@ -42,6 +42,11 @@
 #include "internal.h"
 #include "syslog.h"
 
+#ifdef WIN32
+/* The Windows API doesn't have open_memstream, so hack this. */
+#define open_memstream(m,n) NULL
+#endif
+
 /* Tempted to use LOG_FTP instead of LOG_DAEMON! */
 static const int PRIORITY = LOG_DAEMON|LOG_ERR;
 

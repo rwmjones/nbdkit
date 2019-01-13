@@ -41,8 +41,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <limits.h>
-#include <termios.h>
 #include <errno.h>
+
+#ifdef HAVE_TERMIOS_H
+#include <termios.h>
+#endif
 
 #include "internal.h"
 #include "realpath.h"
@@ -184,12 +187,72 @@ nbdkit_parse_bool (const char *str)
   return -1;
 }
 
+#ifndef WIN32
+
+typedef struct termios echo_mode;
+
+static void
+echo_off (echo_mode *old_mode)
+{
+  struct termios temp;
+  int tty;
+
+  tty = isatty (0);
+  if (tty) {
+    tcgetattr (0, old_mode);
+    temp = *old_mode;
+    temp.c_lflag &= ~ECHO;
+    tcsetattr (0, TCSAFLUSH, &temp);
+  }
+}
+
+static void
+echo_restore (const echo_mode *old_mode)
+{
+  int tty;
+
+  tty = isatty (0);
+  if (tty)
+    tcsetattr (0, TCSAFLUSH, old_mode);
+}
+
+#else /* WIN32 */
+
+/* Windows implementation of tty echo off based on this:
+ * https://stackoverflow.com/a/1455007
+ */
+typedef DWORD echo_mode;
+
+static void
+echo_off (echo_mode *old_mode)
+{
+  HANDLE h_stdin;
+  DWORD mode;
+
+  h_stdin = GetStdHandle (STD_INPUT_HANDLE);
+  GetConsoleMode (h_stdin, old_mode);
+  mode = *old_mode;
+  mode &= ~ENABLE_ECHO_INPUT;
+  SetConsoleMode (h_stdin, mode);
+}
+
+static void
+echo_restore (const echo_mode *old_mode)
+{
+  HANDLE h_stdin;
+
+  h_stdin = GetStdHandle (STD_INPUT_HANDLE);
+  SetConsoleMode (h_stdin, *old_mode);
+}
+
+#endif /* WIN32 */
+
 /* Read a password from configuration value. */
 int
 nbdkit_read_password (const char *value, char **password)
 {
-  int tty, err;;
-  struct termios orig, temp;
+  int err;
+  echo_mode orig;
   ssize_t r;
   size_t n;
   FILE *fp;
@@ -199,20 +262,13 @@ nbdkit_read_password (const char *value, char **password)
     printf ("password: ");
 
     /* Set no echo. */
-    tty = isatty (0);
-    if (tty) {
-      tcgetattr (0, &orig);
-      temp = orig;
-      temp.c_lflag &= ~ECHO;
-      tcsetattr (0, TCSAFLUSH, &temp);
-    }
+    echo_off (&orig);
 
     r = getline (password, &n, stdin);
     err = errno;
 
     /* Restore echo. */
-    if (tty)
-      tcsetattr (0, TCSAFLUSH, &orig);
+    echo_restore (&orig);
 
     /* Complete the printf above. */
     printf ("\n");

@@ -39,12 +39,32 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <netdb.h>
-#include <poll.h>
 #include <errno.h>
 #include <assert.h>
+
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
+#ifdef HAVE_SYS_UN_H
+#include <sys/un.h>
+#endif
+
+#ifdef HAVE_NETDB_H
+#include <netdb.h>
+#endif
+
+#ifdef HAVE_POLL_H
+#include <poll.h>
+#endif
+
+#ifdef HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
 
 #ifdef HAVE_LIBSELINUX
 #include <selinux/selinux.h>
@@ -85,6 +105,8 @@ clear_selinux_label (void)
   }
 #endif
 }
+
+#ifdef HAVE_UNIX_SOCKETS
 
 int *
 bind_unix_socket (size_t *nr_socks)
@@ -139,6 +161,23 @@ bind_unix_socket (size_t *nr_socks)
 
   return ret;
 }
+
+#else /* !HAVE_UNIX_SOCKETS */
+
+int *
+bind_unix_socket (size_t *nr_socks)
+{
+  fprintf (stderr, "%s: -U option: Unix domain sockets "
+           "are not supported on this platform\n",
+           program_name);
+  exit (EXIT_FAILURE);
+}
+
+#endif /* !HAVE_UNIX_SOCKETS */
+
+#ifndef AI_ADDRCONFIG
+#define AI_ADDRCONFIG 0
+#endif
 
 int *
 bind_tcpip_socket (size_t *nr_socks)
@@ -314,6 +353,8 @@ accept_connection (int listen_sock)
    */
 }
 
+#ifndef WIN32
+
 /* Check the list of sockets plus quit_fd until a POLLIN event occurs
  * on any of them.
  *
@@ -359,6 +400,50 @@ check_sockets_and_quit_fd (int *socks, size_t nr_socks)
       accept_connection (socks[i]);
   }
 }
+
+#else /* WIN32 */
+
+static void
+check_sockets_and_quit_fd (int *socks, size_t nr_socks)
+{
+  size_t i;
+  HANDLE h, handles[nr_socks+1];
+  DWORD r;
+
+  for (i = 0; i < nr_socks; ++i) {
+    h = WSACreateEvent ();
+    WSAEventSelect (socks[i], h, FD_ACCEPT|FD_READ|FD_CLOSE);
+    handles[i] = h;
+  }
+  handles[nr_socks] = quit_fd;
+
+  r = WaitForMultipleObjectsEx ((DWORD) (nr_socks+1), handles,
+                                FALSE, INFINITE, TRUE);
+  debug ("WaitForMultipleObjectsEx returned %d", (int)r);
+  if (r == WAIT_FAILED) {
+    fprintf (stderr, "%s: WaitForMultipleObjectsEx: error %lu\n",
+             program_name, GetLastError ());
+    exit (EXIT_FAILURE);
+  }
+
+  for (i = 0; i < nr_socks; ++i) {
+    WSAEventSelect (socks[i], NULL, 0);
+    WSACloseEvent (handles[i]);
+  }
+
+  if (r == WAIT_OBJECT_0 + nr_socks) /* quit_fd signalled. */
+    return;
+
+  if (r >= WAIT_OBJECT_0 && r < WAIT_OBJECT_0 + nr_socks) {
+    i = r - WAIT_OBJECT_0;
+    accept_connection (socks[i]);
+    return;
+  }
+
+  debug ("WaitForMultipleObjectsEx: unexpected return value: %lu\n", r);
+}
+
+#endif /* WIN32 */
 
 void
 accept_incoming_connections (int *socks, size_t nr_socks)

@@ -13,6 +13,7 @@
 *.trs
 
 .deps
+.dirstamp
 .gdb_history
 .libs
 Makefile
@@ -55,10 +56,13 @@ Makefile.in
 /ltmain.sh
 /missing
 /nbdkit
+/nbdkit.exe
 /plugins/example4/nbdkit-example4-plugin
 /plugins/tar/nbdkit-tar-plugin
 /podwrapper.pl
+/server/libnbdkit.a
 /server/nbdkit
+/server/nbdkit.exe
 /server/nbdkit.pc
 /server/protostrings.c
 /server/synopsis.c
