@@ -1,5 +1,5 @@
 /* nbdkit
- * Copyright (C) 2013-2018 Red Hat Inc.
+ * Copyright (C) 2019 Red Hat Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,52 +31,34 @@
  * SUCH DAMAGE.
  */
 
+/* Replacement for strndup for platforms which lack this function. */
+
 #include <config.h>
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
-#include <errno.h>
 
-#include "internal.h"
-#include "syslog.h"
+#ifndef HAVE_STRNDUP
 
-/* Tempted to use LOG_FTP instead of LOG_DAEMON! */
-static const int PRIORITY = LOG_DAEMON|LOG_ERR;
+#include "strndup.h"
 
-/* Note: preserves the previous value of errno. */
-void
-log_syslog_verror (const char *fs, va_list args)
+char *
+strndup(const char *s, size_t n)
 {
-  int err = errno;
-  const char *name = threadlocal_get_name ();
-  size_t instance_num = threadlocal_get_instance_num ();
-  CLEANUP_FREE char *msg = NULL;
-  size_t len = 0;
-  FILE *fp = NULL;
+  size_t len = strlen (s);
+  char *ret;
 
-  fp = open_memstream (&msg, &len);
-  if (fp == NULL) {
-    /* Fallback to logging using fs, args directly. */
-    errno = err; /* Must restore in case fs contains %m */
-    vsyslog (PRIORITY, fs, args);
-    goto out;
-  }
+  if (len > n)
+    len = n;
 
-  if (name) {
-    fprintf (fp, "%s", name);
-    if (instance_num > 0)
-      fprintf (fp, "[%zu]", instance_num);
-    fprintf (fp, ": ");
-  }
+  ret = malloc (len+1);
+  if (ret == NULL)
+    return NULL;
+  memcpy (ret, s, len);
+  ret[len] = '\0';
 
-  errno = err; /* Must restore in case fs contains %m */
-  vfprintf (fp, fs, args);
-  fclose (fp);
-
-  syslog (PRIORITY, "%s", msg);
-
- out:
-  errno = err;
+  return ret;
 }
+
+#endif /* !HAVE_STRNDUP */

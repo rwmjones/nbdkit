@@ -72,6 +72,7 @@ nbdkit_CPPFLAGS = \
 	-Dfilterdir=\"$(filterdir)\" \
 	-Dsbindir=\"$(sbindir)\" \
 	-Dsysconfdir=\"$(sysconfdir)\" \
+	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common/include
 nbdkit_CFLAGS = \
@@ -83,7 +84,8 @@ nbdkit_CFLAGS = \
 nbdkit_LDADD = \
 	$(GNUTLS_LIBS) \
 	$(LIBSELINUX_LIBS) \
-	$(DL_LIBS)
+	$(DL_LIBS) \
+	../lib/libcompat.la
 nbdkit_LDFLAGS = \
 	$(PTHREAD_LIBS) \
 	$(DL_LDFLAGS)
@@ -132,6 +134,7 @@ test_utils_SOURCES = \
 	utils.c \
 	cleanup.c
 test_utils_CPPFLAGS = \
+	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common/include
 test_utils_CFLAGS = $(WARNINGS_CFLAGS) $(VALGRIND_CFLAGS)

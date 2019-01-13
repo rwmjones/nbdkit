@@ -1,5 +1,5 @@
 /* nbdkit
- * Copyright (C) 2013-2018 Red Hat Inc.
+ * Copyright (C) 2019 Red Hat Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,52 +31,19 @@
  * SUCH DAMAGE.
  */
 
+#ifndef NBDKIT_STRNDUP_H
+#define NBDKIT_STRNDUP_H
+
 #include <config.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
+#ifdef HAVE_STRNDUP
+
 #include <string.h>
-#include <errno.h>
 
-#include "internal.h"
-#include "syslog.h"
+#else
 
-/* Tempted to use LOG_FTP instead of LOG_DAEMON! */
-static const int PRIORITY = LOG_DAEMON|LOG_ERR;
+char *strndup(const char *s, size_t n);
 
-/* Note: preserves the previous value of errno. */
-void
-log_syslog_verror (const char *fs, va_list args)
-{
-  int err = errno;
-  const char *name = threadlocal_get_name ();
-  size_t instance_num = threadlocal_get_instance_num ();
-  CLEANUP_FREE char *msg = NULL;
-  size_t len = 0;
-  FILE *fp = NULL;
+#endif
 
-  fp = open_memstream (&msg, &len);
-  if (fp == NULL) {
-    /* Fallback to logging using fs, args directly. */
-    errno = err; /* Must restore in case fs contains %m */
-    vsyslog (PRIORITY, fs, args);
-    goto out;
-  }
-
-  if (name) {
-    fprintf (fp, "%s", name);
-    if (instance_num > 0)
-      fprintf (fp, "[%zu]", instance_num);
-    fprintf (fp, ": ");
-  }
-
-  errno = err; /* Must restore in case fs contains %m */
-  vfprintf (fp, fs, args);
-  fclose (fp);
-
-  syslog (PRIORITY, "%s", msg);
-
- out:
-  errno = err;
-}
+#endif /* NBDKIT_STRNDUP_H */

@@ -47,6 +47,8 @@
 #include "get-current-dir-name.h"
 
 #include "internal.h"
+#include "realpath.h"
+#include "getline.h"
 
 char *
 nbdkit_absolute_path (const char *path)

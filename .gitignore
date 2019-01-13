@@ -47,6 +47,10 @@ Makefile.in
 /html/*.html
 /INSTALL
 /install-sh
+/lib/libcompat.a
+/lib/win32/MSG00001.bin
+/lib/win32/nbdkit-cat.h
+/lib/win32/nbdkit-cat.rc
 /libtool
 /ltmain.sh
 /missing

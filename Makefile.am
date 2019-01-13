@@ -64,6 +64,7 @@ SUBDIRS = \
 	docs \
 	fuzzing \
 	valgrind \
+	lib \
 	include \
 	common/include \
 	server

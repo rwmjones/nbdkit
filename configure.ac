@@ -90,6 +90,23 @@ if test "x$gcc_warnings" = "xyes"; then
     AC_SUBST([WARNINGS_CFLAGS])
 fi
 
+dnl Is this Windows?
+AC_MSG_CHECKING([if the target is Windows])
+AS_CASE([$host_os],
+    [mingw*], [is_windows=yes],
+    [is_windows=no]
+)
+AC_MSG_RESULT([$is_windows])
+AM_CONDITIONAL([IS_WINDOWS],[test "x$is_windows" = "xyes"])
+
+AS_IF([test "x$is_windows" = "xyes"],[
+    dnl For Windows, look for the mc/windmc utility.
+    dnl XXX Do we need to check for mc.exe as well?
+    AC_CHECK_TOOLS([MC],[windmc mc],[no])
+    AS_IF([test "x$MC" = "xno"],
+          [AC_MSG_ERROR([mc/windmc utility must be available when compiling for Windows])])
+])
+
 dnl On Haiku we must use BSD-compatibility headers to get the endian
 dnl macros we use.
 AC_MSG_CHECKING(whether OS-dependent include paths are required)
@@ -191,6 +208,17 @@ AC_CHECK_FUNCS([\
 	fdatasync \
 	get_current_dir_name \
 	mkostemp])
+
+dnl Replacement functions that we provide for some platforms.
+AC_CONFIG_LIBOBJ_DIR([lib])
+AC_REPLACE_FUNCS([\
+	getdelim \
+	getline \
+	openlog \
+	realpath \
+	strndup \
+	syslog \
+	vsyslog])
 
 dnl Check whether printf("%m") works
 AC_CACHE_CHECK([whether the printf family supports %m],
@@ -822,6 +850,8 @@ AC_CONFIG_FILES([Makefile
                  common/sparse/Makefile
                  docs/Makefile
                  include/Makefile
+                 lib/Makefile
+                 lib/win32/Makefile
                  plugins/Makefile
                  plugins/curl/Makefile
                  plugins/data/Makefile
