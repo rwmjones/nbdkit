@@ -206,12 +206,12 @@ AC_CHECK_HEADERS([\
 dnl Check for functions in libc, all optional.
 AC_CHECK_FUNCS([\
 	fdatasync \
-	get_current_dir_name \
 	mkostemp])
 
 dnl Replacement functions that we provide for some platforms.
 AC_CONFIG_LIBOBJ_DIR([lib])
 AC_REPLACE_FUNCS([\
+	get_current_dir_name \
 	getdelim \
 	getline \
 	openlog \

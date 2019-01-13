@@ -48,11 +48,11 @@
 
 #include <nbdkit-plugin.h>
 
-#include "get-current-dir-name.h"
-
 #include "byte-swapping.h"
 #include "regions.h"
 #include "rounding.h"
+
+#include "get_current_dir_name.h"
 
 #include "virtual-floppy.h"
 

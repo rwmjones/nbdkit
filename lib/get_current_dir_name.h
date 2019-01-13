@@ -31,24 +31,19 @@
  * SUCH DAMAGE.
  */
 
+#ifndef NBDKIT_GET_CURRENT_DIR_NAME_H
+#define NBDKIT_GET_CURRENT_DIR_NAME_H
+
 #include <config.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
+#ifdef HAVE_GET_CURRENT_DIR_NAME
+
 #include <unistd.h>
-#include <assert.h>
 
-#include "get-current-dir-name.h"
+#else
 
-int
-main (void)
-{
-  char *pwd;
+extern char *get_current_dir_name (void);
 
-  pwd = get_current_dir_name ();
-  printf ("pwd = %s\n", pwd);
-  free (pwd);
-  exit (EXIT_SUCCESS);
-}
+#endif
+
+#endif /* NBDKIT_GET_CURRENT_DIR_NAME_H */

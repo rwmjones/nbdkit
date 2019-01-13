@@ -44,11 +44,10 @@
 #include <termios.h>
 #include <errno.h>
 
-#include "get-current-dir-name.h"
-
 #include "internal.h"
 #include "realpath.h"
 #include "getline.h"
+#include "get_current_dir_name.h"
 
 char *
 nbdkit_absolute_path (const char *path)

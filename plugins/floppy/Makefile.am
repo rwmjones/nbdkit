@@ -46,6 +46,7 @@ nbdkit_floppy_plugin_la_SOURCES = \
 	$(top_srcdir)/include/nbdkit-plugin.h
 
 nbdkit_floppy_plugin_la_CPPFLAGS = \
+	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common/include \
 	-I$(top_srcdir)/common/regions \

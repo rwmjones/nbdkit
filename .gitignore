@@ -26,7 +26,6 @@ Makefile.in
 /autom4te.cache
 /common/bitmap/test-bitmap
 /common/include/test-byte-swapping
-/common/include/test-current-dir-name
 /common/include/test-isaligned
 /common/include/test-ispowerof2
 /common/include/test-iszero
@@ -48,6 +47,7 @@ Makefile.in
 /INSTALL
 /install-sh
 /lib/libcompat.a
+/lib/test-current-dir-name
 /lib/win32/MSG00001.bin
 /lib/win32/nbdkit-cat.h
 /lib/win32/nbdkit-cat.rc

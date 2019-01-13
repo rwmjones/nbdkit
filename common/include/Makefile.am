@@ -37,7 +37,6 @@ include $(top_srcdir)/common-rules.mk
 EXTRA_DIST = \
 	byte-swapping.h \
 	exit-with-parent.h \
-	get-current-dir-name.h \
 	isaligned.h \
 	ispowerof2.h \
 	iszero.h \
@@ -50,7 +49,6 @@ EXTRA_DIST = \
 
 TESTS = \
 	test-byte-swapping \
-	test-current-dir-name \
 	test-isaligned \
 	test-ispowerof2 \
 	test-iszero \
@@ -61,10 +59,6 @@ check_PROGRAMS = $(TESTS)
 test_byte_swapping_SOURCES = test-byte-swapping.c byte-swapping.h
 test_byte_swapping_CPPFLAGS = -I$(srcdir)
 test_byte_swapping_CFLAGS = $(WARNINGS_CFLAGS)
-
-test_current_dir_name_SOURCES = test-current-dir-name.c get-current-dir-name.h
-test_current_dir_name_CPPFLAGS = -I$(srcdir)
-test_current_dir_name_CFLAGS = $(WARNINGS_CFLAGS)
 
 test_isaligned_SOURCES = test-isaligned.c isaligned.h
 test_isaligned_CPPFLAGS = -I$(srcdir)

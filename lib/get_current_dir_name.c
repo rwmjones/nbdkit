@@ -33,9 +33,6 @@
 
 /* Implement get_current_dir_name(3) on platforms which don't have it. */
 
-#ifndef NBDKIT_GET_CURRENT_DIR_NAME_H
-#define NBDKIT_GET_CURRENT_DIR_NAME_H
-
 #include <config.h>
 
 #ifndef HAVE_GET_CURRENT_DIR_NAME
@@ -44,7 +41,9 @@
 #include <unistd.h>
 #include <limits.h>
 
-static inline char *
+#include "get_current_dir_name.h"
+
+char *
 get_current_dir_name (void)
 {
   char *ret;
@@ -57,6 +56,5 @@ get_current_dir_name (void)
     return NULL;
   return realloc (ret, strlen (ret) + 1);
 }
-#endif
 
-#endif /* NBDKIT_GET_CURRENT_DIR_NAME_H */
+#endif /* !HAVE_GET_CURRENT_DIR_NAME */
