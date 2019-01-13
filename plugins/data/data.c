@@ -49,6 +49,8 @@
 
 #include "sparse.h"
 
+#include "strndup.h"
+
 /* If raw|base64|data parameter seen. */
 static int data_seen = 0;
 

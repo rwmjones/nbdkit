@@ -43,6 +43,7 @@ nbdkit_data_plugin_la_SOURCES = \
 	$(top_srcdir)/include/nbdkit-plugin.h
 
 nbdkit_data_plugin_la_CPPFLAGS = \
+	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common/include \
 	-I$(top_srcdir)/common/sparse
@@ -50,11 +51,13 @@ nbdkit_data_plugin_la_CFLAGS = \
 	$(WARNINGS_CFLAGS) \
 	$(GNUTLS_CFLAGS)
 nbdkit_data_plugin_la_LDFLAGS = \
-	-module -avoid-version -shared \
+	-module -avoid-version -shared -no-undefined \
 	-Wl,--version-script=$(top_srcdir)/plugins/plugins.syms
 nbdkit_data_plugin_la_LIBADD = \
+	-L$(top_builddir)/server -lnbdkit \
 	$(top_builddir)/common/sparse/libsparse.la \
-	$(GNUTLS_LIBS)
+	$(GNUTLS_LIBS) \
+	$(top_builddir)/lib/libcompat.la
 
 if HAVE_POD
 
