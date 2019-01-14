@@ -323,11 +323,12 @@ accept_connection (int listen_sock)
   thread_data->instance_num = instance_num++;
   thread_data->addrlen = sizeof thread_data->addr;
  again:
-  thread_data->sock = accept (listen_sock,
-                              &thread_data->addr, &thread_data->addrlen);
+  thread_data->sock = accept (listen_sock, NULL, NULL);
+//                              &thread_data->addr, &thread_data->addrlen);
   if (thread_data->sock == -1) {
     if (errno == EINTR || errno == EAGAIN)
       goto again;
+    fprintf (stderr, "accept: error %d\n", WSAGetLastError ());
     perror ("accept");
     free (thread_data);
     return;
