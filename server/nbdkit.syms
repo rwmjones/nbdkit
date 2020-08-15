@@ -78,6 +78,11 @@
 
     nbdkit_debug_*;
 
+    # Private interface used when binary nbdkit links to -lnbdkit.
+    # Do not call this, it is not a public API and liable to change
+    # in future.
+    _nbdkit_main;
+
   # Everything else is hidden.
   local: *;
 };

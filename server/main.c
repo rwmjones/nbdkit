@@ -171,7 +171,7 @@ dump_config (void)
 }
 
 int
-main (int argc, char *argv[])
+_nbdkit_main (int argc, char *argv[])
 {
   int c;
   bool help = false, version = false, dump_plugin = false;

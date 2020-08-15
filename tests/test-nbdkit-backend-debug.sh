@@ -49,10 +49,10 @@ nbdkit -U - \
        --run "qemu-img convert \$nbd $out" |& tee $debug
 
 # Should contain all debugging messages.
-grep '^nbdkit:.*debug: nofilter: open' $debug
-grep '^nbdkit:.*debug: memory: open' $debug
-grep '^nbdkit:.*debug: nofilter: pread' $debug
-grep '^nbdkit:.*debug: memory: pread' $debug
+grep 'nbdkit:.*debug: nofilter: open' $debug
+grep 'nbdkit:.*debug: memory: open' $debug
+grep 'nbdkit:.*debug: nofilter: pread' $debug
+grep 'nbdkit:.*debug: memory: pread' $debug
 
 nbdkit -U - \
        -v -D nbdkit.backend.controlpath=0 \
@@ -61,10 +61,10 @@ nbdkit -U - \
        --run "qemu-img convert \$nbd $out" |& tee $debug
 
 # Should contain only datapath messages.
-grep -v '^nbdkit:.*debug: nofilter: open' $debug
-grep -v '^nbdkit:.*debug: memory: open' $debug
-grep '^nbdkit:.*debug: nofilter: pread' $debug
-grep '^nbdkit:.*debug: memory: pread' $debug
+grep -v 'nbdkit:.*debug: nofilter: open' $debug
+grep -v 'nbdkit:.*debug: memory: open' $debug
+grep 'nbdkit:.*debug: nofilter: pread' $debug
+grep 'nbdkit:.*debug: memory: pread' $debug
 
 nbdkit -U - \
        -v -D nbdkit.backend.datapath=0 \
@@ -73,7 +73,7 @@ nbdkit -U - \
        --run "qemu-img convert \$nbd $out" |& tee $debug
 
 # Should contain only controlpath messages.
-grep '^nbdkit:.*debug: nofilter: open' $debug
-grep '^nbdkit:.*debug: memory: open' $debug
-grep -v '^nbdkit:.*debug: nofilter: pread' $debug
-grep -v '^nbdkit:.*debug: memory: pread' $debug
+grep 'nbdkit:.*debug: nofilter: open' $debug
+grep 'nbdkit:.*debug: memory: open' $debug
+grep -v 'nbdkit:.*debug: nofilter: pread' $debug
+grep -v 'nbdkit:.*debug: memory: pread' $debug

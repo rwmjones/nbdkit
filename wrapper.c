@@ -168,12 +168,16 @@ main (int argc, char *argv[])
     }
   }
 
-  /* Needed for plugins written in OCaml. */
+  /* As well as being required by nbdkit, this is also needed for
+   * plugins written in OCaml.
+   */
   s = getenv ("LD_LIBRARY_PATH");
   if (s)
-    r = asprintf (&s, "%s/plugins/ocaml/.libs:%s", builddir, s);
+    r = asprintf (&s, "%s/server/.libs:%s/plugins/ocaml/.libs:%s",
+                  builddir, builddir, s);
   else
-    r = asprintf (&s, "%s/plugins/ocaml/.libs", builddir);
+    r = asprintf (&s, "%s/server/.libs:%s/plugins/ocaml/.libs",
+                  builddir, builddir);
   if (r < 0) {
     perror ("asprintf");
     exit (EXIT_FAILURE);

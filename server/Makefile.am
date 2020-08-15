@@ -34,8 +34,12 @@ include $(top_srcdir)/common-rules.mk
 EXTRA_DIST = nbdkit.syms
 
 sbin_PROGRAMS = nbdkit
+nbdkit_SOURCES = nbdkit.c
+nbdkit_CFLAGS = $(WARNINGS_CFLAGS)
+nbdkit_LDADD = libnbdkit.la
 
-nbdkit_SOURCES = \
+lib_LTLIBRARIES = libnbdkit.la
+libnbdkit_la_SOURCES = \
 	backend.c \
 	background.c \
 	captive.c \
@@ -70,10 +74,10 @@ nbdkit_SOURCES = \
 	$(top_srcdir)/include/nbdkit-filter.h \
 	$(NULL)
 if ENABLE_LIBFUZZER
-nbdkit_SOURCES += fuzzer.c
+libnbdkit_la_SOURCES += fuzzer.c
 endif
 
-nbdkit_CPPFLAGS = \
+libnbdkit_la_CPPFLAGS = \
 	-Dbindir=\"$(bindir)\" \
 	-Dlibdir=\"$(libdir)\" \
 	-Dmandir=\"$(mandir)\" \
@@ -86,21 +90,22 @@ nbdkit_CPPFLAGS = \
 	-I$(top_srcdir)/common/protocol \
 	-I$(top_srcdir)/common/utils \
 	$(NULL)
-nbdkit_CFLAGS = \
+libnbdkit_la_CFLAGS = \
 	$(PTHREAD_CFLAGS) \
 	$(WARNINGS_CFLAGS) \
 	$(GNUTLS_CFLAGS) \
 	$(LIBSELINUX_CFLAGS) \
 	$(VALGRIND_CFLAGS) \
 	$(NULL)
-nbdkit_LDADD = \
+libnbdkit_la_LIBADD = \
 	$(GNUTLS_LIBS) \
 	$(LIBSELINUX_LIBS) \
 	$(DL_LIBS) \
 	$(top_builddir)/common/protocol/libprotocol.la \
 	$(top_builddir)/common/utils/libutils.la \
 	$(NULL)
-nbdkit_LDFLAGS = \
+libnbdkit_la_LDFLAGS = \
+	-shared $(NO_UNDEFINED_ON_WINDOWS) \
 	$(PTHREAD_LIBS) \
 	$(DL_LDFLAGS) \
 	$(NULL)
@@ -109,7 +114,7 @@ if USE_LINKER_SCRIPT_FOR_SERVER
 # adds loads of fuzzer and ASAN-related symbols that are required by
 # the plugins but which our linker script tries to hide.
 if !ENABLE_LIBFUZZER
-nbdkit_LDFLAGS += -Wl,--version-script=$(srcdir)/nbdkit.syms
+libnbdkit_la_LDFLAGS += -Wl,--version-script=$(srcdir)/nbdkit.syms
 endif
 endif
 
@@ -118,7 +123,7 @@ endif
 
 BUILT_SOURCES = synopsis.c
 EXTRA_DIST += synopsis.c
-EXTRA_nbdkit_DEPENDENCIES = synopsis.c
+EXTRA_libnbdkit_la_DEPENDENCIES = synopsis.c
 CLEANFILES += synopsis.c
 main.c: synopsis.c
 synopsis.c: $(top_srcdir)/docs/synopsis.txt
