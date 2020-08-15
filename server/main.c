@@ -44,10 +44,13 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/socket.h>
 
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
+
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
 #endif
 
 #ifdef HAVE_LINUX_VM_SOCKETS_H
@@ -61,6 +64,7 @@
 #include "ascii-string.h"
 #include "exit-with-parent.h"
 #include "nbd-protocol.h"
+#include "realpath.h"
 #include "strndup.h"
 #include "syslog.h"
 
@@ -79,6 +83,7 @@ static void write_pidfile (void);
 static bool is_config_key (const char *key, size_t len);
 static void error_if_stdio_closed (void);
 static void switch_stdio (void);
+static void winsock_init (void);
 
 struct debug_flag *debug_flags; /* -D */
 bool exit_with_parent;          /* --exit-with-parent */
@@ -190,6 +195,7 @@ _nbdkit_main (int argc, char *argv[])
   const char *magic_config_key;
 
   error_if_stdio_closed ();
+  winsock_init ();
 
 #if !ENABLE_LIBFUZZER
   threadlocal_init ();
@@ -730,6 +736,8 @@ _nbdkit_main (int argc, char *argv[])
   return EXIT_SUCCESS;
 }
 
+#ifndef WIN32
+
 /* Implementation of '-U -' */
 static char *
 make_random_fifo (void)
@@ -761,6 +769,16 @@ make_random_fifo (void)
 
   return sock;
 }
+
+#else /* WIN32 */
+
+static char *
+make_random_fifo (void)
+{
+  NOT_IMPLEMENTED_ON_WINDOWS ("-U -");
+}
+
+#endif /* WIN32 */
 
 static struct backend *
 open_plugin_so (size_t i, const char *name, int short_name)
@@ -1003,6 +1021,7 @@ is_config_key (const char *key, size_t len)
 static void
 error_if_stdio_closed (void)
 {
+#ifdef F_GETFL
   if (fcntl (STDERR_FILENO, F_GETFL) == -1) {
     /* Nowhere we can report the error. Oh well. */
     exit (EXIT_FAILURE);
@@ -1012,6 +1031,7 @@ error_if_stdio_closed (void)
     perror ("expecting stdin/stdout to be opened");
     exit (EXIT_FAILURE);
   }
+#endif
 }
 
 /* Sanitize stdin/stdout to /dev/null, after saving the originals
@@ -1026,6 +1046,7 @@ error_if_stdio_closed (void)
 static void
 switch_stdio (void)
 {
+#if defined(F_DUPFD_CLOEXEC) || defined(F_DUPFD)
   fflush (stdin);
   fflush (NULL);
   if (listen_stdin || run) {
@@ -1043,6 +1064,8 @@ switch_stdio (void)
       exit (EXIT_FAILURE);
     }
   }
+#endif
+#ifndef WIN32
   close (STDIN_FILENO);
   close (STDOUT_FILENO);
   if (open ("/dev/null", O_RDONLY) != STDIN_FILENO ||
@@ -1050,4 +1073,23 @@ switch_stdio (void)
     perror ("open");
     exit (EXIT_FAILURE);
   }
+#endif
+}
+
+/* On Windows the Winsock library must be initialized early.
+ * https://docs.microsoft.com/en-us/windows/win32/winsock/initializing-winsock
+ */
+static void
+winsock_init (void)
+{
+#ifdef WIN32
+  WSADATA wsaData;
+  int result;
+
+  result = WSAStartup (MAKEWORD (2, 2), &wsaData);
+  if (result != 0) {
+    fprintf (stderr, "WSAStartup failed: %d\n", result);
+    exit (EXIT_FAILURE);
+  }
+#endif
 }

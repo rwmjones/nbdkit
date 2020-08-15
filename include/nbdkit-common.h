@@ -40,7 +40,13 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <errno.h>
+
+#if !defined(_WIN32) && !defined(__MINGW32__) && \
+    !defined(__CYGWIN__) && !defined(_MSC_VER)
 #include <sys/socket.h>
+#else
+#include <ws2tcpip.h>
+#endif
 
 #include <nbdkit-version.h>
 
@@ -55,7 +61,11 @@ extern "C" {
 #define ATTRIBUTE_FORMAT_PRINTF(fmtpos, argpos)
 #endif
 
+#ifdef WIN32
+#define NBDKIT_DLLEXPORT __declspec(dllexport)
+#else
 #define NBDKIT_DLLEXPORT
+#endif
 
 #define NBDKIT_THREAD_MODEL_SERIALIZE_CONNECTIONS     0
 #define NBDKIT_THREAD_MODEL_SERIALIZE_ALL_REQUESTS    1

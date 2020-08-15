@@ -52,6 +52,7 @@ plugins/*/*.3
 /common/replacements/win32/nbdkit-cat.rc
 /common/utils/test-quotes
 /common/utils/test-vector
+/common/utils/windows-errors.c
 /compile
 /config.cache
 /config.guess
