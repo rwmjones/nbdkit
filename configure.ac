@@ -457,11 +457,13 @@ AS_CASE([$host_os],
     [mingw*|msys*], [
         is_windows=yes
         NO_UNDEFINED_ON_WINDOWS="-no-undefined"
+        LINK_LIBNBDKIT_ON_WINDOWS='$(top_builddir)/server/libnbdkit.la'
     ],
     [is_windows=no]
 )
 AC_MSG_RESULT([$is_windows])
 AC_SUBST([NO_UNDEFINED_ON_WINDOWS])
+AC_SUBST([LINK_LIBNBDKIT_ON_WINDOWS])
 
 AC_SEARCH_LIBS([getaddrinfo], [network socket])
 

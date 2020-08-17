@@ -56,6 +56,7 @@ nbdkit_partition_filter_la_LDFLAGS = \
 	$(NULL)
 nbdkit_partition_filter_la_LIBADD = \
 	$(top_builddir)/common/utils/libutils.la \
+	$(LINK_LIBNBDKIT_ON_WINDOWS) \
 	$(NULL)
 
 if HAVE_POD

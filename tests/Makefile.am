@@ -271,6 +271,7 @@ test_stdio_plugin_la_CFLAGS = $(WARNINGS_CFLAGS)
 test_stdio_plugin_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
+test_stdio_plugin_la_LIBADD = $(LINK_LIBNBDKIT_ON_WINDOWS)
 
 # check_LTLIBRARIES won't build a shared library (see automake manual).
 # So we have to do this and add a dependency.
@@ -290,6 +291,7 @@ test_flush_plugin_la_CFLAGS = $(WARNINGS_CFLAGS)
 test_flush_plugin_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
+test_flush_plugin_la_LIBADD = $(LINK_LIBNBDKIT_ON_WINDOWS)
 
 # check_LTLIBRARIES won't build a shared library (see automake manual).
 # So we have to do this and add a dependency.
@@ -309,6 +311,7 @@ test_shutdown_plugin_la_CFLAGS = $(WARNINGS_CFLAGS)
 test_shutdown_plugin_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
+test_shutdown_plugin_la_LIBADD = $(LINK_LIBNBDKIT_ON_WINDOWS)
 
 endif HAVE_PLUGINS
 
@@ -363,6 +366,7 @@ test_ansi_c_plugin_la_CFLAGS = $(WARNINGS_CFLAGS)
 test_ansi_c_plugin_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
+test_ansi_c_plugin_la_LIBADD = $(LINK_LIBNBDKIT_ON_WINDOWS)
 endif CAN_TEST_ANSI_C
 
 if HAVE_CXX
@@ -388,6 +392,7 @@ test_cxx_plugin_la_CXXFLAGS = $(WARNINGS_CFLAGS)
 test_cxx_plugin_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
+test_cxx_plugin_la_LIBADD = $(LINK_LIBNBDKIT_ON_WINDOWS)
 
 test_cxx_filter_la_SOURCES = \
 	test-cxx-filter.cpp \
@@ -402,6 +407,7 @@ test_cxx_filter_la_CXXFLAGS = $(WARNINGS_CFLAGS)
 test_cxx_filter_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
+test_cxx_filter_la_LIBADD = $(LINK_LIBNBDKIT_ON_WINDOWS)
 endif HAVE_CXX
 
 # Exit with parent test.
@@ -1230,6 +1236,7 @@ test_layers_plugin_la_CFLAGS = $(WARNINGS_CFLAGS)
 test_layers_plugin_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
+test_layers_plugin_la_LIBADD = $(LINK_LIBNBDKIT_ON_WINDOWS)
 
 test_layers_filter1_la_SOURCES = \
 	test-layers-filter.c \
@@ -1242,6 +1249,7 @@ test_layers_filter1_la_CFLAGS = $(WARNINGS_CFLAGS) -Dlayer='"filter1"'
 test_layers_filter1_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
+test_layers_filter1_la_LIBADD = $(LINK_LIBNBDKIT_ON_WINDOWS)
 
 test_layers_filter2_la_SOURCES = \
 	test-layers-filter.c \
@@ -1254,6 +1262,7 @@ test_layers_filter2_la_CFLAGS = $(WARNINGS_CFLAGS) -Dlayer='"filter2"'
 test_layers_filter2_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
+test_layers_filter2_la_LIBADD = $(LINK_LIBNBDKIT_ON_WINDOWS)
 
 test_layers_filter3_la_SOURCES = \
 	test-layers-filter.c \
@@ -1266,6 +1275,7 @@ test_layers_filter3_la_CFLAGS = $(WARNINGS_CFLAGS) -Dlayer='"filter3"'
 test_layers_filter3_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
+test_layers_filter3_la_LIBADD = $(LINK_LIBNBDKIT_ON_WINDOWS)
 
 # blocksize filter test.
 TESTS += test-blocksize.sh test-blocksize-extents.sh

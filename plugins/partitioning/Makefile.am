@@ -61,6 +61,7 @@ nbdkit_partitioning_plugin_la_LIBADD = \
 	$(top_builddir)/common/gpt/libgpt.la \
 	$(top_builddir)/common/regions/libregions.la \
 	$(top_builddir)/common/utils/libutils.la \
+	$(LINK_LIBNBDKIT_ON_WINDOWS) \
 	$(NULL)
 
 if HAVE_POD

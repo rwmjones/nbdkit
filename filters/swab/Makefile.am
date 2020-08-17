@@ -57,6 +57,7 @@ nbdkit_swab_filter_la_LDFLAGS = \
 	$(NULL)
 nbdkit_swab_filter_la_LIBADD = \
 	$(top_builddir)/common/utils/libutils.la \
+	$(LINK_LIBNBDKIT_ON_WINDOWS) \
 	$(GNUTLS_LIBS) \
 	$(NULL)
 

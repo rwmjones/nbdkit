@@ -53,6 +53,7 @@ nbdkit_memory_plugin_la_LDFLAGS = \
 nbdkit_memory_plugin_la_LIBADD = \
 	$(top_builddir)/common/allocators/liballocators.la \
 	$(top_builddir)/common/utils/libutils.la \
+	$(LINK_LIBNBDKIT_ON_WINDOWS) \
 	$(NULL)
 
 if HAVE_POD
