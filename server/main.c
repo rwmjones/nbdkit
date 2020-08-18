@@ -171,6 +171,8 @@ dump_config (void)
 #endif
 }
 
+extern NBDKIT_DLLEXPORT int _nbdkit_main (int argc, char *argv[]);
+
 int
 _nbdkit_main (int argc, char *argv[])
 {

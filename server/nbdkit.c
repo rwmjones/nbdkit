@@ -34,7 +34,9 @@
 
 #include <stdio.h>
 
-extern int _nbdkit_main (int argc, char *argv[]);
+#include <nbdkit-plugin.h>
+
+extern NBDKIT_DLLEXPORT int _nbdkit_main (int argc, char *argv[]);
 
 int
 main (int argc, char *argv[])

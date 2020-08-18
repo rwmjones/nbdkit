@@ -55,6 +55,8 @@ extern "C" {
 #define ATTRIBUTE_FORMAT_PRINTF(fmtpos, argpos)
 #endif
 
+#define NBDKIT_DLLEXPORT
+
 #define NBDKIT_THREAD_MODEL_SERIALIZE_CONNECTIONS     0
 #define NBDKIT_THREAD_MODEL_SERIALIZE_ALL_REQUESTS    1
 #define NBDKIT_THREAD_MODEL_SERIALIZE_REQUESTS        2
@@ -76,49 +78,63 @@ extern "C" {
 #define NBDKIT_EXTENT_HOLE    (1<<0) /* Same as NBD_STATE_HOLE */
 #define NBDKIT_EXTENT_ZERO    (1<<1) /* Same as NBD_STATE_ZERO */
 
-extern void nbdkit_error (const char *msg, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2);
-extern void nbdkit_verror (const char *msg, va_list args)
+extern NBDKIT_DLLEXPORT void nbdkit_error (const char *msg, ...)
+  ATTRIBUTE_FORMAT_PRINTF (1, 2);
+extern NBDKIT_DLLEXPORT void nbdkit_verror (const char *msg, va_list args)
   ATTRIBUTE_FORMAT_PRINTF (1, 0);
-extern void nbdkit_debug (const char *msg, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2);
-extern void nbdkit_vdebug (const char *msg, va_list args)
+extern NBDKIT_DLLEXPORT void nbdkit_debug (const char *msg, ...)
+  ATTRIBUTE_FORMAT_PRINTF (1, 2);
+extern NBDKIT_DLLEXPORT void nbdkit_vdebug (const char *msg, va_list args)
   ATTRIBUTE_FORMAT_PRINTF (1, 0);
 
-extern char *nbdkit_absolute_path (const char *path);
-extern int64_t nbdkit_parse_size (const char *str);
-extern int nbdkit_parse_bool (const char *str);
-extern int nbdkit_parse_int (const char *what, const char *str,
-                             int *r);
-extern int nbdkit_parse_unsigned (const char *what, const char *str,
-                                  unsigned *r);
-extern int nbdkit_parse_int8_t (const char *what, const char *str,
-                                int8_t *r);
-extern int nbdkit_parse_uint8_t (const char *what, const char *str,
-                                 uint8_t *r);
-extern int nbdkit_parse_int16_t (const char *what, const char *str,
-                                 int16_t *r);
-extern int nbdkit_parse_uint16_t (const char *what, const char *str,
-                                  uint16_t *r);
-extern int nbdkit_parse_int32_t (const char *what, const char *str,
-                                 int32_t *r);
-extern int nbdkit_parse_uint32_t (const char *what, const char *str,
-                                  uint32_t *r);
-extern int nbdkit_parse_int64_t (const char *what, const char *str,
-                                 int64_t *r);
-extern int nbdkit_parse_uint64_t (const char *what, const char *str,
-                                  uint64_t *r);
-extern int nbdkit_stdio_safe (void);
-extern int nbdkit_read_password (const char *value, char **password);
-extern char *nbdkit_realpath (const char *path);
-extern int nbdkit_nanosleep (unsigned sec, unsigned nsec);
-extern int nbdkit_peer_name (struct sockaddr *addr, socklen_t *addrlen);
-extern void nbdkit_shutdown (void);
+extern NBDKIT_DLLEXPORT char *nbdkit_absolute_path (const char *path);
+extern NBDKIT_DLLEXPORT int64_t nbdkit_parse_size (const char *str);
+extern NBDKIT_DLLEXPORT int nbdkit_parse_bool (const char *str);
+extern NBDKIT_DLLEXPORT int nbdkit_parse_int (const char *what,
+                                              const char *str,
+                                              int *r);
+extern NBDKIT_DLLEXPORT int nbdkit_parse_unsigned (const char *what,
+                                                   const char *str,
+                                                   unsigned *r);
+extern NBDKIT_DLLEXPORT int nbdkit_parse_int8_t (const char *what,
+                                                 const char *str,
+                                                 int8_t *r);
+extern NBDKIT_DLLEXPORT int nbdkit_parse_uint8_t (const char *what,
+                                                  const char *str,
+                                                  uint8_t *r);
+extern NBDKIT_DLLEXPORT int nbdkit_parse_int16_t (const char *what,
+                                                  const char *str,
+                                                  int16_t *r);
+extern NBDKIT_DLLEXPORT int nbdkit_parse_uint16_t (const char *what,
+                                                   const char *str,
+                                                   uint16_t *r);
+extern NBDKIT_DLLEXPORT int nbdkit_parse_int32_t (const char *what,
+                                                  const char *str,
+                                                  int32_t *r);
+extern NBDKIT_DLLEXPORT int nbdkit_parse_uint32_t (const char *what,
+                                                   const char *str,
+                                                   uint32_t *r);
+extern NBDKIT_DLLEXPORT int nbdkit_parse_int64_t (const char *what,
+                                                  const char *str,
+                                                  int64_t *r);
+extern NBDKIT_DLLEXPORT int nbdkit_parse_uint64_t (const char *what,
+                                                   const char *str,
+                                                   uint64_t *r);
+extern NBDKIT_DLLEXPORT int nbdkit_stdio_safe (void);
+extern NBDKIT_DLLEXPORT int nbdkit_read_password (const char *value,
+                                                  char **password);
+extern NBDKIT_DLLEXPORT char *nbdkit_realpath (const char *path);
+extern NBDKIT_DLLEXPORT int nbdkit_nanosleep (unsigned sec, unsigned nsec);
+extern NBDKIT_DLLEXPORT int nbdkit_peer_name (struct sockaddr *addr,
+                                              socklen_t *addrlen);
+extern NBDKIT_DLLEXPORT void nbdkit_shutdown (void);
 
 struct nbdkit_extents;
-extern int nbdkit_add_extent (struct nbdkit_extents *,
+extern NBDKIT_DLLEXPORT int nbdkit_add_extent (struct nbdkit_extents *,
                               uint64_t offset, uint64_t length, uint32_t type);
 
 struct nbdkit_exports;
-extern int nbdkit_add_export (struct nbdkit_exports *,
+extern NBDKIT_DLLEXPORT int nbdkit_add_export (struct nbdkit_exports *,
                               const char *name, const char *description);
 
 /* A static non-NULL pointer which can be used when you don't need a

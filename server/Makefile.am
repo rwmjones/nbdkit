@@ -35,6 +35,7 @@ EXTRA_DIST = nbdkit.syms
 
 sbin_PROGRAMS = nbdkit
 nbdkit_SOURCES = nbdkit.c
+nbdkit_CPPFLAGS = -I $(top_srcdir)/include
 nbdkit_CFLAGS = $(WARNINGS_CFLAGS)
 nbdkit_LDADD = libnbdkit.la
 
