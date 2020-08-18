@@ -489,12 +489,17 @@ AS_CASE([$host_os],
         LIBS="$LIBS -lmsvcrt -lkernel32 -luser32"
         NO_UNDEFINED_ON_WINDOWS="-no-undefined"
         LINK_LIBNBDKIT_ON_WINDOWS='$(top_builddir)/server/libnbdkit.la'
+        SOEXT="dll"
     ],
-    [is_windows=no]
+    [is_windows=no], [
+        SOEXT="so"
+    ]
 )
 AC_MSG_RESULT([$is_windows])
 AC_SUBST([NO_UNDEFINED_ON_WINDOWS])
 AC_SUBST([LINK_LIBNBDKIT_ON_WINDOWS])
+AC_DEFINE_UNQUOTED([SOEXT],["$SOEXT"],[Extension used for shared objects/DLLs.])
+AC_DEFINE_UNQUOTED([EXEEXT],["$EXEEXT"],[Extension used for executables.])
 AM_CONDITIONAL([IS_WINDOWS],[test "x$is_windows" = "xyes"])
 
 AS_IF([test "x$is_windows" = "xyes"],[
