@@ -81,7 +81,9 @@ TESTS_ENVIRONMENT = \
 # Common disk image shared with several tests.  These are built
 # conditionally, so tests should check the files they need exist and
 # skip if not present.
+if !IS_WINDOWS
 if HAVE_MKE2FS_WITH_D
+
 check_DATA += disk disk.tar
 CLEANFILES += disk disk.tar
 
@@ -122,7 +124,8 @@ disk.tar.xz: disk.tar
 	xz --best --block-size=32768 --keep $<
 endif HAVE_LIBLZMA
 
-endif
+endif HAVE_MKE2FS_WITH_D
+endif !IS_WINDOWS
 
 #----------------------------------------------------------------------
 # Use 'make check' to run the ordinary tests as non-root.  The
@@ -242,6 +245,7 @@ EXTRA_DIST += \
 	test-vsock.sh \
 	$(NULL)
 
+if !IS_WINDOWS
 check_PROGRAMS += \
 	test-socket-activation \
 	$(NULL)
@@ -252,6 +256,7 @@ test_socket_activation_CPPFLAGS = \
 	-I$(top_srcdir)/common/protocol \
 	$(NULL)
 test_socket_activation_CFLAGS = $(WARNINGS_CFLAGS)
+endif
 
 # check_LTLIBRARIES won't build a shared library (see automake manual).
 # So we have to do this and add a dependency.
@@ -264,14 +269,21 @@ test_stdio_plugin_la_SOURCES = \
 	test-stdio-plugin.c \
 	$(top_srcdir)/include/nbdkit-plugin.h \
 	$(NULL)
-test_stdio_plugin_la_CPPFLAGS = -I$(top_srcdir)/include
+test_stdio_plugin_la_CPPFLAGS = \
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/common/replacements \
+	$(NULL)
 test_stdio_plugin_la_CFLAGS = $(WARNINGS_CFLAGS)
 # For use of the -rpath option, see:
 # https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
 test_stdio_plugin_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
-test_stdio_plugin_la_LIBADD = $(LINK_LIBNBDKIT_ON_WINDOWS)
+test_stdio_plugin_la_LIBADD = \
+	$(LINK_LIBNBDKIT_ON_WINDOWS) \
+	$(top_builddir)/common/replacements/libcompat.la \
+	$(top_builddir)/common/utils/libutils.la \
+	$(NULL)
 
 # check_LTLIBRARIES won't build a shared library (see automake manual).
 # So we have to do this and add a dependency.

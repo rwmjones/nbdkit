@@ -41,6 +41,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <pthread.h>
+
 #include "internal.h"
 
 static bool error_flagged;
@@ -53,11 +55,20 @@ nbdkit_error (const char *fs, ...)
   error_flagged = true;
 }
 
+void
+nbdkit_debug (const char *fs, ...)
+{
+}
+
 bool listen_stdin;
 bool configured;
 
 volatile int quit;
+#ifndef WIN32
 int quit_fd = -1;
+#else
+extern HANDLE quit_fd;
+#endif
 
 struct connection *
 threadlocal_get_conn (void)
