@@ -54,6 +54,8 @@
 #define NBDKIT_API_VERSION 2
 #include <nbdkit-plugin.h>
 
+#include "isaligned.h"
+
 static char *filename = NULL;
 
 static void
@@ -110,6 +112,7 @@ struct handle {
   bool is_readonly;
   bool is_volume;
   bool is_sparse;
+  uint16_t blocksize; /* 1 for files, sector_size (512 or 4096) for volumes */
 };
 
 static void *
@@ -122,6 +125,7 @@ winfile_open (int readonly)
   bool is_volume;
   BY_HANDLE_FILE_INFORMATION fileinfo;
   bool is_sparse;
+  uint16_t blocksize = 1;
 
   flags = GENERIC_READ;
   if (!readonly) flags |= GENERIC_WRITE;
@@ -148,6 +152,7 @@ winfile_open (int readonly)
   if (is_volume) {
     /* Windows volume (block device).  Get the size. */
     GET_LENGTH_INFORMATION li;
+    DISK_GEOMETRY dg;
     DWORD lisz = sizeof li;
     DWORD obsz = 0;
 
@@ -158,6 +163,15 @@ winfile_open (int readonly)
       return NULL;
     }
     size.QuadPart = li.Length.QuadPart;
+
+    if (!DeviceIoControl (fh, IOCTL_DISK_GET_DRIVE_GEOMETRY, NULL, 0,
+                          (LPVOID) &dg, sizeof dg, &obsz, NULL)) {
+      nbdkit_error ("%s: DeviceIoControl/geometry: %lu", filename,
+                    GetLastError ());
+      CloseHandle (fh);
+      return NULL;
+    }
+    blocksize = dg.BytesPerSector;
   }
   else {
     /* Regular file.  Get the size. */
@@ -193,11 +207,13 @@ winfile_open (int readonly)
   h->is_readonly = readonly;
   h->is_volume = is_volume;
   h->is_sparse = is_sparse;
-  nbdkit_debug ("%s: size=%" PRIi64 " readonly=%s is_volume=%s is_sparse=%s",
+  h->blocksize = blocksize;
+  nbdkit_debug ("%s: size=%" PRIi64 " readonly=%s is_volume=%s is_sparse=%s blocksize=%d",
                 filename, h->size,
                 readonly ? "true" : "false",
                 is_volume ? "true" : "false",
-                is_sparse ? "true" : "false");
+                is_sparse ? "true" : "false",
+                blocksize);
   return h;
 }
 
@@ -267,7 +283,16 @@ winfile_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
 
   /* XXX Will fail weirdly if count is larger than 32 bits. */
   if (!ReadFile (h->fh, buf, count, &r, &ovl)) {
-    nbdkit_error ("%s: ReadFile: %lu", filename, GetLastError ());
+    int lasterror = GetLastError();
+    nbdkit_error ("%s: ReadFile: %lu (offset: %llx count: %d",
+                  filename, lasterror, offset, count);
+    if (lasterror == ERROR_INVALID_PARAMETER &&
+        h->blocksize == 4096 &&
+        (! IS_ALIGNED (offset, 4096) || ! IS_ALIGNED (count, 4096))) {
+      nbdkit_error ("%s: ReadFile: possible unaligned read on 4k raw device, "
+                    "consider --filter=blocksize",
+                    filename);
+    }
     return -1;
   }
   return 0;
@@ -440,6 +465,22 @@ winfile_extents (void *handle, uint32_t count, uint64_t offset,
   return 0;
 }
 
+static int
+winfile_block_size (void *handle,
+                   uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
+{
+  struct handle *h = handle;
+  if (h->blocksize == 1) {
+    *minimum = *preferred = *maximum = 0;
+  } else {
+    *minimum = h->blocksize;
+    /* minimum above is what's essential.  Set the others to sane defaults */
+    *preferred = 32 * 1024;
+    *maximum = 32 * 1024 * 1024;
+  }
+  return 0;
+}
+
 #define THREAD_MODEL NBDKIT_THREAD_MODEL_PARALLEL
 
 static struct nbdkit_plugin plugin = {
@@ -463,6 +504,7 @@ static struct nbdkit_plugin plugin = {
   .can_extents       = winfile_can_extents,
   .close             = winfile_close,
   .get_size          = winfile_get_size,
+  .block_size        = winfile_block_size,
   .pread             = winfile_pread,
   .pwrite            = winfile_pwrite,
   .flush             = winfile_flush,
