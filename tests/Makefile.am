@@ -1902,6 +1902,10 @@ test_gzip_SOURCES = test-gzip.c test.h requires.c requires.h
 test_gzip_CFLAGS = $(WARNINGS_CFLAGS) $(LIBGUESTFS_CFLAGS)
 test_gzip_LDADD = libtest.la $(LIBGUESTFS_LIBS)
 
+# indexed-gzip filter tests.
+TESTS += test-indexed-gzip-filter.sh
+EXTRA_DIST += test-indexed-gzip-filter.sh
+
 # ip filter test.
 TESTS += \
 	test-ip-filter.sh \
