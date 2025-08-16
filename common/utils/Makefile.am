@@ -66,9 +66,11 @@ libutils_la_CPPFLAGS = \
 libutils_la_CFLAGS = \
 	$(WARNINGS_CFLAGS) \
 	$(PTHREAD_CFLAGS) \
+	$(ZLIB_CFLAGS) \
 	$(NULL)
 libutils_la_LIBADD = \
 	$(PTHREAD_LIBS) \
+	$(ZLIB_LIBS) \
 	$(NULL)
 
 # Generate the code to map Winsock errors to errno codes.
