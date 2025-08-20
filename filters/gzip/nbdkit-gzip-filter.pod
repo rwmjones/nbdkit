@@ -25,9 +25,11 @@ The filter only allows read-only connections.
 
 B<Note> that gzip files are not very good for random access in large
 files because seeking to a position in the gzip file involves
-decompressing all data before that point in the file.  A more
-practical method to compress large disk images is to use L<xz(1)>
-or L<plzip(1)>.  Both L<nbdkit-xz-filter(1)> and L<nbdkit-lzip-filter(1)>
+decompressing all data before that point in the file.
+L<nbdkit-indexed-gzip-filter(1)> is an alternate filter to this one
+which builds an index file, which can mitigate this problem.  Another
+method to compress large disk images is to use L<xz(1)> or
+L<plzip(1)>.  Both L<nbdkit-xz-filter(1)> and L<nbdkit-lzip-filter(1)>
 support block-level decompression if the file was compressed using the
 right options.
 
@@ -74,6 +76,7 @@ from C<nbdkit-gzip-plugin> which first appeared in nbdkit 1.0.
 L<nbdkit-bzip2-filter(1)>,
 L<nbdkit-curl-plugin(1)>,
 L<nbdkit-file-plugin(1)>,
+L<nbdkit-indexed-gzip-filter(1)>,
 L<nbdkit-lzip-filter(1)>,
 L<nbdkit-tar-filter(1)>,
 L<nbdkit-xz-filter(1)>,

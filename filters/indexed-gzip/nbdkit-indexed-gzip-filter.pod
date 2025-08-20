@@ -1,7 +1,6 @@
 =head1 NAME
 
-nbdkit-indexed-gzip-filter - access .gz contents without an overbearing
-system resource penalty
+nbdkit-indexed-gzip-filter - access .gz contents efficiently
 
 =head1 SYNOPSIS
 
@@ -10,28 +9,26 @@ system resource penalty
 
 =head1 DESCRIPTION
 
-C<nbdkit-indexed-gzip-filter> is a filter for nbdkit that provides fast and
-efficient random-access to gzip-compressed data.
+C<nbdkit-indexed-gzip-filter> is a filter for nbdkit that provides
+fast and efficient random-access to gzip-compressed data.
 
-The standard L<nbdkit-gzip-filter(1)> decompresses the entire archive to a
-temporary file, which means you need to have enough storage or memory to
-store the complete uncompressed input. Other nbdkit modules (such as the
-L<nbdkit-split-plugin(1)> and the L<nbdkit-truncate-filter(1)>) don't have
-any such overbearing penalty around system resources.
+The standard L<nbdkit-gzip-filter(1)> decompresses the entire archive
+to a temporary file, which means you need to have enough storage or
+memory to store the complete uncompressed input.
 
-With this filter, the entire archive still needs to be decompressed once,
-but only an index file needs to be stored in storage or memory, which
-(depending on user-specified distance between index points) may be 0.3% to
-3% of the size of the uncompressed archive.
+With this filter, the entire archive still needs to be decompressed
+once, but only an index file needs to be stored in storage or memory,
+which (depending on user-specified distance between index points) may
+be 0.3% to 3% of the size of the uncompressed archive.
 
 =head1 PARAMETERS
 
-=over 2
+=over 4
 
 =item B<gzip-index-path=>PATH
 
-Path to the complete gzip index file (created if it doesn't exist, reused if
-it does).
+Path to the complete gzip index file (created if it doesn't exist,
+reused if it does).
 
 This parameter is required.
 
@@ -43,9 +40,9 @@ A span of 10M produces an index file of eg, ~0.3% of uncompressed input
 
 A span of 1M produces an index file of eg, ~3% of uncompressed input.
 
-Smaller span improves random-access performance, since on average it means
-fewer bytes to decompress until reaching the requested byte (with the
-trade-off of a larger index file).
+Smaller span improves random-access performance, since on average it
+means fewer bytes to decompress until reaching the requested byte
+(with the trade-off of a larger index file).
 
 =back
 
