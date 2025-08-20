@@ -60,6 +60,8 @@
 // use of pointers in the state. The approach here allows for storage of the
 // index in a file.
 
+#include <config.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

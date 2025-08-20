@@ -54,7 +54,6 @@
 #include "pread.h"
 #include "minmax.h"
 
-
 /* NBDkit filter handle containing the index */
 struct handle {
     struct deflate_index *index;

@@ -31,7 +31,6 @@
  */
 
 #include <config.h>
-#include <errno.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +40,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include <unistd.h>
 #include <assert.h>
 #include <limits.h>
@@ -309,7 +309,8 @@ indexed_gzip_pread(nbdkit_next *next, void *handle,
         default:
             //
             *err = EIO;
-            nbdkit_error(FILTER_NAME ": error %ld while extracting value\n", len);
+            nbdkit_error(FILTER_NAME ": error %jd while extracting value\n",
+                         (intmax_t) len);
         }
         return -1;
     }

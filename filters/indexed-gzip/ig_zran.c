@@ -2,7 +2,9 @@
  * Copyright (C) 2005, 2012, 2018, 2023, 2024 Mark Adler
  * Copyright (C) 2025 Shasheen Ediriweera
  * For conditions of distribution and use, see copyright notice in zlib.h
- * Version 1.6  2 Aug 2024  Mark Adler */
+ * Version 1.6  2 Aug 2024  Mark Adler
+ */
+
 #include <config.h>
 
 #include <stdio.h>
@@ -33,8 +35,9 @@
 int ig_deflate_index_build(nbdkit_next *next, void* handle, off_t span, int* nbdkit_err) {
     struct handle *h = handle;
 
-    nbdkit_debug("ig_deflate_index_build: starting with span=%ld, compressed_size=%lu",
-                 span, h->compressed_size);
+    nbdkit_debug("ig_deflate_index_build: "
+                 "starting with span=%jd, compressed_size=%" PRIu64,
+                 (intmax_t) span, h->compressed_size);
 
     // Create and initialize the index list.
     struct deflate_index *index = malloc(sizeof(struct deflate_index));
@@ -67,7 +70,11 @@ int ig_deflate_index_build(nbdkit_next *next, void* handle, off_t span, int* nbd
         // Print how much of the file has been decompressed, for external applications to track progress of this long-lived operation
         float new_progress = (float)totin / (float)h->compressed_size;
         if (new_progress - decompression_progress > progress_print_threshold) {
-            nbdkit_debug("ig_deflate_index_extract: total_in=%ld, compressed_size=%ld, progress=%f", index->strm.total_in, h->compressed_size, decompression_progress);
+            nbdkit_debug("ig_deflate_index_extract: "
+                         "total_in=%ld, compressed_size=%" PRIu64 ", "
+                         "progress=%f",
+                         index->strm.total_in, h->compressed_size,
+                         decompression_progress);
             decompression_progress = new_progress;
         }
 
@@ -144,8 +151,9 @@ int ig_deflate_index_build(nbdkit_next *next, void* handle, off_t span, int* nbd
             // very start for the first access point, or there has been span or
             // more uncompressed bytes since the last access point, so we want
             // to add an access point here.
-            nbdkit_debug("ig_deflate_index_build: adding access point at totout=%ld, have=%d",
-                         totout, index->have);
+            nbdkit_debug("ig_deflate_index_build: "
+                         "adding access point at totout=%jd, have=%d",
+                         (intmax_t) totout, index->have);
             index = add_point(index, totin - index->strm.avail_in, totout, beg,
                               win);
             if (index == NULL) {
@@ -184,8 +192,9 @@ int ig_deflate_index_build(nbdkit_next *next, void* handle, off_t span, int* nbd
     index->mode = mode;
     index->length = totout;
     h->index = index;
-    nbdkit_debug("ig_deflate_index_build: Successfully completed indexation, have=%d, length=%ld",
-                 index->have, totout);
+    nbdkit_debug("ig_deflate_index_build: "
+                 "successfully completed indexation, have=%d, length=%jd",
+                 index->have, (intmax_t) totout);
     return index->have;
 }
 
@@ -194,7 +203,9 @@ ptrdiff_t ig_deflate_index_extract(nbdkit_next *next, void *handle, off_t offset
     struct handle *h = handle;
     struct deflate_index* index = h->index;
 
-    nbdkit_debug("ig_deflate_index_extract: starting with offset=%ld, len=%zu", offset, len);
+    nbdkit_debug("ig_deflate_index_extract: "
+                 "starting with offset=%jd, len=%zu",
+                 (intmax_t) offset, len);
 
     // Do a quick sanity check on the index.
     if (index == NULL || index->have < 1 || index->list[0].out != 0 ||
@@ -206,8 +217,10 @@ ptrdiff_t ig_deflate_index_extract(nbdkit_next *next, void *handle, off_t offset
 
     // If nothing to extract, return zero bytes extracted.
     if (len == 0 || offset < 0 || offset >= index->length) {
-        nbdkit_debug("ig_deflate_index_extract: nothing to extract - len=%zu, offset=%ld, index->length=%ld",
-                     len, offset, index->length);
+        nbdkit_debug("ig_deflate_index_extract: "
+                     "nothing to extract - len=%zu, offset=%jd, "
+                     "index->length=%jd",
+                     len, (intmax_t) offset, (intmax_t) index->length);
         return 0;
     }
 
@@ -223,8 +236,10 @@ ptrdiff_t ig_deflate_index_extract(nbdkit_next *next, void *handle, off_t offset
     }
     point += lo;
 
-    nbdkit_debug("ig_deflate_index_extract: found access point %d - point->in=%ld, point->out=%ld, point->bits=%d",
-                 lo, point->in, point->out, point->bits);
+    nbdkit_debug("ig_deflate_index_extract: "
+                 "found access point %d - point->in=%jd, point->out=%jd, "
+                 "point->bits=%d",
+                 lo, (intmax_t) point->in, (intmax_t) point->out, point->bits);
 
     // Initialize the input file and prime the inflate engine to start there.
     off_t start_byte = point->in - (point->bits ? 1 : 0);
@@ -232,7 +247,9 @@ ptrdiff_t ig_deflate_index_extract(nbdkit_next *next, void *handle, off_t offset
     index->strm.avail_in = 0;
     int ret = inflateReset2(&index->strm, RAW);
     index->strm.total_in = start_byte;
-    nbdkit_debug("ig_deflate_index_extract: inflateReset2 returned %d, start_byte=%ld", ret, start_byte);
+    nbdkit_debug("ig_deflate_index_extract: "
+                 "inflateReset2 returned %d, start_byte=%jd",
+                 ret, (intmax_t) start_byte);
     if (ret != Z_OK)
         return ret;
     if (point->bits) {
@@ -248,7 +265,9 @@ ptrdiff_t ig_deflate_index_extract(nbdkit_next *next, void *handle, off_t offset
     offset -= point->out;       // number of bytes to skip to get to offset
     size_t left = len;          // number of bytes left to read after offset
 
-    nbdkit_debug("ig_deflate_index_extract: adjusted offset=%ld, left=%zu", offset, left);
+    nbdkit_debug("ig_deflate_index_extract: "
+                 "adjusted offset=%jd, left=%zu",
+                 (intmax_t) offset, left);
 
     do {
         if (offset) {
@@ -362,7 +381,8 @@ ptrdiff_t ig_deflate_index_extract(nbdkit_next *next, void *handle, off_t offset
 
     // Return the number of uncompressed bytes read into buf, or the error.
     ptrdiff_t result = ret == Z_OK || ret == Z_STREAM_END ? len - left : ret;
-    nbdkit_debug("ig_deflate_index_extract: completed with result=%ld, ret=%d, len=%zu, left=%zu",
+    nbdkit_debug("ig_deflate_index_extract: "
+                 "completed with result=%td, ret=%d, len=%zu, left=%zu",
                  result, ret, len, left);
     return result;
 }
