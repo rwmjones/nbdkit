@@ -464,8 +464,10 @@ nbdkit_parse_delay (const char *what, const char *str,
 
   if (rsec)
     *rsec = d;
-  if (rnsec)
-    *rnsec = (d - *rsec) * 1000000000.;
+  if (rnsec) {
+    long m = lrint ((d - *rsec) * 1000000000.);
+    *rnsec = m;
+  }
 
   return 0;
 }
