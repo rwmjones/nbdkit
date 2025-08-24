@@ -45,6 +45,8 @@ cfg = {}
 class TestAPI(unittest.TestCase):
 
     def test_parse_size(self):
+        test = "test_parse_size"
+
         self.assertEqual(nbdkit.parse_size('511'), 511)
         self.assertEqual(nbdkit.parse_size('7k'), 7*1024)
         self.assertEqual(nbdkit.parse_size('17M'), 17*1024*1024)
