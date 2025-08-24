@@ -82,10 +82,26 @@ class TestAPI(unittest.TestCase):
         with self.assertRaises(ValueError):
             nbdkit.parse_delay(test, 'bar')
 
+    def test_parse_bool(self):
+        test = "test_parse_bool"
+
+        self.assertEqual(nbdkit.parse_bool("true"), True)
+        self.assertEqual(nbdkit.parse_bool("yes"), True)
+        self.assertEqual(nbdkit.parse_bool("no"), False)
+        self.assertEqual(nbdkit.parse_bool("n"), False)
+        self.assertEqual(nbdkit.parse_bool("0"), False)
+
+        with self.assertRaises(TypeError):
+            nbdkit.parse_bool(123)
+
+        with self.assertRaises(ValueError):
+            nbdkit.parse_bool("abc")
+
 
 TestAPI().test_parse_size()
 TestAPI().test_parse_probability()
 TestAPI().test_parse_delay()
+TestAPI().test_parse_bool()
 
 
 def config(k, v):

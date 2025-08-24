@@ -26,6 +26,11 @@ In L<nbdkit-ocaml-plugin(3)>:
 
  NBDKit.parse_bool : string -> bool
 
+In L<nbdkit-python-plugin(3)>:
+
+ import nbdkit
+ bool = nbdkit.parse_bool(str)
+
 In L<nbdkit-rust-plugin(3)>:
 
  use nbdkit::*;

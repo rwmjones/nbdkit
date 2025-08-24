@@ -139,6 +139,11 @@ C<False> if the connection is plaintext.
 
 Sleep for seconds and nanoseconds.
 
+=head3 C<nbdkit.parse_bool(str)>
+
+Parse a human-readable boolean (such as "yes" or "false"), returning
+C<True> or C<False>.  Wraps the L<nbdkit_parse_bool(3)> function.
+
 =head3 C<nbdkit.parse_delay(what, str)>
 
 Parse a delay or sleep (such as "10ms") into a pair (sec, nsec).
