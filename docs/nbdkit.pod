@@ -319,7 +319,7 @@ I<-s>, etc.)
 
 =item B<--log=null>
 
-=item B<--log=/path>
+=item B<--log=>/path
 
 =item B<--log=default>
 
