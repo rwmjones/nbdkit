@@ -404,11 +404,8 @@ main (int argc, char *argv[])
       break;
 
     case LONG_OPTIONS_OPTION:
-      for (i = 0; long_options[i].name != NULL; ++i) {
-        if (strcmp (long_options[i].name, "long-options") != 0 &&
-            strcmp (long_options[i].name, "short-options") != 0)
-          printf ("--%s\n", long_options[i].name);
-      }
+      for (i = 0; long_options[i].name != NULL; ++i)
+        printf ("--%s\n", long_options[i].name);
       cleanup_random_fifo ();
       exit (EXIT_SUCCESS);
 

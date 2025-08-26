@@ -338,6 +338,13 @@ L<nbdkit_error(3)> or L<nbdkit_verror(3)>.
 Debug messages (I<-v>/I<--verbose>) always go to standard error and
 are never sent to the system log.
 
+=item B<--long-options>
+
+List the long command line options (those starting with I<-->)
+supported by this build of nbdkit.  The options are listed one per
+line, and then nbdkit exits.  This is used mainly to implement tab
+completion.  See also I<--short-options>.
+
 =item B<--mask-handshake=>MASK
 
 This option can be used to mask off particular global features which
@@ -465,6 +472,13 @@ that the socket and filesystem labels are different.
 
  nbdkit -U /tmp/sock --selinux-label=system_u:object_r:svirt_socket_t:s0 ...
  chcon system_u:object_r:svirt_image_t:s0 /tmp/sock
+
+=item B<--short-options>
+
+List the short command line options (single letter options starting
+with I<->) supported by this build of nbdkit.  The options are listed
+one per line, and then nbdkit exits.  This is used mainly to implement
+tab completion.  See also I<--long-options>.
 
 =item B<-s>
 
