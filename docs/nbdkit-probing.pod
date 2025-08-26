@@ -12,6 +12,12 @@ nbdkit-probing - how to probe for nbdkit configuration and plugins
 
 =for paragraph
 
+ nbdkit --short-options
+
+ nbdkit --long-options
+
+=for paragraph
+
  nbdkit PLUGIN --dump-plugin
 
 =for paragraph
@@ -75,6 +81,15 @@ earlier versions.
 
 You can also probe the minimum version using L<pkg-config(1)>.  See
 L<nbdkit-plugin(3)/PKG-CONFIG/PKGCONF>.
+
+=head2 Find out if nbdkit implements a command line option
+
+To test if a specific single letter option (like I<-D>) or long option
+(like I<--name>) is supported by nbdkit, use:
+
+ nbdkit --short-options | grep -sq '^-D$'
+
+ nbdkit --long-options | grep -sq '^--name$'
 
 =head2 Query information about a particular plugin
 
