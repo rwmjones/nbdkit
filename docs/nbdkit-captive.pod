@@ -6,6 +6,7 @@ reliably cleaned up
 =head1 SYNOPSIS
 
  nbdkit PLUGIN [...] [-e|--exportname EXPORTNAME] \
+                     --name NAME \
                      --run 'COMMAND ARGS ...'
 
 =for paragraph
@@ -177,6 +178,13 @@ compatible way is:
 In nbdkit E<ge> 1.34, S<C<nbdkit --dump-config>> prints either
 C<exit_with_parent=yes> or C<exit_with_parent=no> but earlier versions
 did not have this.
+
+=head1 nbdkit I<--name>
+
+The I<--name=NAME> option is useful with captive nbdkit instances, as
+it allows you to give a name to each instance.  This appears in error
+and debug messages, making it possible to distinguish between nbdkit
+instances in log files.
 
 =head1 SEE ALSO
 

@@ -117,6 +117,7 @@ enum log_to log_to = LOG_TO_DEFAULT; /* --log */
 const char *log_to_file;        /* --log=/path */
 FILE *log_to_fp;                /* --log=/path */
 unsigned mask_handshake = ~0U;  /* --mask-handshake */
+const char *process_name;       /* --name */
 bool newstyle = true;           /* false = -o, true = -n */
 bool no_mc;                     /* --no-meta-contexts */
 bool no_sr;                     /* --no-sr */
@@ -417,6 +418,10 @@ main (int argc, char *argv[])
         exit (EXIT_FAILURE);
       break;
 
+    case NAME_OPTION:
+      process_name = optarg;
+      break;
+
     case NO_MC_OPTION:
       no_mc = true;
       break;
@@ -670,7 +675,7 @@ main (int argc, char *argv[])
     /* If we will or might use syslog. */
   case LOG_TO_DEFAULT:
   case LOG_TO_SYSLOG:
-    openlog (program_name, LOG_PID, 0);
+    openlog (process_name ? : program_name, LOG_PID, 0);
     break;
 
   case LOG_TO_FILE:

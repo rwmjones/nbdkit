@@ -56,7 +56,10 @@ log_fp_verror (FILE *fp, int orig_errno, const char *fs, va_list args)
   tty = isatty (fileno (fp));
   if (tty) ansi_force_colour (ANSI_FG_BRIGHT_RED, fp);
 
-  fprintf (fp, "%s: ", program_name);
+  fprintf (fp, "%s", program_name);
+  if (process_name)             /* --name parameter */
+    fprintf (fp, "%s: ", process_name);
+  fprintf (fp, ": ");
 
   if (name) {
     fprintf (fp, "%s", name);

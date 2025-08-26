@@ -344,6 +344,14 @@ This option can be used to mask off particular global features which
 are advertised during new-style handshake (defaulting to all supported
 bits set).  See L<nbdkit-protocol(1)>.
 
+=item B<--name>=NAME
+
+Name this nbdkit instance.  This allows you to associate names with
+nbdkit processes, if you have several.  The name appears in error and
+debug messages, but is otherwise unused by nbdkit.  The name can be
+any string, but usually a short string containing only letters,
+numbers and common punctuation is best.
+
 =item B<-n>
 
 =item B<--new-style>

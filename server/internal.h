@@ -169,6 +169,7 @@ extern enum log_to log_to;
 extern const char *log_to_file;
 extern FILE *log_to_fp;
 extern unsigned mask_handshake;
+extern const char *process_name;
 extern bool newstyle;
 extern bool no_mc;
 extern bool no_sr;

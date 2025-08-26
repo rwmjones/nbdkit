@@ -53,7 +53,10 @@ prologue (FILE *fp)
   const char *name = threadlocal_get_name ();
   size_t instance_num = threadlocal_get_instance_num ();
 
-  fprintf (fp, "%s: ", program_name);
+  fprintf (fp, "%s", program_name);
+  if (process_name)             /* --name parameter */
+    fprintf (fp, "[%s]", process_name);
+  fprintf (fp, ": ");
 
   if (name) {
     fprintf (fp, "%s", name);

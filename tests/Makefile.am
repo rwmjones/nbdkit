@@ -268,6 +268,8 @@ TESTS += \
 	test-version-example1.sh \
 	test-version-plugin.sh \
 	test-version-filter.sh \
+	test-name.sh \
+	test-no-name.sh \
 	test-dump-plugin-example1.sh \
 	test-dump-plugin.sh \
 	test-dump-plugin-example2.sh \
@@ -369,9 +371,11 @@ EXTRA_DIST += \
 	test-log-to-file.sh \
 	test-log-to-file-append.sh \
 	test-long-name.sh \
+	test-name.sh \
 	test-nbd-client-tls.sh \
 	test-nbd-client.sh \
 	test-nbdkit-backend-debug.sh \
+	test-no-name.sh \
 	test-no-parameters.sh \
 	test-not-linked-to-libssl.sh \
 	test-plugin-docs.sh \
