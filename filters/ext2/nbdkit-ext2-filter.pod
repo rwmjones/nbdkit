@@ -37,11 +37,6 @@ I<not> guarantee that no writes are made to the filesystem.  In
 particular we may have to replay the ext3 journal in order to open a
 filesystem even read-only.
 
-The filter does I<not> support multiple parallel connections, because
-there is a risk of corrupting the filesystem (as if the filesystem was
-mounted by multiple machines).  If a second connection is made to
-nbdkit, it will block until the first connection closes.
-
 The filter is implemented using the ext2fs library which is provided
 in most Linux distros, and also available as part of the e2fsprogs
 project.
