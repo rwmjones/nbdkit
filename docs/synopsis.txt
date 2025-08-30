@@ -4,13 +4,13 @@ nbdkit [-4|--ipv4-only] [-6|--ipv6-only]
        [--filter=FILTER ...] [-f|--foreground]
        [-g|--group GROUP] [-i|--ipaddr IPADDR] [--keepalive]
        [--log=default|stderr|syslog|null|/path]
-       [--long-options] [--mask-handshake=MASK] [--name=NAME]
+       [--mask-handshake=MASK] [--name=NAME]
        [-n|--newstyle] [--no-mc|--no-meta-contexts]
        [--no-sr|--no-structured-replies] [-o|--oldstyle]
        [-P|--pidfile PIDFILE] [-p|--port PORT] [--print-uri]
        [-r|--readonly] [--run 'COMMAND ARGS ...']
-       [--selinux-label=LABEL] [--short-options]
-       [-s|--single] [--swap] [-t|--threads THREADS]
+       [--selinux-label=LABEL] [-s|--single]
+       [--swap] [-t|--threads THREADS]
        [--timeout=TIMEOUT] [--tls=off|on|require]
        [--tls-certificates=/path/to/certificates]
        [--tls-psk=/path/to/pskfile] [--tls-verify-peer]
@@ -26,3 +26,5 @@ nbdkit PLUGIN --dump-plugin
 nbdkit --help
 
 nbdkit [-V|--version]
+
+nbdkit [--short-options|--long-options]
