@@ -10,11 +10,11 @@ nbdkit-vddk-plugin - nbdkit VMware VDDK plugin
              [create=true] [create-adapter-type=ide|scsi-buslogic|...]
              [create-hwversion=workstation4|workstation5|...]
              [create-size=...] [create-type=monolithic-sparse|...]
-             [libdir=LIBRARY]
-             [nfchostport=PORT] [single-link=true]
+             [libdir=LIBRARY] [nfchostport=PORT]
              [password=PASSWORD | password=- | password=+FILENAME |
               password=-FD]
-             [port=PORT] [server=HOSTNAME] [snapshot=MOREF]
+             [port=PORT] [server=HOSTNAME]
+             [single-link=true] [snapshot=MOREF]
              [thumbprint=THUMBPRINT] [transports=MODE:MODE:...]
              [unbuffered=true] [user=USERNAME] [vm=moref=ID]
  nbdkit vddk --dump-plugin
