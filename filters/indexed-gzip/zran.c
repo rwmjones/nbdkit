@@ -136,7 +136,8 @@ int deflate_index_serialize(struct deflate_index *index, FILE *out) {
         return Z_ERRNO;
 
     // Write each access point
-    for (int i = 0; i < index->have; i++) {
+    int i;
+    for (i = 0; i < index->have; i++) {
         point_t *point = &index->list[i];
 
         // Write the point metadata
@@ -209,7 +210,8 @@ struct deflate_index *deflate_index_deserialize(FILE *in) {
     }
 
     // Read each access point
-    for (int i = 0; i < index->have; i++) {
+    int i;
+    for (i = 0; i < index->have; i++) {
         point_t *point = &index->list[i];
 
         // Read the point metadata
@@ -218,7 +220,8 @@ struct deflate_index *deflate_index_deserialize(FILE *in) {
             fread(&point->bits, sizeof(int), 1, in) != 1 ||
             fread(&point->dict, sizeof(unsigned), 1, in) != 1) {
             // Clean up partial allocation
-            for (int j = 0; j < i; j++)
+            int j;
+            for (j = 0; j < i; j++)
                 free(index->list[j].window);
             free(index->list);
             free(index);
@@ -230,7 +233,8 @@ struct deflate_index *deflate_index_deserialize(FILE *in) {
             point->bits < 0 || point->bits > 7 ||
             point->dict > WINSIZE) {
             // Clean up partial allocation
-            for (int j = 0; j < i; j++)
+            int j;
+            for (j = 0; j < i; j++)
                 free(index->list[j].window);
             free(index->list);
             free(index);
@@ -242,7 +246,8 @@ struct deflate_index *deflate_index_deserialize(FILE *in) {
             point->window = malloc(point->dict);
             if (point->window == NULL) {
                 // Clean up partial allocation
-                for (int j = 0; j < i; j++)
+                int j;
+                for (j = 0; j < i; j++)
                     free(index->list[j].window);
                 free(index->list);
                 free(index);
@@ -252,7 +257,8 @@ struct deflate_index *deflate_index_deserialize(FILE *in) {
             if (fread(point->window, 1, point->dict, in) != point->dict) {
                 // Clean up partial allocation
                 free(point->window);
-                for (int j = 0; j < i; j++)
+                int j;
+                for (j = 0; j < i; j++)
                     free(index->list[j].window);
                 free(index->list);
                 free(index);
