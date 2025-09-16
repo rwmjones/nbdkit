@@ -1,6 +1,6 @@
 =head1 NAME
 
-nbdkit - toolkit for creating Network Block Device (NBD) servers
+nbdkit - network block device (NBD) server
 
 =head1 SYNOPSIS
 
@@ -12,10 +12,9 @@ Network Block Device (NBD) is a network protocol for accessing block
 devices over the network.  Block devices are hard disks and things
 that behave like hard disks such as disk images and virtual machines.
 
-nbdkit is both a toolkit for creating NBD servers from
-“unconventional” sources, and the name of an NBD server.  nbdkit ships
-with many plugins for performing common tasks like serving local
-files.
+nbdkit is an NBD server, and also a powerful toolkit for creating your
+own NBD servers from “unconventional” sources.  nbdkit ships with many
+plugins for performing common tasks like serving local files.
 
 =head2 Plugins and filters
 
