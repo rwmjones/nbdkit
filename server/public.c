@@ -73,10 +73,10 @@
 
 #include "array-size.h"
 #include "ascii-ctype.h"
-#include "ascii-string.h"
 #include "get_current_dir_name.h"
 #include "getline.h"
 #include "human-size.h"
+#include "parse-bool.h"
 #include "poll.h"
 #include "realpath.h"
 #include "strndup.h"
@@ -403,24 +403,13 @@ nbdkit_parse_probability (const char *what, const char *str,
 NBDKIT_DLL_PUBLIC int
 nbdkit_parse_bool (const char *str)
 {
-  if (!strcmp (str, "1") ||
-      !ascii_strcasecmp (str, "true") ||
-      !ascii_strcasecmp (str, "t") ||
-      !ascii_strcasecmp (str, "yes") ||
-      !ascii_strcasecmp (str, "y") ||
-      !ascii_strcasecmp (str, "on"))
-    return 1;
-
-  if (!strcmp (str, "0") ||
-      !ascii_strcasecmp (str, "false") ||
-      !ascii_strcasecmp (str, "f") ||
-      !ascii_strcasecmp (str, "no") ||
-      !ascii_strcasecmp (str, "n") ||
-      !ascii_strcasecmp (str, "off"))
-    return 0;
-
-  nbdkit_error ("could not decipher boolean (%s)", str);
-  return -1;
+  int r = parse_bool (str);
+  if (r == -1) {
+    nbdkit_error ("could not decipher boolean (%s)", str);
+    return -1;
+  }
+  else
+    return r;
 }
 
 /* Parse a delay or sleep. */
