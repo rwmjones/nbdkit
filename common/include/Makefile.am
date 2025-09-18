@@ -50,6 +50,7 @@ EXTRA_DIST = \
 	minmax.h \
 	nextnonzero.h \
 	once.h \
+	parse-bool.h \
 	random.h \
 	rounding.h \
 	static-assert.h \
