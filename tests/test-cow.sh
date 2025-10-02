@@ -39,7 +39,7 @@ requires_run
 requires_plugin linuxdisk
 requires guestfish --version
 requires_nbdcopy
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 requires $STAT --version
 
 sock=$(mktemp -u /tmp/nbdkit-test-sock.XXXXXX)
@@ -74,10 +74,10 @@ fi
 
 # If we have qemu-img, try the hairy rebase operation documented
 # in the nbdkit-cow-filter manual.
-if qemu-img --version >/dev/null 2>&1; then
-    qemu-img create -F raw -b nbd:unix:$sock -f qcow2 cow-diff.qcow2
-    time qemu-img rebase -F raw -b cow-base.img -f qcow2 cow-diff.qcow2
-    qemu-img info cow-diff.qcow2
+if "$QEMU_IMG" --version >/dev/null 2>&1; then
+    "$QEMU_IMG" create -F raw -b nbd:unix:$sock -f qcow2 cow-diff.qcow2
+    time "$QEMU_IMG" rebase -F raw -b cow-base.img -f qcow2 cow-diff.qcow2
+    "$QEMU_IMG" info cow-diff.qcow2
 
     # This checks the file we created exists.
     guestfish --ro -a cow-diff.qcow2 -m /dev/sda1 cat /hello

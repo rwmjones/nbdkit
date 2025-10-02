@@ -38,8 +38,9 @@ set -u
 requires_nbdcopy
 requires nbdsh --version
 requires_nbdsh_uri
-requires qemu-img --version
-requires bash -c 'qemu-img --help | grep -- --target-image-opts'
+requires "$QEMU_IMG" --version
+export QEMU_IMG
+requires bash -c '"$QEMU_IMG" --help | grep -- --target-image-opts'
 requires hexdump --version
 requires $TRUNCATE --version
 requires_filter luks
@@ -66,12 +67,12 @@ rm -f $encrypt_disk $plain_disk $pid $sock
 # starts with random plaintext.
 #
 # https://stackoverflow.com/a/44669936
-qemu-img create -f luks \
+"$QEMU_IMG" create -f luks \
          --object secret,data=123456,id=sec0 \
          -o key-secret=sec0 \
          $encrypt_disk 1M
 $TRUNCATE -s 1M $plain_disk
-qemu-img convert --target-image-opts -n \
+"$QEMU_IMG" convert --target-image-opts -n \
          --object secret,data=123456,id=sec0 \
          $plain_disk \
          driver=luks,file.filename=$encrypt_disk,key-secret=sec0
@@ -110,7 +111,7 @@ nbdsh -u "$uri" \
 
 # Use qemu to copy out the whole disk.  Note we called flush() above
 # so the disk should be synchronised.
-qemu-img convert --image-opts \
+"$QEMU_IMG" convert --image-opts \
          --object secret,data=123456,id=sec0 \
          driver=luks,file.filename=$encrypt_disk,key-secret=sec0 \
          $plain_disk

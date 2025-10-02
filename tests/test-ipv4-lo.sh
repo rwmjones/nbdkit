@@ -46,8 +46,8 @@ if is_windows; then
 fi
 
 requires ip -V
-requires qemu-img --version
-requires qemu-img info --image-opts driver=file,filename=functions.sh
+requires "$QEMU_IMG" --version
+requires "$QEMU_IMG" info --image-opts driver=file,filename=functions.sh
 
 rm -f ipv4lo.pid ipv4lo.out
 cleanup_fn rm -f ipv4lo.pid ipv4lo.out
@@ -66,7 +66,7 @@ kill -s 0 $pid
 # Check we can connect over the IPv4 loopback interface.
 ipv4_lo="$(ip -o -4 addr show scope host)"
 if test -n "$ipv4_lo"; then
-    qemu-img info --output=json \
+    "$QEMU_IMG" info --output=json \
         --image-opts "file.driver=nbd,file.host=127.0.0.1,file.port=$port" > ipv4lo.out
     cat ipv4lo.out
     grep -sq '"virtual-size": *104857600\b' ipv4lo.out

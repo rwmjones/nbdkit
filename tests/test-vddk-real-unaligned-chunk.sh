@@ -41,7 +41,7 @@ requires_run
 requires test "${vddkdir:-}" != ""
 requires test -d "$vddkdir"
 requires test -f "$vddkdir/lib64/libvixDiskLib.so"
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 requires_nbdinfo
 requires $TRUNCATE --version
 requires dd --version
@@ -63,7 +63,7 @@ mkdir $d
 # aligned to 128 sectors (chunk size).
 dd if=/dev/urandom of=$d/test.raw bs=512 count=$(( 3*128 ))
 $TRUNCATE -s $(( (4*128 + 3) * 512)) $d/test.raw
-qemu-img convert -f raw $d/test.raw -O vmdk $d/test.vmdk
+"$QEMU_IMG" convert -f raw $d/test.raw -O vmdk $d/test.vmdk
 
 # Read the map using VDDK.
 export d

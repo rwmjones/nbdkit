@@ -883,6 +883,12 @@ AC_CHECK_PROGS([CUT],[gnucut cut],[cut])
 AC_CHECK_PROGS([STAT],[gstat stat],[stat])
 AC_CHECK_PROGS([TRUNCATE],[gtruncate truncate],[truncate])
 
+dnl qemu-img is used by the tests to create the disk.  This might not
+dnl be present everywhere (eg. on i386), so check for it.  Individual
+dnl tests also need to check that qemu-img is present.
+AC_CHECK_PROGS([QEMU_IMG], [qemu-img], [no])
+AM_CONDITIONAL([HAVE_QEMU_IMG], [test "x$QEMU_IMG" != "xno"])
+
 HEADING([Checking for bash completion])
 
 dnl Bash completion.

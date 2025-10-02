@@ -38,7 +38,7 @@ set -u
 requires test -f disk
 requires guestfish --version
 requires_nbdinfo
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 requires qemu-nbd --version
 
 disk=nbd-qcow2-disk.qcow2
@@ -49,7 +49,7 @@ rm -f $files
 cleanup_fn rm -f $files
 
 # Create a qcow2 disk for testing.
-qemu-img convert -f raw disk -O qcow2 $disk
+"$QEMU_IMG" convert -f raw disk -O qcow2 $disk
 
 # Run qemu-nbd via nbdkit with the partition filter.
 start_nbdkit -P $pid -U $sock \

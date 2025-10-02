@@ -43,7 +43,7 @@ requires mkfs --version
 
 # Note we test both qemu-img info and nbdinfo in order to exercise the
 # lesser-used exportname paths in both tools.
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 requires_nbdinfo
 
 dir=$(mktemp -d /tmp/nbdkit-test-dir.XXXXXX)
@@ -72,13 +72,13 @@ test -f $dir/test
 errors=0
 for e in /bad bad/bad .bad . .. ./etc ; do
     if nbdinfo "nbd+unix:///$e?socket=$sock"; then ((errors++)) ||:; fi
-    if qemu-img info nbd:unix:$sock:exportname=$e; then ((errors++)) ||:; fi
+    if "$QEMU_IMG" info nbd:unix:$sock:exportname=$e; then ((errors++)) ||:; fi
     # QEMU 9.1 switched to glib to parse URIs, and this munges URIs
     # that contain ".", "..", and various other things:
     # https://gitlab.com/qemu-project/qemu/-/issues/2584
     # So we must skip URI-based tests for some URIs.
     if test "$e" != "." && test "$e" != ".." && test "$e" != "./etc"; then
-        if qemu-img info "nbd+unix:///$e?socket=$sock"
+        if "$QEMU_IMG" info "nbd+unix:///$e?socket=$sock"
         then ((errors++)) ||:; fi
     fi
 done

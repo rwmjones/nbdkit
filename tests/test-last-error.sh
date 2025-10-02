@@ -40,17 +40,17 @@ set -u
 
 requires_run
 requires_plugin eval
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 
 out=last-error.out
 rm -f $out
 cleanup_fn rm -f $out
 
-export out
+export out QEMU_IMG
 
 nbdkit eval \
        open=' echo EPERM Go Away >&2; exit 1 ' get_size=' echo 0 ' \
-       --run ' qemu-img info "$uri" > $out 2>&1 ||: '
+       --run ' "$QEMU_IMG" info "$uri" > $out 2>&1 ||: '
 cat $out
 
 grep "Go Away" $out

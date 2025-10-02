@@ -39,8 +39,8 @@ set -u
 
 requires_run
 requires jq --version
-requires qemu-img --version
-requires qemu-img map --help
+requires "$QEMU_IMG" --version
+requires "$QEMU_IMG" map --help
 
 out=test-extentlist.out
 input=test-extentlist.in
@@ -49,13 +49,15 @@ files="$out $input $expected"
 rm -f $files
 cleanup_fn rm $files
 
+export QEMU_IMG
+
 test ()
 {
     nbdkit -v -D extentlist.lookup=1 \
            -r \
            --filter=extentlist \
            null size=$1 extentlist=$input \
-           --run 'qemu-img map -f raw --output=json "$uri"' |
+           --run '"$QEMU_IMG" map -f raw --output=json "$uri"' |
         jq -c '.[] | {start:.start, length:.length, data:.data, zero:.zero}' \
            > $out
     diff -u $out $expected

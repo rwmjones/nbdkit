@@ -43,8 +43,8 @@ requires_filter tar
 requires_filter xz
 requires test -f disk
 requires tar --version
-requires qemu-img --version
-requires qemu-img info --output=json /dev/null
+requires "$QEMU_IMG" --version
+requires "$QEMU_IMG" info --output=json /dev/null
 requires jq --version
 requires $STAT --version
 requires xz --version
@@ -58,15 +58,17 @@ rm -f $files
 cleanup_fn rm -f $files
 
 # Create a tar file containing a known qcow2 file.
-qemu-img convert -f raw disk -O qcow2 $disk
+"$QEMU_IMG" convert -f raw disk -O qcow2 $disk
 tar cf $tar $disk
 xz --best --block-size=32768 $tar
+
+export QEMU_IMG
 
 # Run nbdkit.
 nbdkit file $tar_xz \
        --filter=tar tar-entry=$disk \
        --filter=xz \
-       --run 'qemu-img info --output=json "$uri"' > $out
+       --run '"$QEMU_IMG" info --output=json "$uri"' > $out
 cat $out
 
 # Check various fields in the input.

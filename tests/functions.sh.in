@@ -56,6 +56,7 @@ SOEXT="@SOEXT@"
 EXEEXT="@EXEEXT@"
 
 CUT="@CUT@"
+QEMU_IMG="@QEMU_IMG@"
 SED="@SED@"
 STAT="@STAT@"
 TRUNCATE="@TRUNCATE@"
@@ -226,9 +227,9 @@ define()
 # requires program [args]
 #
 # Check that ‘program [args]’ works.  If not, skip the test.
-# For example to check that qemu-img is available, do:
+# For example to check that 'jq' is available, do:
 #
-# requires qemu-img --version
+#   requires jq --version
 requires ()
 {
     ( "$@" ) </dev/null >/dev/null 2>&1 || {
@@ -256,12 +257,12 @@ requires_not ()
 # https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/SXDLSZ3GKXL6NDAKP4MPJ25IMHKN67X3/
 requires_ipv6_loopback ()
 {
-    requires qemu-img --version
+    requires "$QEMU_IMG" --version
 
     # This should fail with "Connection refused".  If IPv6 is broken
     # then it fails with "Address family for hostname not supported"
     # instead.  It's very unlikely that port 1 is open.
-    if LANG=C qemu-img info "nbd:[::1]:1" |& \
+    if LANG=C "$QEMU_IMG" info "nbd:[::1]:1" |& \
        grep -sq "Address family for hostname not supported"; then
         echo "$0: IPv6 loopback is not available, skipping this test"
         exit 77

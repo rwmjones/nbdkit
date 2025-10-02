@@ -35,7 +35,7 @@ set -e
 set -x
 set -u
 
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 requires_tls_psk
 
 # Does the nbd plugin support TLS?
@@ -63,7 +63,7 @@ start_nbdkit -P "$pid2" -U "$sock2" --tls=off nbd retry=10 \
     tls=require tls-psk="$pskfile" tls-username=qemu socket="$sock1"
 
 # Run unencrypted client in background, so that retry will be required
-qemu-img info --output=json -f raw "nbd+unix:///?socket=$sock2" \
+"$QEMU_IMG" info --output=json -f raw "nbd+unix:///?socket=$sock2" \
 	 > nbd-tls-psk.out &
 info_pid=$!
 sleep 1

@@ -39,7 +39,7 @@ requires_run
 requires test -f disk
 requires_nbdcopy
 requires_nbdinfo
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 requires cmp --version
 
 # Check nbdinfo supports the --is flag (not RHEL 8).
@@ -54,8 +54,8 @@ rm -f $files
 cleanup_fn rm -f $files
 
 # Create a qcow2 disk for testing.
-qemu-img convert -f raw disk -O qcow2 $qcow2 -c
-#qemu-img convert -f raw disk -O qcow2 $qcow2 -c -o compression_type=zstd
+"$QEMU_IMG" convert -f raw disk -O qcow2 $qcow2 -c
+#"$QEMU_IMG" convert -f raw disk -O qcow2 $qcow2 -c -o compression_type=zstd
 
 # Start nbdkit.
 start_nbdkit -P $pid -U $sock \

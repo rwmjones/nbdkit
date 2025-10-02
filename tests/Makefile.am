@@ -108,6 +108,7 @@ endif
 # skip if not present.
 if !IS_WINDOWS
 if HAVE_MKE2FS_WITH_D
+if HAVE_QEMU_IMG
 
 check_DATA += disk disk.tar
 CLEANFILES += disk disk.tar
@@ -117,7 +118,7 @@ disk:
 	mkdir disk.tmp
 	echo -n "hello,world" > disk.tmp/hello.txt
 	$(top_builddir)/nbdkit$(EXEEXT) -fv linuxdisk disk.tmp size=100M \
-	    --run 'qemu-img convert "$$uri" $@-t'
+	    --run '@QEMU_IMG@ convert "$$uri" $@-t'
 	rm -rf disk.tmp
 	mv $@-t $@
 
@@ -172,6 +173,7 @@ disk.tar.lz: disk.tar chunked-lzip.sh
 endif HAVE_LZIP
 EXTRA_DIST += chunked-lzip.sh
 
+endif HAVE_QEMU_IMG
 endif HAVE_MKE2FS_WITH_D
 endif !IS_WINDOWS
 
@@ -1855,6 +1857,7 @@ TESTS += test-exportname.sh
 EXTRA_DIST += test-exportname.sh
 
 # ext2 filter test.
+if HAVE_QEMU_IMG
 if HAVE_MKE2FS_WITH_D
 if HAVE_EXT2
 
@@ -1884,6 +1887,7 @@ ext2.img: disk test-ext2-exportname.sh
 
 endif HAVE_EXT2
 endif HAVE_MKE2FS_WITH_D
+endif HAVE_QEMU_IMG
 
 # extentlist filter test.
 TESTS += test-extentlist.sh

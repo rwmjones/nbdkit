@@ -38,7 +38,7 @@ set -u
 requires_run
 requires test -f disk
 requires_nbdinfo
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 requires qemu-nbd --version
 requires diff --version
 
@@ -54,7 +54,7 @@ rm -f $files
 cleanup_fn rm -f $files
 
 # Create a qcow2 disk for testing.
-qemu-img convert -f raw disk -O qcow2 $qcow2 -c
+"$QEMU_IMG" convert -f raw disk -O qcow2 $qcow2 -c
 
 # Get the expected map from qemu-nbd.
 nbdinfo --map -- [ qemu-nbd -r -f qcow2 $qcow2 ] > $map_expected
