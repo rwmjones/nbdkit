@@ -38,7 +38,7 @@ set -e
 set -x
 set -u
 
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 
 sock=$(mktemp -u /tmp/nbdkit-test-sock.XXXXXX)
 files="truncate3.out truncate3.pid $sock"
@@ -51,7 +51,7 @@ start_nbdkit -P truncate3.pid -U $sock \
        pattern 5G \
        round-up=512
 
-qemu-img info --output=json nbd:unix:$sock > truncate3.out
+"$QEMU_IMG" info --output=json nbd:unix:$sock > truncate3.out
 if ! grep '"virtual-size": *5368709120' truncate3.out; then
     echo "$0: unexpected output from truncate3 regression test:"
     cat truncate3.out

@@ -46,8 +46,8 @@ if is_windows; then
 fi
 
 requires ip -V
-requires qemu-img --version
-requires qemu-img info --image-opts driver=file,filename=functions.sh
+requires "$QEMU_IMG" --version
+requires "$QEMU_IMG" info --image-opts driver=file,filename=functions.sh
 requires_ipv6_loopback
 
 rm -f ipv6lo.pid ipv6lo.out
@@ -67,7 +67,7 @@ kill -s 0 $pid
 # Check we can connect over the IPv6 loopback interface.
 ipv6_lo="$(ip -o -6 addr show scope host)"
 if test -n "$ipv6_lo"; then
-    qemu-img info --output=json \
+    "$QEMU_IMG" info --output=json \
         --image-opts "file.driver=nbd,file.host=::1,file.port=$port" > ipv6lo.out
     cat ipv6lo.out
     grep -sq '"virtual-size": *104857600\b' ipv6lo.out

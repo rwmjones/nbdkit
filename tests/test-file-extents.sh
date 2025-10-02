@@ -42,8 +42,8 @@ set -u
 requires_run
 requires test -f disk
 requires jq --version
-requires qemu-img --version
-requires qemu-img map --help
+requires "$QEMU_IMG" --version
+requires "$QEMU_IMG" map --help
 
 # The file plugin must support reading file extents.
 requires sh -c 'nbdkit file --dump-plugin | grep file_extents=yes'
@@ -58,11 +58,13 @@ cleanup_fn rm -f $files
 stat disk || :
 stat -f disk || :
 
-qemu-img map -f raw --output=json disk > test-file-extents.tmp
+export QEMU_IMG
+
+"$QEMU_IMG" map -f raw --output=json disk > test-file-extents.tmp
 cat test-file-extents.tmp
 jq -c '.[] | {start:.start, length:.length, data:.data, zero:.zero}' \
   < test-file-extents.tmp > test-file-extents.local
-nbdkit file disk --run 'qemu-img map -f raw --output=json "$uri"' \
+nbdkit file disk --run '"$QEMU_IMG" map -f raw --output=json "$uri"' \
   > test-file-extents.tmp
 cat test-file-extents.tmp
 jq -c '.[] | {start:.start, length:.length, data:.data, zero:.zero}' \

@@ -38,8 +38,8 @@ set -u
 requires_run
 requires_plugin sh
 requires jq --version
-requires qemu-img --version
-requires qemu-img map --help
+requires "$QEMU_IMG" --version
+requires "$QEMU_IMG" map --help
 
 out="test-sh-extents.out"
 expected="test-sh-extents.expected"
@@ -47,10 +47,12 @@ files="$out $expected"
 rm -f $files
 cleanup_fn rm -f $files
 
+export QEMU_IMG
+
 do_test ()
 {
     # We use jq to normalize the output and convert it to plain text.
-    nbdkit -v sh - --run 'qemu-img map -f raw --output=json "$uri"' |
+    nbdkit -v sh - --run '"$QEMU_IMG" map -f raw --output=json "$uri"' |
         jq -c '.[] | {start:.start, length:.length, data:.data, zero:.zero}' \
            > $out
     if ! cmp $out $expected; then

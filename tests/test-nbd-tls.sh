@@ -35,7 +35,7 @@ set -e
 set -x
 set -u
 
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 requires_tls_certificates
 
 # Does the nbd plugin support TLS?
@@ -65,7 +65,7 @@ start_nbdkit -P "$pid1" -U "$sock1" \
     example1
 
 # Run unencrypted client
-qemu-img info --output=json -f raw "nbd+unix:///?socket=$sock2" > nbd-tls.out
+"$QEMU_IMG" info --output=json -f raw "nbd+unix:///?socket=$sock2" > nbd-tls.out
 
 cat nbd-tls.out
 

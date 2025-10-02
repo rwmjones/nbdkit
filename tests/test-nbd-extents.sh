@@ -37,8 +37,8 @@ set -u
 
 requires_run
 requires jq --version
-requires qemu-img --version
-requires qemu-img map --help
+requires "$QEMU_IMG" --version
+requires "$QEMU_IMG" map --help
 error_if_sparse_page_not_32768
 
 # Because of macOS SIP misfeature the DYLD_* environment variable
@@ -58,6 +58,8 @@ files="$out $expected $sock $pid1 $pid2 $pid3 $pid4 $pid5"
 rm -f $files
 cleanup_fn rm -f $files
 
+export QEMU_IMG
+
 do_test ()
 {
     start_nbdkit -P "$4" -U "$sock" \
@@ -66,7 +68,7 @@ do_test ()
            truncate="$3"
     # We use jq to normalize the output and convert it to plain text.
     nbdkit nbd socket="$sock" \
-           --run 'qemu-img map -f raw --output=json "$uri"' |
+           --run '"$QEMU_IMG" map -f raw --output=json "$uri"' |
         jq -c '.[] | {start:.start, length:.length, data:.data, zero:.zero}' \
            > $out
     rm -f "$sock"

@@ -42,7 +42,7 @@ requires test -f "$vddkdir/lib64/libvixDiskLib.so"
 requires test -r /dev/urandom
 requires cmp --version
 requires dd --version
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 requires_nbdcopy
 requires_nbdinfo
 skip_if_valgrind "because setting LD_LIBRARY_PATH breaks valgrind"
@@ -67,7 +67,7 @@ files="$pid $sock $vmdk $raw $raw2 $log"
 rm -f $files
 cleanup_fn rm -f $files
 
-qemu-img create -f vmdk $vmdk 10M
+"$QEMU_IMG" create -f vmdk $vmdk 10M
 
 # Check first that the VDDK library can be fully loaded.  We have to
 # check the log file for missing modules since they may not show up as

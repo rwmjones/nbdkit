@@ -37,7 +37,7 @@ set -u
 
 requires_nbdinfo
 requires_run
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 requires_filter luks
 
 # Test fails on macOS (darwin) because of:
@@ -53,7 +53,7 @@ info=luks-info.log
 cleanup_fn rm -f $disk $info
 rm -f $disk $info
 
-qemu-img create -f luks \
+"$QEMU_IMG" create -f luks \
          --object secret,data=123456,id=sec0 \
          -o key-secret=sec0 \
          $disk 1M

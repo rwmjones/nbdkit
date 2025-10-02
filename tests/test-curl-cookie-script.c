@@ -81,6 +81,8 @@ main (int argc, char *argv[])
   skip_because ("curl does not support CURLOPT_UNIX_SOCKET_PATH");
 #endif
 
+  requires_exists ("disk");
+
   sockpath = web_server ("disk", check_request, false);
   if (sockpath == NULL) {
     fprintf (stderr, "%s: could not start web server thread\n", program_name);

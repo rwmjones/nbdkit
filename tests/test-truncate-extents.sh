@@ -37,8 +37,8 @@ set -u
 
 requires_run
 requires jq --version
-requires qemu-img --version
-requires qemu-img map --help
+requires "$QEMU_IMG" --version
+requires "$QEMU_IMG" map --help
 error_if_sparse_page_not_32768
 
 out="test-truncate-extents.out"
@@ -47,6 +47,8 @@ files="$out $expected"
 rm -f $files
 cleanup_fn rm -f $files
 
+export QEMU_IMG
+
 do_test ()
 {
     # We use jq to normalize the output and convert it to plain text.
@@ -54,7 +56,7 @@ do_test ()
            --filter=truncate \
            data "$1" size="$2" \
            truncate="$3" \
-           --run 'qemu-img map -f raw --output=json "$uri"' |
+           --run '"$QEMU_IMG" map -f raw --output=json "$uri"' |
         jq -c '.[] | {start:.start, length:.length, data:.data, zero:.zero}' \
            > $out
     if ! cmp $out $expected; then

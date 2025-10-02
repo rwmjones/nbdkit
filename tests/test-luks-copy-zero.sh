@@ -38,7 +38,7 @@ set -e
 set -x
 set -u
 
-requires qemu-img --version
+requires "$QEMU_IMG" --version
 requires_nbdcopy
 requires_run
 requires $TRUNCATE --version
@@ -55,7 +55,7 @@ cleanup_fn rm -f $encrypt_disk $zero_disk
 rm -f $encrypt_disk $zero_disk
 
 # Create an empty encrypted disk container.
-qemu-img create -f luks \
+"$QEMU_IMG" create -f luks \
          --object secret,data=123456,id=sec0 \
          -o key-secret=sec0 \
          $encrypt_disk 100M
