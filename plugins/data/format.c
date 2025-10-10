@@ -210,8 +210,8 @@ expr (enum expr_type t, ...)
   expr_t e = { .t = t };
   va_list args;
 
-  /* Note that you cannot pass uint8_t through varargs, so for the
-   * byte fields we use int here.
+  /* Note that for varargs, uint8_t is automatically promoted to int
+   * (note: signed), so for the byte fields we use int here.
    */
   va_start (args, t);
   switch (t) {
