@@ -634,7 +634,7 @@ parser (int level, const char *value, size_t *start, size_t len,
       }
       id = list.ptr[list.len-1];
       list.len--;
-      APPEND_EXPR (new_node (expr (EXPR_SLICE, id, i64, m)));
+      APPEND_EXPR (new_node (expr (EXPR_SLICE, id, (uint64_t) i64, m)));
       break;
 
     case '<':
