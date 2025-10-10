@@ -210,8 +210,8 @@ expr (enum expr_type t, ...)
   expr_t e = { .t = t };
   va_list args;
 
-  /* Note that you cannot pass uint8_t through varargs, so for the
-   * byte fields we use int here.
+  /* Note that for varargs, uint8_t is automatically promoted to int
+   * (note: signed), so for the byte fields we use int here.
    */
   va_start (args, t);
   switch (t) {
@@ -249,6 +249,149 @@ expr (enum expr_type t, ...)
 
   return e;
 }
+
+#if defined(__GNUC__) && __GNUC__ >= 5
+
+/* If using GCC, add some compiler magic that type-checks calls to expr() */
+
+struct canary {} canary;
+
+/* Check expr() invocations with no parameters. */
+#define check_expr_0(t, canary, ...)            \
+  check_canary (canary);
+
+/* Check expr() invocations with exactly 1 parameter. */
+#define check_expr_1(t, arg, canary, ...)                           \
+  check_canary (canary);                                            \
+  switch (t) {                                                      \
+  case EXPR_LIST:                                                   \
+    check_type (arg, node_ids);                                     \
+    break;                                                          \
+  case EXPR_BYTE:                                                   \
+    check_type_byte_compatible (arg);                               \
+    break;                                                          \
+  case EXPR_ABS_OFFSET:                                             \
+  case EXPR_ALIGN_OFFSET:                                           \
+    check_type (arg, uint64_t);                                     \
+    break;                                                          \
+  case EXPR_REL_OFFSET:                                             \
+    check_type (arg, int64_t);                                      \
+    break;                                                          \
+  case EXPR_FILE:                                                   \
+  case EXPR_SCRIPT:                                                 \
+  case EXPR_NAME:                                                   \
+    check_type_char_ptr (arg);                                      \
+    break;                                                          \
+  case EXPR_STRING:                                                 \
+    check_type (arg, string);                                       \
+    break;                                                          \
+  default:                                                          \
+    abort ();                                                       \
+  }
+
+/* Check expr() invocations with exactly 2 parameters. */
+#define check_expr_2(t, arg0, arg1, canary, ...)                        \
+  check_canary (canary);                                                \
+  switch (t) {                                                          \
+  case EXPR_FILL:                                                       \
+    check_type_byte_compatible (arg0);                                  \
+    check_type (arg1, uint64_t);                                        \
+  break;                                                                \
+  case EXPR_ASSIGN:                                                     \
+    check_type (arg0, char *);                                          \
+    check_type (arg1, node_id);                                         \
+  break;                                                                \
+  case EXPR_REPEAT:                                                     \
+    check_type (arg0, node_id);                                         \
+    check_type (arg1, uint64_t);                                        \
+    break;                                                              \
+  default:                                                              \
+    abort ();                                                           \
+  }
+
+/* Check expr() invocations with exactly 3 parameters. */
+#define check_expr_3(t, arg0, arg1, arg2, canary, ...)                 \
+  check_canary (canary);                                               \
+  switch (t) {                                                         \
+  case EXPR_SLICE:                                                     \
+    check_type (arg0, node_id);                                        \
+    check_type (arg1, uint64_t);                                       \
+    check_type (arg2, int64_t);                                        \
+    break;                                                             \
+  default:                                                             \
+    abort ();                                                          \
+  }
+
+#define check_canary(c)                                                \
+  if (!__builtin_types_compatible_p (__typeof__ (c), struct canary))   \
+    warn_invalid_parameter_count ();
+
+static void
+__attribute__((__warning__("invalid number of parameters to expr() macro")))
+__attribute__((__unused__)) __attribute__((__noinline__))
+warn_invalid_parameter_count (void)
+{
+  __asm__("");
+}
+
+#define check_type(arg, t)                                   \
+  if (!__builtin_types_compatible_p (__typeof__(arg), t))    \
+    warn_invalid_parameter_type ();
+
+#define check_type_char_ptr(arg)                                        \
+  if (!__builtin_types_compatible_p (__typeof__(arg), char *) &&        \
+      !__builtin_types_compatible_p (__typeof__(arg), const char *))    \
+    warn_invalid_parameter_type ();
+
+/* Check for byte parameters.  Because of int promotion, we allow
+ * uint8_t, char or int.
+ */
+#define check_type_byte_compatible(arg)                                 \
+  if (!__builtin_types_compatible_p (__typeof__(arg), int) &&           \
+      !__builtin_types_compatible_p (__typeof__(arg), uint8_t) &&       \
+      !__builtin_types_compatible_p (__typeof__(arg), char))            \
+    warn_invalid_parameter_type ();
+
+static void
+__attribute__((__warning__("invalid type of parameters to expr() macro")))
+__attribute__((__unused__)) __attribute__((__noinline__))
+warn_invalid_parameter_type (void)
+{
+  __asm__("");
+}
+
+#define expr(t, ...)                                                \
+  __extension__({                                                   \
+      if (__builtin_constant_p (t)) {                               \
+        switch (t) {                                                \
+        case EXPR_NULL:                                             \
+          check_expr_0 (t,## __VA_ARGS__, canary);                  \
+          break;                                                    \
+        case EXPR_LIST:                                             \
+        case EXPR_BYTE:                                             \
+        case EXPR_ABS_OFFSET:                                       \
+        case EXPR_ALIGN_OFFSET:                                     \
+        case EXPR_REL_OFFSET:                                       \
+        case EXPR_FILE:                                             \
+        case EXPR_SCRIPT:                                           \
+        case EXPR_STRING:                                           \
+        case EXPR_NAME:                                             \
+          check_expr_1 (t,## __VA_ARGS__, canary, 0);               \
+          break;                                                    \
+        case EXPR_FILL:                                             \
+        case EXPR_ASSIGN:                                           \
+        case EXPR_REPEAT:                                           \
+          check_expr_2 (t,## __VA_ARGS__, canary, 0, 0);            \
+          break;                                                    \
+        case EXPR_SLICE:                                            \
+          check_expr_3 (t,## __VA_ARGS__, canary, 0, 0, 0);         \
+          break;                                                    \
+        }                                                           \
+      }                                                             \
+      expr (t, ##__VA_ARGS__);                                      \
+    })
+
+#endif /* GCC >= 5 */
 
 /* Make a shallow copy of an expression. */
 static expr_t
@@ -634,7 +777,7 @@ parser (int level, const char *value, size_t *start, size_t len,
       }
       id = list.ptr[list.len-1];
       list.len--;
-      APPEND_EXPR (new_node (expr (EXPR_SLICE, id, i64, m)));
+      APPEND_EXPR (new_node (expr (EXPR_SLICE, id, (uint64_t) i64, m)));
       break;
 
     case '<':
