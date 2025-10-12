@@ -71,6 +71,9 @@ do_test ()
                 run_test $1
             fi
             ;;
+        vram-valgrind)
+            echo "$0: skipping $1$vg because AMD ROCm driver is unhappy under valgrind"
+            ;;
         *)
             run_test $1
             ;;
