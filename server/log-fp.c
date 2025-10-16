@@ -58,7 +58,7 @@ log_fp_verror (FILE *fp, int orig_errno, const char *fs, va_list args)
 
   fprintf (fp, "%s", program_name);
   if (process_name)             /* --name parameter */
-    fprintf (fp, "%s: ", process_name);
+    fprintf (fp, "[%s]", process_name);
   fprintf (fp, ": ");
 
   if (name) {
