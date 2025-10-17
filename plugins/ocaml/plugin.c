@@ -250,7 +250,11 @@ static void
 unload_wrapper (void)
 {
   register_thread ();
-  ACQUIRE_RUNTIME_FOR_CURRENT_SCOPE ();
+  /* NB: Don't call ACQUIRE_RUNTIME_FOR_CURRENT_SCOPE here since it
+   * will release the lock after caml_shutdown (which is a bug), and
+   * the runtime system must be locked when calling caml_shutdown.
+   */
+  do_caml_acquire_runtime_system ();
 
   if (unload_fn) {
     caml_callback (unload_fn, Val_unit);
@@ -259,18 +263,9 @@ unload_wrapper (void)
   free_strings ();
   remove_roots ();
 
-  /* In OCaml >= 5.4 this crashes with:
-   *
-   * Fatal error: Fatal error during unlock: Invalid argument
-   *
-   * Since it's not really necessary to shut down the OCaml runtime,
-   * let's just avoid it.
-   */
-/*
 #ifdef HAVE_CAML_SHUTDOWN
   caml_shutdown ();
 #endif
-*/
 }
 
 static void
