@@ -639,6 +639,7 @@ vddk_dump_plugin (void)
 
   printf ("vddk_default_libdir=%s\n", VDDK_LIBDIR);
   printf ("vddk_has_nfchostport=1\n");
+  printf ("vddk_has_fnm_pathname=0\n");
 
   /* Because load_library (false) we might not have loaded VDDK, in
    * which case we didn't set library_version.  Note this cannot
@@ -744,7 +745,7 @@ vddk_open (int readonly)
       goto err0;
     }
 
-    r = fnmatch (export_wildcard, nbd_export_name, FNM_PATHNAME);
+    r = fnmatch (export_wildcard, nbd_export_name, 0);
     switch (r) {
     case 0: /* OK */ break;
     case FNM_NOMATCH:
