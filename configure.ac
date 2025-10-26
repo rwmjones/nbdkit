@@ -759,6 +759,9 @@ AM_CONDITIONAL([USE_LINKER_SCRIPT],
 
 HEADING([Checking for libraries and programs])
 
+m4_define([PRINT_PKG_VERSION],
+          [AS_ECHO_N(["$1 version is "]); $PKG_CONFIG --modversion "$1"])
+
 dnl Check for SELinux socket labelling (optional).
 AC_ARG_WITH([selinux],
     AS_HELP_STRING([--without-selinux], [disable SELinux support, used for socket labelling @<:@default=check@:>@]))
@@ -1290,7 +1293,7 @@ AC_ARG_WITH([libblkio],
     [with_libblkio=check])
 AS_IF([test "$with_libblkio" != "no"],[
     PKG_CHECK_MODULES([LIBBLKIO], [blkio],[
-        printf "libblkio version is "; $PKG_CONFIG --modversion blkio
+        PRINT_PKG_VERSION(blkio)
         AC_SUBST([LIBBLKIO_CFLAGS])
         AC_SUBST([LIBBLKIO_LIBS])
         AC_DEFINE([HAVE_LIBBLKIO],[1],[libblkio found at compile time.])
@@ -1307,7 +1310,7 @@ AC_ARG_WITH([curl],
     [with_curl=check])
 AS_IF([test "$with_curl" != "no"],[
     PKG_CHECK_MODULES([CURL], [libcurl],[
-        printf "libcurl version is "; $PKG_CONFIG --modversion libcurl
+        PRINT_PKG_VERSION(libcurl)
         AC_SUBST([CURL_CFLAGS])
         AC_SUBST([CURL_LIBS])
         AC_DEFINE([HAVE_CURL],[1],[curl found at compile time.])
@@ -1372,7 +1375,7 @@ AC_ARG_WITH([ssh],
     [with_ssh=check])
 AS_IF([test "$with_ssh" != "no"],[
     PKG_CHECK_MODULES([SSH], [libssh >= 0.8.0],[
-        printf "libssh version is "; $PKG_CONFIG --modversion libssh
+        PRINT_PKG_VERSION(libssh)
         # Ubuntu 18.04 shipped prerelease of libssh-0.8.0 without
         # SSH_OPTIONS_NODELAY
         old_CFLAGS="$CFLAGS"
@@ -1399,7 +1402,7 @@ AC_ARG_WITH([nfs],
     [with_nfs=check])
 AS_IF([test "$with_nfs" != "no"],[
     PKG_CHECK_MODULES([LIBNFS], [libnfs >= 16],[
-        printf "libnfs internal version is "; $PKG_CONFIG --modversion libnfs
+        PRINT_PKG_VERSION(libnfs)
         AC_SUBST([LIBNFS_CFLAGS])
         AC_SUBST([LIBNFS_LIBS])
 
@@ -1530,7 +1533,7 @@ AC_ARG_WITH([libnbd],
     [with_libnbd=check])
 AS_IF([test "$with_libnbd" != "no"],[
     PKG_CHECK_MODULES([LIBNBD], [libnbd >= 0.9.8],[
-        printf "libnbd version is "; $PKG_CONFIG --modversion libnbd
+        PRINT_PKG_VERSION(libnbd)
         AC_SUBST([LIBNBD_CFLAGS])
         AC_SUBST([LIBNBD_LIBS])
         AC_DEFINE([HAVE_LIBNBD],[1],[libnbd found at compile time.])
