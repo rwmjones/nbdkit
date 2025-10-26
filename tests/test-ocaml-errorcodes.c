@@ -78,9 +78,15 @@ main (int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  if (nbd_connect_command (nbd,
+  /* NB: nbd_connect_command does not work for OCaml plugins, possibly
+   * because nbdkit serves requests on the same thread, instead of
+   * creating a new thread (which could interfere with
+   * register_thread() in the OCaml plugin code.  Anyway using systemd
+   * socket activation works fine and is usually preferable.
+   */
+  if (nbd_connect_systemd_socket_activation (nbd,
                            (char *[]) {
-                             "nbdkit", "-s", "--exit-with-parent", "-v",
+                             "nbdkit", "--exit-with-parent", "-v",
                              "./test-ocaml-errorcodes-plugin.so",
                              NULL }) == -1) {
     fprintf (stderr, "%s\n", nbd_get_error ());
