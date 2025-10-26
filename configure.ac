@@ -767,6 +767,7 @@ AC_ARG_WITH([selinux],
     AS_HELP_STRING([--without-selinux], [disable SELinux support, used for socket labelling @<:@default=check@:>@]))
 AS_IF([test "x$with_selinux" != xno], [
     PKG_CHECK_MODULES([LIBSELINUX], [libselinux], [
+        PRINT_PKG_VERSION(libselinux)
         AC_SUBST([LIBSELINUX_CFLAGS])
         AC_SUBST([LIBSELINUX_LIBS])
         AC_DEFINE([HAVE_LIBSELINUX],[1],[libselinux found at compile time.])
@@ -790,6 +791,7 @@ AC_ARG_ENABLE([valgrind],
     [enable_valgrind=check])
 AS_IF([test "x$enable_valgrind" != "xno"],[
     PKG_CHECK_MODULES([VALGRIND], [valgrind], [
+        PRINT_PKG_VERSION(valgrind)
         AC_SUBST([VALGRIND_CFLAGS])
         AC_SUBST([VALGRIND_LIBS])
         AC_DEFINE([HAVE_VALGRIND],[1],[Valgrind headers found at compile time])
@@ -806,6 +808,7 @@ AC_ARG_WITH([gnutls],
 
 AS_IF([test "x$with_gnutls" != xno], [
     PKG_CHECK_MODULES([GNUTLS], [gnutls >= 3.5.18], [
+        PRINT_PKG_VERSION(gnutls)
         AC_SUBST([GNUTLS_CFLAGS])
         AC_SUBST([GNUTLS_LIBS])
         AC_DEFINE([HAVE_GNUTLS],[1],[gnutls found at compile time.])
@@ -900,6 +903,7 @@ AC_ARG_WITH([bash-completions],
 
 AS_IF([test "x$with_bash_completions" != xno], [
     PKG_CHECK_MODULES([BASH_COMPLETION], [bash-completion >= 2.0], [
+        PRINT_PKG_VERSION([bash-completion])
         bash_completion=yes
         AC_MSG_CHECKING([for bash-completions directory])
         m4_ifdef([PKG_CHECK_VAR],[
@@ -1219,6 +1223,7 @@ AC_ARG_ENABLE([tcl],
     [enable_tcl=yes])
 AS_IF([test "x$enable_tcl" != "xno"],[
     PKG_CHECK_MODULES([TCL], [tcl], [
+        PRINT_PKG_VERSION(tcl)
         AC_SUBST([TCL_CFLAGS])
         AC_SUBST([TCL_LIBS])
     ],[
@@ -1237,6 +1242,7 @@ AC_ARG_ENABLE([lua],
     [enable_lua=yes])
 AS_IF([test "x$enable_lua" != "xno"],[
     PKG_CHECK_MODULES([LUA], [lua], [
+        PRINT_PKG_VERSION(lua)
         AC_SUBST([LUA_CFLAGS])
         AC_SUBST([LUA_LIBS])
 
@@ -1466,6 +1472,7 @@ AC_ARG_WITH([libvirt],
     [with_libvirt=check])
 AS_IF([test "$with_libvirt" != "no"],[
     PKG_CHECK_MODULES([LIBVIRT], [libvirt],[
+        PRINT_PKG_VERSION(libvirt)
         AC_SUBST([LIBVIRT_CFLAGS])
         AC_SUBST([LIBVIRT_LIBS])
         AC_DEFINE([HAVE_LIBVIRT],[1],[libvirt found at compile time.])
@@ -1482,6 +1489,7 @@ AC_ARG_WITH([bzip2],
     [with_bzip2=check])
 AS_IF([test "$with_bzip2" != "no"],[
     PKG_CHECK_MODULES([BZLIB], [bzip2],[
+        PRINT_PKG_VERSION(bzip2)
         AC_SUBST([BZLIB_CFLAGS])
         AC_SUBST([BZLIB_LIBS])
         AC_DEFINE([HAVE_BZLIB],[1],[libbz2 found at compile time.])
@@ -1500,6 +1508,7 @@ AC_ARG_WITH([zlib],
     [with_zlib=check])
 AS_IF([test "$with_zlib" != "no"],[
     PKG_CHECK_MODULES([ZLIB], [zlib >= 1.2.3.5],[
+        PRINT_PKG_VERSION(zlib)
         AC_SUBST([ZLIB_CFLAGS])
         AC_SUBST([ZLIB_LIBS])
         AC_DEFINE([HAVE_ZLIB],[1],[zlib found at compile time.])
@@ -1516,6 +1525,7 @@ AC_ARG_WITH([zlib-ng],
     [with_zlib_ng=check])
 AS_IF([test "$with_zlib_ng" != "no"],[
     PKG_CHECK_MODULES([ZLIB_NG], [zlib-ng],[
+        PRINT_PKG_VERSION([zlib-ng])
         AC_SUBST([ZLIB_NG_CFLAGS])
         AC_SUBST([ZLIB_NG_LIBS])
         AC_DEFINE([HAVE_ZLIB_NG],[1],[zlib-ng found at compile time.])
@@ -1557,6 +1567,7 @@ AC_ARG_WITH([liblzma],
     [with_liblzma=check])
 AS_IF([test "$with_liblzma" != "no"],[
     PKG_CHECK_MODULES([LIBLZMA], [liblzma],[
+        PRINT_PKG_VERSION(liblzma)
         AC_SUBST([LIBLZMA_CFLAGS])
         AC_SUBST([LIBLZMA_LIBS])
         AC_DEFINE([HAVE_LIBLZMA],[1],[liblzma found at compile time.])
@@ -1589,6 +1600,7 @@ AC_ARG_WITH([libzstd],
     [with_libzstd=check])
 AS_IF([test "$with_libzstd" != "no"],[
     PKG_CHECK_MODULES([LIBZSTD], [libzstd],[
+        PRINT_PKG_VERSION(libzstd)
         AC_SUBST([LIBZSTD_CFLAGS])
         AC_SUBST([LIBZSTD_LIBS])
         AC_DEFINE([HAVE_LIBZSTD],[1],[libzstd found at compile time.])
@@ -1606,6 +1618,7 @@ AC_ARG_WITH([libguestfs],
     [with_libguestfs=check])
 AS_IF([test "$with_libguestfs" != "no"],[
     PKG_CHECK_MODULES([LIBGUESTFS], [libguestfs],[
+        PRINT_PKG_VERSION(libguestfs)
         # Although the library was found, we want to make sure it supports nbd
         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <guestfs.h>
@@ -1667,12 +1680,14 @@ AC_ARG_WITH([ext2],
     [with_ext2=check])
 AS_IF([test "$with_ext2" != "no"], [
     PKG_CHECK_MODULES([EXT2FS], [ext2fs], [
+        PRINT_PKG_VERSION(ext2fs)
         AC_SUBST([EXT2FS_CFLAGS])
         AC_SUBST([EXT2FS_LIBS])
         AC_DEFINE([HAVE_EXT2FS],[1],[ext2fs found at compile time.])
     ],
     [AC_MSG_WARN([ext2fs not found, ext2 filter will be disabled])])
     PKG_CHECK_MODULES([COM_ERR], [com_err], [
+        PRINT_PKG_VERSION([com_err])
         AC_SUBST([COM_ERR_CFLAGS])
         AC_SUBST([COM_ERR_LIBS])
         AC_DEFINE([HAVE_COM_ERR],[1],[com_err found at compile time.])
@@ -1694,6 +1709,7 @@ AC_ARG_ENABLE([torrent],
 )
 AS_IF([test "x$enable_torrent" != "xno"], [
     PKG_CHECK_MODULES([LIBTORRENT], [libtorrent-rasterbar], [
+        PRINT_PKG_VERSION([libtorrent-rasterbar])
         AC_SUBST([LIBTORRENT_CFLAGS])
         AC_SUBST([LIBTORRENT_LIBS])
     ],
