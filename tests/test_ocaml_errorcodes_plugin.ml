@@ -49,6 +49,8 @@ let sectors = [|
   (* 5 *) Some (EINVAL, "EINVAL");
 |]
 
+let name = "test-ocaml-errorcodes"
+
 let open_connection _ = ()
 
 let get_size () = Int64.mul (Array.length sectors |> Int64.of_int) sector_size
@@ -59,10 +61,16 @@ let pread () buf offset _ =
   | None -> Bigarray.Array1.fill buf '\000'
   | Some (err, str) -> NBDKit.set_error err; failwith str
 
+let unload () =
+  (* A good way to find memory bugs: *)
+  Gc.compact ();
+  NBDKit.debug "%s plugin unloaded" name
+
 let () =
   NBDKit.register_plugin
-    ~name:    "test-ocaml-errorcodes"
+    ~name
     ~version: (NBDKit.version ())
+    ~unload
 
     ~open_connection
     ~get_size
