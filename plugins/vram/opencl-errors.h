@@ -101,6 +101,9 @@ opencl_errstr (cl_int err)
     case_return_string(CL_INVALID_COMPILER_OPTIONS       );
     case_return_string(CL_INVALID_LINKER_OPTIONS         );
     case_return_string(CL_INVALID_DEVICE_PARTITION_COUNT );
+
+    /* Extended. */
+    case_return_string(CL_PLATFORM_NOT_FOUND_KHR         );
   default: return "unknown OpenCL error";
   }
 }

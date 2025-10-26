@@ -41,6 +41,7 @@
 
 #define CL_TARGET_OPENCL_VERSION 200 /* OpenCL >= 2.0 */
 #include <CL/cl.h>
+#include <CL/cl_ext.h>
 
 #define NBDKIT_API_VERSION 2
 #include <nbdkit-plugin.h>
@@ -126,6 +127,12 @@ get_all_devices (void)
   /* Build the list of all devices from all platforms as a flat list. */
   what = "clGetPlatformIDs";
   r = clGetPlatformIDs (0, NULL, &num_platforms);
+  if (r == CL_PLATFORM_NOT_FOUND_KHR) {
+    /* OpenCL seems to return this when no platform is detected at
+     * all, so just return the empty list in this case.
+     */
+    return;
+  }
   if (r != CL_SUCCESS) goto err;
   platform_ids = calloc (num_platforms, sizeof platform_ids[0]);
   if (!platform_ids) {
