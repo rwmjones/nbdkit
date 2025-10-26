@@ -147,6 +147,13 @@ get_all_devices (void)
     what = "clGetDeviceIDs";
     r = clGetDeviceIDs (platform_ids[pl_i], CL_DEVICE_TYPE_ALL, 0, NULL,
                         &num_devices);
+    if (r == CL_DEVICE_NOT_FOUND) {
+      /* OpenCL seems to return this when the platform is found but
+       * the vendor's library is not configured to access devices
+       * within the platform; skip over this platform.
+       */
+      continue;
+    }
     if (r != CL_SUCCESS) goto err;
     free (device_ids);
     device_ids = calloc (num_devices, sizeof device_ids[0]);
