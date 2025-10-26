@@ -135,6 +135,7 @@ non_lang_plugins="\
         tmpdisk \
         torrent \
         vddk \
+        vram \
         zero \
         "
 plugins="$(echo $(printf %s\\n $lang_plugins $non_lang_plugins | sort -u))"
@@ -1718,6 +1719,24 @@ AS_IF([test "x$enable_torrent" != "xno"], [
 AM_CONDITIONAL([HAVE_TORRENT],
                [test "x$have_cxx" = "xyes" && test "x$LIBTORRENT_LIBS" != "x"])
 
+dnl OpenCL for the vram plugin.
+AC_ARG_ENABLE([vram],
+    [AS_HELP_STRING([--disable-vram],
+                    [disable Video RAM (OpenCL) plugin])],
+    [],
+    [enable_vram=check]
+)
+AS_IF([test "x$enable_vram" != "xno"], [
+    PKG_CHECK_MODULES([OPENCL], [OpenCL >= 2.0], [
+        PRINT_PKG_VERSION(OpenCL)
+        AC_SUBST([OPENCL_CFLAGS])
+        AC_SUBST([OPENCL_LIBS])
+    ],
+    [AC_MSG_WARN([OpenCL not found, vram plugin will be disabled])])
+])
+AM_CONDITIONAL([HAVE_OPENCL],
+               [test "x$OPENCL_LIBS" != "x"])
+
 dnl Check if the user wants to disable VDDK support.
 dnl See plugins/vddk/README.VDDK.
 AC_ARG_ENABLE([vddk],
@@ -1810,6 +1829,7 @@ AC_CONFIG_FILES([Makefile
                  plugins/tmpdisk/Makefile
                  plugins/torrent/Makefile
                  plugins/vddk/Makefile
+                 plugins/vram/Makefile
                  plugins/zero/Makefile
                  filters/Makefile
                  filters/blocksize/Makefile
@@ -1932,6 +1952,7 @@ feature "S3"                  test "x$HAVE_PYTHON_TRUE" = "x"
 feature "ssh"                 test "x$HAVE_SSH_TRUE" = "x"
 feature "torrent"             test "x$HAVE_TORRENT_TRUE" = "x"
 feature "vddk"                test "x$HAVE_VDDK_TRUE" = "x"
+feature "vram"                test "x$HAVE_OPENCL_TRUE" = "x"
 
 echo
 echo "Languages:"

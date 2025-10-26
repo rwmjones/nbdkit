@@ -200,6 +200,7 @@ plugins/*/*.3
 /tests/test-tcl
 /tests/test-tmpdisk
 /tests/test-vddk
+/tests/test-vram
 /tests/test-xz
 /tests/test-xz-curl
 /test-driver

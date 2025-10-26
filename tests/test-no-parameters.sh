@@ -92,6 +92,9 @@ do_test ()
 	    # test won't work.  Skip it entirely on Macs.
 	    if test "$(uname)" != "Darwin"; then run_test $1; fi
 	    ;;
+        vram*)
+            echo "$0: skipping vram to avoid allocating all GPU Video RAM"
+            ;;
         *)
             run_test $1
             ;;

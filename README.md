@@ -134,6 +134,14 @@ For the blkio plugin:
 
 * [libblkio](https://libblkio.gitlab.io/libblkio)
 
+For the vram (Video RAM) plugin:
+
+* OpenCL platform version >= 2.0
+* OpenCL-ICD-Loader
+* OpenCL-Headers
+* Intel or AMD ROCm OpenCL driver
+* Use `sudo clinfo` to check OpenCL is installed and recognizes your GPU.
+
 For the containerized data importer (CDI) plugin:
 
 * podman

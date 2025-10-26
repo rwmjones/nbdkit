@@ -1,0 +1,172 @@
+=head1 NAME
+
+nbdkit-vram-plugin - use GPU Video RAM as a network block device
+
+=head1 SYNOPSIS
+
+ nbdkit vram -f [device=NAME|N] [SIZE]
+
+=for paragraph
+
+ nbdkit vram --dump-plugin
+
+=head1 DESCRIPTION
+
+C<nbdkit-vram-plugin> is a plugin for L<nbdkit(1)> which uses Video
+RAM from an OpenCL-capable graphics card (GPU) as a block device.
+
+You currently B<must> run the plugin in the foreground (C<nbdkit -f>
+option).
+
+Video RAM is volatile.  As soon as nbdkit exits or the machine is
+turned off, the disk and B<all data on it is deleted>.
+
+=head2 Checking for compatible GPUs
+
+To check that OpenCL is installed and sees your GPU, run L<clinfo(1)>:
+
+ $ clinfo --list
+ Platform #0: AMD Accelerated Parallel Processing
+  +-- Device #0: gfx1101
+  `-- Device #1: gfx1036
+
+ $ clinfo
+ Number of platforms    1
+   Platform Name        AMD Accelerated Parallel Processing
+   Platform Vendor      Advanced Micro Devices, Inc.
+   Platform Version     OpenCL 2.1 AMD-APP (3649.0)
+ ...
+ Number of devices      2
+  Device Name           gfx1101
+  Device Vendor         Advanced Micro Devices, Inc.
+  Device Vendor ID      0x1002
+  Device Version        OpenCL 2.0
+ ...
+  Global memory size    17163091968 (15.98GiB)
+ ...
+  Device Name           gfx1036
+  Device Vendor         Advanced Micro Devices, Inc.
+  Device Vendor ID      0x1002
+  Device Version        OpenCL 2.0
+ ...
+  Global memory size    33247174656 (30.96GiB)
+
+If there is more than one device in the system, use the C<device>
+parameter with the device name or index (counting from 0).  For
+example:
+
+ $ nbdkit -f vram device=gfx1101
+
+=for comment
+
+ $ nbdkit -f vram device=0
+
+To see what devices the plugin sees, use:
+
+ $ nbdkit vram --dump-plugin
+ ...
+ vram_num_devices=2
+ vram_device_index=0
+ vram_device_name=gfx1101
+ ...
+ vram_device_index=1
+ vram_device_name=gfx1036
+
+=head2 Setting video RAM size
+
+By default, the plugin will try to use as much of the video RAM on the
+device as possible.  You can limit the RAM to a smaller amount using
+the optional C<size> parameter, eg:
+
+ $ nbdkit -f vram 10G
+
+=head2 Video RAM is lazily allocated
+
+The plugin allocates video RAM on demand as you fill it up with data.
+This means that if there are other users of the GPU (for example, you
+are running a game at the same time), it is possible to run out of
+space.  In this case, writes will return ENOSPC "No space left on
+device" errors.
+
+To limit the maximum amount of video RAM that will be used, use the
+optional C<size> parameter.
+
+If you trim the block device (eg. L<fstrim(8)>), video RAM is given
+back to the system.
+
+Currently you cannot limit the video RAM used independently of the
+virtual size of the disk (because it's not a good idea).
+
+=head2 Integrated graphics
+
+Integrated graphics GPUs (where the GPU is part of the CPU) usually
+use system RAM as video RAM.  Therefore there is no point using this
+plugin with integrated graphics.  Use L<nbdkit-memory-plugin(1)> to
+use system RAM as a RAM disk instead.
+
+=head1 PARAMETERS
+
+=over 4
+
+=item B<device=>NAME
+
+=item B<device=>N
+
+Choose the GPU by OpenCL name or by device index (counting from 0).
+
+To list the devices known to OpenCL, use the L<clinfo(1)> command.
+
+If you are not sure what device name or index to use, consult the
+output of S<C<nbdkit vram --dump-plugin>>
+
+=item [B<size=>]SIZE
+
+Limit the size of the video RAM disk.  If omitted, the plugin will try
+to use all available video RAM on the device.
+
+Note this may be rounded up by the plugin (currently to a multiple of
+64K).
+
+C<size=> __IS_MAGIC__
+
+=back
+
+=head1 ENVIRONMENT VARIABLES
+
+Various environment variables are passed through to OpenCL and the
+OpenCL driver.  Please consult documentation for your GPU.
+
+=head1 FILES
+
+=over 4
+
+=item F<$plugindir/nbdkit-vram-plugin.so>
+
+The plugin.
+
+Use C<nbdkit --dump-config> to find the location of C<$plugindir>.
+
+=back
+
+=head1 VERSION
+
+C<nbdkit-vram-plugin> first appeared in nbdkit 1.46.
+
+=head1 SEE ALSO
+
+L<nbdkit(1)>,
+L<nbdkit-plugin(3)>,
+L<nbdkit-memory-plugin(1)>,
+L<clinfo(1)>,
+L<fstrim(8)>.
+
+=head1 AUTHORS
+
+Richard W.M. Jones
+
+This plugin was heavily inspired by vramfs, a FUSE module written by
+Alexander Overvoorde (L<https://github.com/Overv/vramfs>).
+
+=head1 COPYRIGHT
+
+Copyright Red Hat

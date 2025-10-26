@@ -1278,6 +1278,20 @@ libvixDiskLib_la_LDFLAGS = \
 	$(NULL)
 endif HAVE_VDDK
 
+if HAVE_OPENCL
+# vram plugin test.
+
+LIBGUESTFS_TESTS += test-vram
+
+test_vram_SOURCES = test-vram.c test.h requires.c requires.h
+test_vram_CFLAGS = \
+	$(WARNINGS_CFLAGS) \
+	$(LIBGUESTFS_CFLAGS) \
+	$(NULL)
+test_vram_LDADD = libtest.la $(LIBGUESTFS_LIBS)
+
+endif HAVE_OPENCL
+
 EXTRA_DIST += \
 	test-vddk-dump-plugin.sh \
 	test-vddk-password-fd.sh \
