@@ -58,6 +58,7 @@ static struct { uint64_t offset; int expected_errno; } tests[] = {
   { 3*512, ENOMEM },
   { 4*512, ESHUTDOWN },
   { 5*512, EINVAL },
+  { 6*512, 0 },
 };
 
 int

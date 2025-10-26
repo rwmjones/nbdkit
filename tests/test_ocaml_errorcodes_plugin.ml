@@ -47,6 +47,7 @@ let sectors = [|
   (* 3 *) Some (ENOMEM, "ENOMEM");
   (* 4 *) Some (ESHUTDOWN, "ESHUTDOWN");
   (* 5 *) Some (EINVAL, "EINVAL");
+  (* 6 *) None (* no error *);
 |]
 
 let name = "test-ocaml-errorcodes"
