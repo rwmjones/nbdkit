@@ -121,13 +121,6 @@ register_thread (void)
 }
 
 static void
-unregister_thread (void)
-{
-  void *val = pthread_getspecific (thread_key);
-  destroy_thread (val);
-}
-
-static void
 destroy_thread (void *val)
 {
   if (val == &thread_key_non_main) {
@@ -482,7 +475,7 @@ static void
 close_wrapper (void *hv)
 {
   register_thread ();
-  do_caml_acquire_runtime_system ();
+  ACQUIRE_RUNTIME_FOR_CURRENT_SCOPE ();
   CAMLparam0 ();
   CAMLlocal1 (rv);
   struct handle *h = hv;
@@ -494,8 +487,6 @@ close_wrapper (void *hv)
 
   caml_remove_generational_global_root (&h->v);
   free (h);
-  do_caml_release_runtime_system ();
-  unregister_thread ();
 
   CAMLreturn0;
 }
