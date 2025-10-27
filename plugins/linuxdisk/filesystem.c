@@ -148,7 +148,7 @@ create_filesystem (struct virtual_disk *disk)
 static int64_t
 estimate_size (void)
 {
-  CLEANUP_FREE char *command = NULL, *line = NULL;
+  CLEANUP_FREE char *command = NULL, *line = NULL, *lastline = NULL;
   size_t len = 0;
   FILE *fp;
   int64_t ret;
@@ -177,8 +177,16 @@ estimate_size (void)
 
   /* Ignore everything up to the last line. */
   len = 0;
-  while (getline (&line, &len, fp) != -1)
-    /* empty */;
+  while (getline (&line, &len, fp) != -1) {
+    nbdkit_debug ("du: %s", line);
+    free (lastline);
+    lastline = strndup (line, len);
+    if (lastline == NULL) {
+      nbdkit_error ("strndup: %m");
+      pclose (fp);
+      return -1;
+    }
+  }
   if (ferror (fp)) {
     nbdkit_error ("getline failed: %m");
     pclose (fp);
@@ -193,9 +201,14 @@ estimate_size (void)
   if (exit_status_to_nbd_error (r, "pclose: du") == -1)
     return -1;
 
+  if (lastline == NULL) {
+    nbdkit_error ("no output from du command");
+    return -1;
+  }
+
   /* Parse the last line. */
-  if (sscanf (line, "%" SCNi64, &ret) != 1 || ret < 0) {
-    nbdkit_error ("could not parse last line of output: %s", line);
+  if (sscanf (lastline, "%" SCNi64, &ret) != 1 || ret < 0) {
+    nbdkit_error ("could not parse last line from du command: %s", lastline);
     return -1;
   }
 
