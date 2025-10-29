@@ -1895,7 +1895,7 @@ ext2.img: disk test-ext2-exportname.sh
 	cp $< ext2.img.d/disks/disk.img
 	echo /disks/disk.img > ext2.img.d/manifest
 	$(TRUNCATE) -s 2147483648 $@-t
-	mke2fs -q -F -t ext4 -d ext2.img.d $@-t 2147483648
+	mke2fs -q -F -t ext4 -d ext2.img.d $@-t
 	rm -r ext2.img.d
 	mv $@-t $@
 
