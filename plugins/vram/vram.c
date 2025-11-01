@@ -811,6 +811,10 @@ vram_trim (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
   /* Aligned body */
   while (count >= BUFFER_SIZE) {
     free_buffer (bufnum);
+
+    count -= BUFFER_SIZE;
+    offset += BUFFER_SIZE;
+    bufnum++;
   }
 
   return 0;
