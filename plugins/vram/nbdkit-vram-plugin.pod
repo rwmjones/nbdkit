@@ -158,6 +158,7 @@ L<nbdkit(1)>,
 L<nbdkit-plugin(3)>,
 L<nbdkit-memory-plugin(1)>,
 L<clinfo(1)>,
+L<radeontop(1)>,
 L<fstrim(8)>.
 
 =head1 AUTHORS
