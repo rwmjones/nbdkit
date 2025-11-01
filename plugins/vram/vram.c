@@ -817,6 +817,9 @@ vram_trim (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
     bufnum++;
   }
 
+  if (flags & NBDKIT_FLAG_FUA && vram_flush (handle, 0) == -1)
+    return -1;
+
   return 0;
 }
 
