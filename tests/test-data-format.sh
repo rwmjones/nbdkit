@@ -106,6 +106,12 @@ do_test 'be32:0xffffffff' 'b"\xff\xff\xff\xff"'
 do_test 'le64:0xffffffffffffffff' 'b"\xff\xff\xff\xff\xff\xff\xff\xff"'
 do_test 'be64:0xffffffffffffffff' 'b"\xff\xff\xff\xff\xff\xff\xff\xff"'
 
+if nbdkit data --dump-plugin | grep -sq "data_base64=yes"; then
+    do_test 'base64:bmV0d29yayBibG9jayBkZXZpY2UgKE5CRCkgc2VydmVy' \
+            'b"network block device (NBD) server"'
+    do_test 'base64:TkJE * 16' 'b"NBD" * 16'
+fi
+
 do_test '""' 'b""'
 do_test '"foo"' 'b"foo"'
 do_test '"foo\x00"' 'b"foo\x00"'

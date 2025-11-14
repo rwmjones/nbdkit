@@ -38,10 +38,6 @@
 #include <inttypes.h>
 #include <string.h>
 
-#if defined (HAVE_GNUTLS) && defined (HAVE_GNUTLS_BASE64_DECODE2)
-#include <gnutls/gnutls.h>
-#endif
-
 #define NBDKIT_API_VERSION 2
 #include <nbdkit-plugin.h>
 
@@ -85,7 +81,7 @@ data_unload (void)
 static int
 read_base64 (const char *value, uint64_t *size_ret)
 {
-#if defined (HAVE_GNUTLS) && defined (HAVE_GNUTLS_BASE64_DECODE2)
+#ifdef NBDKIT_DATA_HAVE_BASE64_SUPPORT
   gnutls_datum_t in, out;
   int err;
 
@@ -242,7 +238,7 @@ data_get_ready (void)
 static void
 data_dump_plugin (void)
 {
-#if defined (HAVE_GNUTLS) && defined (HAVE_GNUTLS_BASE64_DECODE2)
+#ifdef NBDKIT_DATA_HAVE_BASE64_SUPPORT
   printf ("data_base64=yes\n");
 #endif
 #ifdef HAVE_MLOCK
