@@ -187,6 +187,18 @@ nbdkit-file-plugin:
   - For more, see comments in
     https://gitlab.com/nbdkit/nbdkit/-/merge_requests/88
 
+nbdkit-vram-plugin:
+
+* Investigate why, on AMD Radeon, trim does not immediately free Video
+  RAM.  For some reason the Video RAM is only freed when you trim the
+  entire device, not when you trim a part of the device.  (This might
+  be an issue specific to the AMD driver, but that's the only driver I
+  have to test.)
+
+* radeontop says we're using 101% of the available Video RAM when we
+  fully allocate a disk (without using the 'size' parameter).
+  Apparently this doesn't cause any issues, but why does it happen?
+
 Suggestions for language plugins
 --------------------------------
 
