@@ -33,6 +33,11 @@
 #ifndef NBDKIT_DATA_DATA_H
 #define NBDKIT_DATA_DATA_H
 
+#if defined (HAVE_GNUTLS) && defined (HAVE_GNUTLS_BASE64_DECODE2)
+#include <gnutls/gnutls.h>
+#define NBDKIT_DATA_HAVE_BASE64_SUPPORT 1
+#endif
+
 extern const char *get_extra_param (const char *name);
 
 #endif /* NBDKIT_DATA_DATA_H */
