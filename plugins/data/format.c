@@ -606,6 +606,7 @@ read_data_format (const char *value, struct allocator *a, uint64_t *size_rtn)
 static int parse_string (const char *value, size_t *start, size_t len,
                          string *rtn);
 static int parse_le_be (string word, string *rtn);
+static int parse_base64 (string word, string *rtn);
 static int get_word (const char *value, size_t *start, size_t len,
                      string *word);
 static size_t get_name (const char *value, size_t i, size_t len,
@@ -933,8 +934,13 @@ parser (int level, const char *value, size_t *start, size_t len,
        */
       assert (word.len >= 2);
 
-      if (parse_le_be (word, &str) == -1)
-        return -1;
+      if (strncmp (word.ptr, "base64:", 7) == 0) {
+        if (parse_base64 (word, &str) == -1)
+          return -1;
+      } else {
+        if (parse_le_be (word, &str) == -1)
+          return -1;
+      }
       APPEND_EXPR (new_node (expr (EXPR_STRING, str)));
       break;
     }
@@ -1246,6 +1252,43 @@ parse_le_be (const string word, string *rtn)
   }
 
   return 0;
+}
+
+/* Parse base64:... sequence. */
+static int
+parse_base64 (const string word, string *rtn)
+{
+#ifdef NBDKIT_DATA_HAVE_BASE64_SUPPORT
+  gnutls_datum_t in, out;
+  int err;
+
+  assert (strncmp (word.ptr, "base64:", 7) == 0); /* caller checked already */
+
+  in.data = (unsigned char *) &word.ptr[7];
+  in.size = word.len - 7 - 1;
+  err = gnutls_base64_decode2 (&in, &out);
+  if (err != GNUTLS_E_SUCCESS) {
+    nbdkit_error ("base64: %s", gnutls_strerror (err));
+    return -1;
+  }
+
+  /* Reserve space in the return string. */
+  *rtn = (string) empty_vector;
+  if (string_reserve_exactly (rtn, out.size) == -1) {
+    nbdkit_error ("realloc: %m");
+    return -1;
+  }
+
+  memcpy (rtn->ptr, out.data, out.size);
+  free (out.data);
+  rtn->len = out.size;
+
+  return 0;
+
+#else
+  nbdkit_error ("base64 is not supported in this build of the plugin");
+  return -1;
+#endif
 }
 
 /* This simple optimization pass over the AST simplifies some

@@ -226,6 +226,18 @@ specified in decimal, octal or hexadecimal.  For example:
 
 generates the 4 byte sequence C<0 0 0 1>.
 
+=item B<base64:>BASE64
+
+(nbdkit E<ge> 1.46)
+
+Decode the BASE64 string into bytes and write these into the image.
+The offset is advanced by the number of decoded bytes.  The BASE64
+string cannot contain any whitespace.
+
+This is only supported if nbdkit was compiled with S<GnuTLS E<ge> 3.6.0>.
+The output of C<nbdkit data --dump-plugin> will contain
+C<data_base64=yes>.
+
 =item B<@>OFFSET
 
 Moves the current offset to C<OFFSET>.  The offset may be specified as
