@@ -605,8 +605,9 @@ read_data_format (const char *value, struct allocator *a, uint64_t *size_rtn)
 
 static int parse_string (const char *value, size_t *start, size_t len,
                          string *rtn);
-static int parse_word (const char *value, size_t *start, size_t len,
-                       string *rtn);
+static int parse_le_be (string word, string *rtn);
+static int get_word (const char *value, size_t *start, size_t len,
+                     string *word);
 static size_t get_name (const char *value, size_t i, size_t len,
                         size_t *initial);
 static size_t get_var (const char *value, size_t i, size_t len,
@@ -918,10 +919,21 @@ parser (int level, const char *value, size_t *start, size_t len,
       APPEND_EXPR (new_node (expr (EXPR_BYTE, j)));
       break;
 
-    case 'l': case 'b': {       /* le or be + NN: + WORD */
+    case 'l': case 'b': {       /* le or be + NN: + WORD, or base64:... */
+      CLEANUP_FREE_STRING string word = empty_vector;
       string str = empty_vector;
 
-      if (parse_word (value, &i, len, &str) == -1)
+      /* Get the whole word, up to the next whitespace (or end of
+       * input), into a \0-terminated string.
+       */
+      if (get_word (value, &i, len, &word) == -1)
+        return -1;
+      /* This must be true because we parsed 'l' or 'b' above, plus
+       * the terminating \0 character makes at least 2.
+       */
+      assert (word.len >= 2);
+
+      if (parse_le_be (word, &str) == -1)
         return -1;
       APPEND_EXPR (new_node (expr (EXPR_STRING, str)));
       break;
@@ -952,6 +964,36 @@ parser (int level, const char *value, size_t *start, size_t len,
 
   /* Return the node ID. */
   *rtn = new_node (expr (EXPR_LIST, list));
+  return 0;
+}
+
+/* Return the next word in the input, starting at the current position
+ * and ending at the first whitespace (or end of input).  This updates
+ * *start with the end of the word + 1.
+ */
+static int
+get_word (const char *value, size_t *start, size_t len, string *word)
+{
+  size_t i = *start;
+  size_t n;
+
+  while (i < len) {
+    if (ascii_isspace (value[i]))
+      break;
+    i++;
+  }
+  n = i - *start;
+
+  *word = (string) empty_vector;
+  if (string_reserve (word, n + 1) == -1) {
+    nbdkit_error ("realloc: %m");
+    return -1;
+  }
+  memcpy (word->ptr, &value[*start], n);
+  word->ptr[n] = '\0';
+  word->len = n + 1;
+  *start = i;
+
   return 0;
 }
 
@@ -1110,38 +1152,14 @@ parse_string (const char *value, size_t *start, size_t len, string *rtn)
 
 /* Parse le<NN>:WORD be<NN>:WORD expressions.  These are parsed into strings. */
 static int
-parse_word (const char *value, size_t *start, size_t len, string *rtn)
+parse_le_be (const string word, string *rtn)
 {
-  size_t i = *start;
-  CLEANUP_FREE_STRING string copy = empty_vector;
-  size_t n;
   enum { little, big } endian;
   uint16_t u16;
   uint32_t u32;
   uint64_t u64;
 
   *rtn = (string) empty_vector;
-
-  /* It's convenient to use the nbdkit_parse* functions below because
-   * they deal already with overflow etc.  However these functions
-   * require a \0-terminated string, so we have to copy what we are
-   * parsing to a new string here.
-   */
-  while (i < len) {
-    if (ascii_isspace (value[i]))
-      break;
-    i++;
-  }
-  n = i - *start;
-  assert (n > 0);          /* must be because caller parsed 'l'/'b' */
-  if (string_reserve (&copy, n + 1) == -1) {
-    nbdkit_error ("realloc: %m");
-    return -1;
-  }
-  memcpy (copy.ptr, &value[*start], n);
-  copy.ptr[n] = '\0';
-  copy.len = n + 1;
-  *start = i;
 
   /* Reserve enough space in the return buffer for the longest
    * possible bitstring (64 bits / 8 bytes).
@@ -1152,42 +1170,42 @@ parse_word (const char *value, size_t *start, size_t len, string *rtn)
   }
 
   /* Parse the rest of {le|be}{16|32|64}: */
-  if (strncmp (copy.ptr, "le16:", 5) == 0) {
+  if (strncmp (word.ptr, "le16:", 5) == 0) {
     endian = little; rtn->len = 2;
   }
-  else if (strncmp (copy.ptr, "le32:", 5) == 0) {
+  else if (strncmp (word.ptr, "le32:", 5) == 0) {
     endian = little; rtn->len = 4;
   }
-  else if (strncmp (copy.ptr, "le64:", 5) == 0) {
+  else if (strncmp (word.ptr, "le64:", 5) == 0) {
     endian = little; rtn->len = 8;
   }
-  else if (strncmp (copy.ptr, "be16:", 5) == 0) {
+  else if (strncmp (word.ptr, "be16:", 5) == 0) {
     endian = big; rtn->len = 2;
   }
-  else if (strncmp (copy.ptr, "be32:", 5) == 0) {
+  else if (strncmp (word.ptr, "be32:", 5) == 0) {
     endian = big; rtn->len = 4;
   }
-  else if (strncmp (copy.ptr, "be64:", 5) == 0) {
+  else if (strncmp (word.ptr, "be64:", 5) == 0) {
     endian = big; rtn->len = 8;
   }
   else {
     nbdkit_error ("data parameter: expected \"le16/32/64:\" "
-                  "or \"be16/32/64:\" at offset %zu", i);
+                  "or \"be16/32/64:\" but got \"%s\"", word.ptr);
     return -1;
   }
 
   /* Parse the word field into a host-order unsigned int. */
   switch (rtn->len) {
   case 2:
-    if (nbdkit_parse_uint16_t ("data", &copy.ptr[5], &u16) == -1)
+    if (nbdkit_parse_uint16_t ("data", &word.ptr[5], &u16) == -1)
       return -1;
     break;
   case 4:
-    if (nbdkit_parse_uint32_t ("data", &copy.ptr[5], &u32) == -1)
+    if (nbdkit_parse_uint32_t ("data", &word.ptr[5], &u32) == -1)
       return -1;
     break;
   case 8:
-    if (nbdkit_parse_uint64_t ("data", &copy.ptr[5], &u64) == -1)
+    if (nbdkit_parse_uint64_t ("data", &word.ptr[5], &u64) == -1)
       return -1;
     break;
   default: abort ();
