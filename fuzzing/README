@@ -1,4 +1,4 @@
-To report security bugs, see ‘SECURITY’ in the top source directory.
+To report security bugs, see ‘SECURITY.md’ in the top source directory.
 
 
 Fuzzing nbdkit using the American Fuzzy Lop (AFL) fuzzer

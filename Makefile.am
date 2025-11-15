@@ -43,7 +43,8 @@ EXTRA_DIST = \
 	OTHER_PLUGINS \
 	README.md \
 	scripts/git.orderfile \
-	SECURITY \
+	SECURITY.md \
+	TODO.md \
 	.vscode/settings.json \
 	.vscode/tasks.json \
 	$(NULL)
