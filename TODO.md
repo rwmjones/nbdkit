@@ -107,6 +107,12 @@ for these use cases.
   well if the OVA contains raw format images (not VMDK which is normal
   for these files).  See also nbdkit-tar-filter.
 
+* Imago plugin
+
+  [Imago](https://docs.rs/imago/latest/imago/) is a Rust library that
+  handles a bunch of common disk image formats like qcow2.  This could
+  be exposed as a plugin.
+
 nbdkit-floppy-plugin:
 
 * Add boot sector support.  In theory this is easy (eg. using
