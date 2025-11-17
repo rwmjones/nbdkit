@@ -1,0 +1,160 @@
+=head1 NAME
+
+nbdkit-release-notes-1.46 - release notes for nbdkit 1.46
+
+=head1 DESCRIPTION
+
+These are the release notes for nbdkit stable release 1.46.
+This describes the major changes since 1.44.
+
+nbdkit 1.46.0 was released on B<XXX December 2025>.
+
+=head2 Security
+
+On certain types of storage, notably where a disk image is on an NFS
+mount, nbdkit would truncate zero requests to 64M.  As L<nbdcopy(1)>
+defaults to 128M block size, this could leave parts of a disk
+unzeroed, exposing older content.  This was fixed in 1.44.1 and the
+fix was backported all the way back to the 1.38 branch.  For more
+details see
+L<https://gitlab.com/nbdkit/nbdkit/-/commit/20b23fc9838faeddfd42664a7f497a9b29dc5921>
+(thanks Alex Kalenyuk).
+
+See L<nbdkit-security(1)> for past security issues.
+
+=head2 Plugins
+
+New L<nbdkit-vram-plugin(1)> which allows Video RAM to be turned into
+an NBD disk, using OpenCL.
+
+L<nbdkit-vddk-plugin(1)> C<export> parameter (added in 1.44) now
+allows exports from subdirectories on the ESXi server.
+
+L<nbdkit-data-plugin(1)> now supports C<base64:...> in format strings.
+
+=head2 Filters
+
+New L<nbdkit-count-filter(1)> which produces a simple summary of the
+number of bytes read, written, etc.
+
+New L<nbdkit-indexed-gzip-filter(1)> which can be used to random
+access gzip files efficiently (Shasheen Ediriweera).
+
+New L<nbdkit-map-filter(1)> which can remap disk blocks arbitrarily.
+
+L<nbdkit-delay-filter(1)> has a new C<delay-trigger=FILE> option that
+lets you enable the filter based on the existence of a file.
+
+nbdkit-cacheextents-filter was deprecated before and has been removed
+in this release of nbdkit.  If you used this filter before, the advice
+is simply to remove it from the filter chain as it usually wasn't
+effective.
+
+=head2 Language bindings
+
+Python binding for L<nbdkit_parse_bool(3)>.
+
+Fix crasher when unloading OCaml plugins (Guillaume Munch-Maccagnoni).
+Also we document that C<nbdkit -s> does not work for OCaml plugins,
+you must use systemd socket activation instead.
+
+=head2 Server
+
+New nbdkit I<--name> parameter which allows you to name nbdkit
+instances.  This is useful when you have multiple copies of nbdkit
+running, especially if they are all writing debug or error messages
+into a single log file so you can tell which instance produced a
+particular message (thanks Ming Xie).
+
+You can now read nbdkit command line parameters from an external file
+using C<@PATH> syntax.
+
+nbdkit I<--long-options> and I<--short-options> are used to implement
+bash completion.  Previously they were hidden, implementation-specific
+options.  However they are useful enough to support and document.
+
+=begin comment
+
+=head2 API
+
+=end comment
+
+=head2 Bug fixes
+
+L<nbdkit-file-plugin(1)> trimming and zeroing paths were fixed so they
+should work on a wider range of backing storage.
+
+Empty string is now rejected as either a plugin or filter name.  This
+caused us to try to C<dlopen("")> which actually opens the current
+executable (apparently a glibc extension).  It would fail with a very
+confusing error.
+
+Fix L<nbdkit_parse_delay(3)> on i386 without SSE.  The previous code
+used the wrong floating point rounding mode.
+
+The way that L<nbdkit-linuxdisk-plugin(1)> parsed the output of
+L<du(1)> using L<getline(3)> was not POSIX compliant, and a change to
+glibc broke it.  This was fixed in nbdkit, but also caused POSIX to
+reconsider the wording of the getline standard (thanks Eric Blake).
+
+Fix our use of L<mke2fs(8)> when creating a test disk for
+L<nbdkit-ext2-filter(1)>.  This greatly reduces the amount of disk
+space used for nbdkit builds (Mykola Ivanets).
+
+=head2 Documentation
+
+Document how to attach NBD devices to QEMU VMs, either when using qemu
+directly, or with libvirt (thanks Vadim Rozenfeld, Peter Krempa).
+
+TODO and SECURITY files in the git repository now use markdown.
+
+=head2 Tests
+
+Tests no longer fail if L<qemu-img(1)> is not available at build time.
+
+=head2 Build
+
+Installed package names are printed by C<./configure>.
+
+=head2 Internals
+
+New C<ONCE()> macro which runs code only once.  This is used for some
+informational debug messages where we want the message to be printed
+once, the first time the situation is encountered.
+
+Several extensions to the internal vector type, including
+C<vector_uniq>, C<vector_append_array>, C<vector_insert_array>,
+C<vector_remove_range>.
+
+New tests functions C<requires_tls>, C<requires_tls_certificates>,
+C<requires_tls_psk>.
+
+=head1 SEE ALSO
+
+L<nbdkit(1)>.
+
+=head1 AUTHORS
+
+Authors of nbdkit 1.46:
+
+=begin comment
+
+git shortlog -s v1.44.0..
+
+=end comment
+
+=over 4
+
+=item Eric Blake
+
+=item Mykola Ivanets
+
+=item Richard W.M. Jones
+
+=item Shasheen Ediriweera
+
+=back
+
+=head1 COPYRIGHT
+
+Copyright Red Hat
