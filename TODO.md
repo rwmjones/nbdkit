@@ -100,6 +100,13 @@ for these use cases.
   https://lists.gnu.org/archive/html/qemu-devel/2017-11/msg02971.html
   is a partial solution but it needs cleaning up.
 
+* OVA files
+
+  OVAs are tar files, and could be automatically opened and all the
+  disks inside exposed as separate exports.  This only really works
+  well if the OVA contains raw format images (not VMDK which is normal
+  for these files).  See also nbdkit-tar-filter.
+
 nbdkit-floppy-plugin:
 
 * Add boot sector support.  In theory this is easy (eg. using
