@@ -332,7 +332,7 @@ make check
 make check-valgrind
 ```
 
-For development ideas, see the [TODO](TODO) file.
+For development ideas, see the [TODO](TODO.md) file.
 
 The upstream git repository is:
 https://gitlab.com/nbdkit/nbdkit
@@ -412,8 +412,8 @@ We configured nbdkit using:
 
 Experimentally, the server can be compiled on Windows or
 cross-compiled from Linux using mingw-w64.  Only a small subset of
-features are available.  To find out what is missing read the TODO
-"Windows port".
+features are available.  To find out what is missing read the
+[TODO](TODO.md) "Windows port".
 
 Note that GCC or Clang is required even if you are compiling on
 Windows because of some C language extensions we use.  MSVC will not

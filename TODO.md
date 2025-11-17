@@ -1,8 +1,6 @@
-To-do list for nbdkit
-======================================================================
+# To-do list for nbdkit
 
-General ideas for improvements
-------------------------------
+## General ideas for improvements
 
 * Listen on specific interfaces or protocols.
 
@@ -15,12 +13,12 @@ General ideas for improvements
   time, up to the thread pool size limit.  Of course, once created, a
   thread is reused as possible until the connection closes.
 
-* A new threading model, SERIALIZE_RETIREMENT, which lets the client
+* A new threading model, `SERIALIZE_RETIREMENT`, which lets the client
   queue up multiple requests and processes them in parallel in the
   plugin, but where the responses sent back to the client are in the
   same order as the client's request rather than the plugin's
   completion.  This is stricter than fully parallel, but looser than
-  SERIALIZE_REQUESTS (in particular, a client can get
+  `SERIALIZE_REQUESTS` (in particular, a client can get
   non-deterministic behavior if batched requests touch the same area
   of the export).
 
@@ -39,28 +37,29 @@ General ideas for improvements
 * If a client negotiates structured replies, and issues a read/extents
   call that exceeds EOF (qemu 3.1 is one such client, when nbdkit
   serves non-sector-aligned images), return the valid answer for the
-  subset of the request in range and then NBD_REPLY_TYPE_ERROR_OFFSET
+  subset of the request in range and then `NBD_REPLY_TYPE_ERROR_OFFSET`
   for the tail, rather than erroring the entire request.
 
-* Audit the code base to get rid of strerror() usage (the function is
-  not thread-safe); however, using strerror_r() can be tricky as it
+* Audit the code base to get rid of `strerror()` usage (the function is
+  not thread-safe); however, using `strerror_r()` can be tricky as it
   has a different signature in glibc than in POSIX.
 
-* Teach nbdkit_error() to have smart newline appending (for existing
+* Teach `nbdkit_error()` to have smart newline appending (for existing
   inconsistent clients), while fixing internal uses to omit the
   newline. Commit ef4f72ef has some ideas on smart newlines, but that
   should probably be factored into a utility function.
 
 * Add a mode of operation where nbdkit is handed a pre-opened fd to be
   used immediately in transmission phase (skipping handshake).  There
-  are already third-party clients of the kernel's /dev/nbdX which rely
+  are already third-party clients of the kernel's `/dev/nbdX` which rely
   on their own protocol instead of NBD handshake, before calling
-  ioctl(NBD_SET_SOCK); this mode would let the third-party client
+  `ioctl(NBD_SET_SOCK)`; this mode would let the third-party client
   continue to keep their non-standard handshake while utilizing nbdkit
   to prototype new behaviors in serving the kernel.
 
-* "nbdkit.so": nbdkit as a loadable shared library.  The aim of nbdkit
-  is to make it reusable from other programs (see nbdkit-captive(1)).
+* `nbdkit.so`: nbdkit as a loadable shared library.  The aim of nbdkit
+  is to make it reusable from other programs (see
+  [nbdkit-captive(1)](https://libguestfs.org/nbdkit-captive.1.html)).
   If it was a loadable shared library it would be even more reusable.
   API would allow you to create an nbdkit instance, configure it (same
   as the current command line), start it serving on a socket, etc.
@@ -68,27 +67,27 @@ General ideas for improvements
   good enough?  Also allowing multiple instances of nbdkit to be
   loaded in the same process is probably impossible.
 
-* password=- to mean read a password interactively from /dev/tty (not
-  stdin).
+* `password=-` to mean read a password interactively from `/dev/tty`
+  (not stdin).
 
-* Add separate man pages for a few missing NBDKIT_EXTERN_DECL
+* Add separate man pages for a few missing `NBDKIT_EXTERN_DECL`
   functions, including those for extents, contexts, and exports.
 
-* Enhance --keepalive by allowing more socket options to be set, in
-  particular SOL_TCP + TCP_KEEPCNT, SOL_TCP + TCP_KEEPIDLE, and
-  SOL_TCP + TCP_KEEPINTVL.
+* Enhance `--keepalive` by allowing more socket options to be set, in
+  particular `SOL_TCP` + `TCP_KEEPCNT`, `SOL_TCP` + `TCP_KEEPIDLE`,
+  and `SOL_TCP` + `TCP_KEEPINTVL`.
 
-* Fix --port=0 / allow nbdkit to choose a TCP port: Several tests rely
-  on picking a random TCP port, which is racy.  The kernel can pick a
-  port for us, and nbdkit --print-uri function can be used to display
-  the random port to the user.  Because of a bug, nbdkit lets you
-  choose --port=0, causing the kernel to pick a port, but --print-uri
-  doesn't display the port, and a different port is picked for IPv4
-  and IPv6 (so it only makes sense to use this with -4 or -6 option).
-  Once this mess is fixed, the tests should be updated to use this.
+* Fix `--port=0` / allow nbdkit to choose a TCP port: Several tests
+  rely on picking a random TCP port, which is racy.  The kernel can
+  pick a port for us, and nbdkit `--print-uri` function can be used to
+  display the random port to the user.  Because of a bug, nbdkit lets
+  you choose `--port=0`, causing the kernel to pick a port, but
+  `--print-uri` doesn't display the port, and a different port is
+  picked for IPv4 and IPv6 (so it only makes sense to use this with
+  `-4` or `-6` option).  Once this mess is fixed, the tests should be
+  updated to use this.
 
-Suggestions for plugins
------------------------
+## Suggestions for plugins
 
 Note: qemu supports other formats such as iscsi and ceph/rbd, and
 while similar plugins could be written for nbdkit there is no
@@ -114,7 +113,7 @@ nbdkit-floppy-plugin:
 
 nbdkit-linuxdisk-plugin:
 
-* Add multiple dir merging (in e2fsprogs mke2fs).
+* Add multiple dir merging (in e2fsprogs `mke2fs`).
 
 VDDK:
 
@@ -133,23 +132,23 @@ nbdkit-torrent-plugin:
 
 nbdkit-ondemand-plugin:
 
-* Implement more callbacks, eg. .zero
+* Implement more callbacks, eg. `.zero`
 
 * Allow client to select size up to a limit, eg. by sending export
-  names like ‘export:4G’.  This would have to be controlled by a
-  flag, since existing clients might be using ':'.
+  names like `export:4G`.  This would have to be controlled by a
+  flag, since existing clients might be using `':'`.
 
 nbdkit-data-plugin:
 
 * Allow expressions to evaluate to numbers, offsets, etc so that this
   works:
 
-  nbdkit data '(0x55 0xAA)*n' n=1000
+  `nbdkit data '(0x55 0xAA)*n' n=1000`
 
 * Allow inclusion of files where the file is not binary but is written
   in the data format.
 
-* Like $VAR but the variable is either binary or base64.
+* Like `$VAR` but the variable is either binary or base64.
 
 nbdkit-cdi-plugin:
 
@@ -176,7 +175,7 @@ nbdkit-file-plugin:
     code currently assumes that sector alignment is always fine, but
     there may be block devices with larger alignment requirements.
 
-  - We're waiting for Linux to allow fallocate(FALLOC_FL_PUNCH_HOLE)
+  - We're waiting for Linux to allow `fallocate(FALLOC_FL_PUNCH_HOLE)`
     on all block device types (including LVM thin).  There are some
     proposals upstream.  This would allow us to remove the BLKDISCARD
     code and simplify things.
@@ -196,20 +195,18 @@ nbdkit-vram-plugin:
   have to test.)
 
 * radeontop says we're using 101% of the available Video RAM when we
-  fully allocate a disk (without using the 'size' parameter).
+  fully allocate a disk (without using the `size` parameter).
   Apparently this doesn't cause any issues, but why does it happen?
 
-Suggestions for language plugins
---------------------------------
+## Suggestions for language plugins
 
 Python:
 
-* Get the __docstring__ from the module and print it in --help output.
-  This requires changes to the core API so that config_help is a
-  function rather than a variable (see V3 suggestions below).
+* Get the `__docstring__` from the module and print it in `--help`
+  output.  This requires changes to the core API so that config_help
+  is a function rather than a variable (see V3 suggestions below).
 
-Suggestions for filters
------------------------
+## Suggestions for filters
 
 * Add shared filter.  Take advantage of filter context APIs to open a
   single context into the backend shared among multiple client
@@ -220,7 +217,7 @@ Suggestions for filters
   https://www.cloudandheat.com/block-level-data-tracking-using-davice-mappers-dm-era/
   https://github.com/qemu/qemu/blob/master/docs/interop/bitmaps.rst
 
-* masking plugin features for testing clients (see 'nozero' and 'fua'
+* masking plugin features for testing clients (see `nozero` and `fua`
   filters for examples)
 
 * "bandwidth quota" filter which would close a connection after it
@@ -233,7 +230,7 @@ Suggestions for filters
   deal with non-seekable compressed data.  Note the filter would have
   to work by caching already-read data in a temporary file.
 
-* nbdkit-cache-filter should handle ENOSPC errors automatically by
+* nbdkit-cache-filter should handle `ENOSPC` errors automatically by
   reclaiming blocks from the cache
 
 * nbdkit-cache-filter could use a background thread for reclaiming.
@@ -256,7 +253,7 @@ nbdkit-luks-filter:
 
 * There are some missing features: ESSIV, more ciphers.
 
-* Implement trim and zero if possible.
+* Implement `.trim` and `.zero` if possible.
 
 nbdkit-readahead-filter:
 
@@ -281,11 +278,11 @@ nbdkit-retry-filter:
 
 * allow user to specify which errors cause a retry and which ones are
   passed through; for example there's probably no point retrying on
-  ENOMEM
+  `ENOMEM`
 
 * there are all kinds of extra complications possible here,
   eg. specifying a pattern of retrying and reopening:
-  retry-method=RRRORRRRRORRRRR meaning to retry the data command 3
+  `retry-method=RRRORRRRRORRRRR` meaning to retry the data command 3
   times, reopen, retry 5 times, etc.
 
 * subsecond times
@@ -300,7 +297,7 @@ nbdkit-ip-filter:
 
 nbdkit-extentlist-filter:
 
-* read the extents generated by qemu-img map, allowing extents to be
+* read the extents generated by `qemu-img map`, allowing extents to be
   ported from a qemu block device
 
 * make non-read-only access safe by updating the extent list when the
@@ -308,8 +305,8 @@ nbdkit-extentlist-filter:
 
 nbdkit-exportname-filter:
 
-* find a way to call the plugin's .list_exports during .open, so that
-  we can enforce exportname-strict=true without command line redundancy
+* find a way to call the plugin's `.list_exports` during `.open`, so that
+  we can enforce `exportname-strict=true` without command line redundancy
 
 * add a mode for passing in a file containing exportnames in the same
   manner accepted by the sh/eval plugins, rather than one name (and no
@@ -381,14 +378,14 @@ nbdkit processes.  Perhaps libnbd will prove useful for this purpose.
 Build-related
 -------------
 
-* Figure out how to get 'make distcheck' working. VPATH builds are
+* Figure out how to get `make distcheck` working. VPATH builds are
   working, but various pkg-config results that try to stick
   bash-completion and ocaml add-ons into their system-wide home do
-  not play nicely with --prefix builds for a non-root user.
+  not play nicely with `--prefix` builds for a non-root user.
 
-* Right now, 'make check' builds keys with an expiration of 1 year
+* Right now, `make check` builds keys with an expiration of 1 year
   only if they don't exist, and we leave the keys around except under
-  'make distclean'.  This leads to testsuite failures when
+  `make distclean`.  This leads to testsuite failures when
   (re-)building in an incremental tree first started more than a year
   ago.  Better would be having make unconditionally run the generator
   scripts, but tweak the scripts themselves to be a no-op unless the
@@ -401,18 +398,18 @@ Currently many features are missing, including:
 
 * Daemonization.  This is not really applicable for Windows where you
   would instead want to run nbdkit as a service using something like
-  SRVANY.  You must use the -f option or one of the other options that
-  implies -f.
+  SRVANY.  You must use the `-f` option or one of the other options
+  that implies `-f`.
 
-* These options are all unimplemented:
-  --exit-with-parent, --group, --run, --selinux-label, --single, --swap,
-  --user, --vsock
+* These options are all unimplemented: `--exit-with-parent`,
+  `--group`, `--run`, `--selinux-label`, `--single`, `--swap`,
+  `--user`, `--vsock`
 
 * Many other plugins and filters.
 
-* errno_is_preserved should use GetLastError and/or WSAGetLastError
-  but currently does neither so errors from plugins are probably wrong
-  in many cases.
+* `.errno_is_preserved` should use `GetLastError` and/or
+  `WSAGetLastError` but currently does neither so errors from plugins
+  are probably wrong in many cases.
 
 * Most tests are skipped because of the missing features above.
 
@@ -425,27 +422,27 @@ the protocol.
 
 Note that we keep the old protocol(s) around so that source
 compatibility is retained.  Plugins must opt in to the new protocol
-using ‘#define NBDKIT_API_VERSION <version>’.
+using `#define NBDKIT_API_VERSION <version>`
 
-* All methods taking a ‘count’ field should be uint64_t (instead of
-  uint32_t).  Although the NBD protocol does not support 64 bit
+* All methods taking a `count` field should be `uint64_t` (instead of
+  `uint32_t`).  Although the NBD protocol does not support 64 bit
   lengths, it might do in future.
 
-* v2 .can_zero is tri-state for filters, but bool for plugins; in v3,
-  even plugins should get a say on whether to emulate
+* v2 `.can_zero` is tri-state for filters, but bool for plugins; in
+  v3, even plugins should get a say on whether to emulate
 
-* v2 .can_extents is bool, and cannot affect our response to
-  NBD_OPT_SET_META_CONTEXT (that is, we are blindly emulating extent
-  support regardless of the export name).  In v3, .can_extents should
-  be tri-state, with an explicit way to disable that context on a
-  per-export basis.
+* v2 `.can_extents` is bool, and cannot affect our response to
+  `NBD_OPT_SET_META_CONTEXT` (that is, we are blindly emulating extent
+  support regardless of the export name).  In v3, `.can_extents`
+  should be tri-state, with an explicit way to disable that context on
+  a per-export basis.
 
-* pread could be changed to allow it to support Structured Replies
+* `.pread` could be changed to allow it to support Structured Replies
   (SRs).  This could mean allowing it to return partial data, holes,
   zeroes, etc.  For a client that negotiates SR coupled with a plugin
   that supports .extents, the v2 protocol would allow us to at least
-  synthesize NBD_REPLY_TYPE_OFFSET_HOLE for less network traffic, even
-  though the plugin will still have to fully populate the .pread
+  synthesize `NBD_REPLY_TYPE_OFFSET_HOLE` for less network traffic,
+  even though the plugin will still have to fully populate the .pread
   buffer; the v3 protocol should make sparse reads more direct.
 
 * Parameters should be systematized so that they aren't just (key,
@@ -453,34 +450,36 @@ using ‘#define NBDKIT_API_VERSION <version>’.
   and filters, and the type of the values, and both check and parse
   them for the plugin.
 
-* Modify open() API so it takes an export name and tls parameter.
+* Modify `.open` so it takes an export name and tls parameter.
 
-* Modify get_ready() API to pass final selected thread model.  Filters
+* Modify `.get_ready` to pass final selected thread model.  Filters
   already get this information, but to date, we have not yet seen a
-  reason to add nbdkit_get_thread_model for use by v2 plugins.
+  reason to add `nbdkit_get_thread_model` for use by v2 plugins.
 
-* Change config_help from a variable to a function.
+* Change `config_help` from a variable to a function.
 
-* Consider extra parameters to .block_size().  First so that we can
+* Consider extra parameters to `.block_size`.  First so that we can
   separately control maximum data request (eg. pread) vs maximum
   virtual request (eg. zero).  Note that the NBD protocol does not yet
-  support this distinction.  We may also need a 'bool strict'
+  support this distinction.  We may also need a `bool strict`
   parameter to specify whether the client requested block size
   information or not.  qemu-nbd can distinguish these two cases.
 
 * Renumber thread models.  Redefine existing thread models like this:
 
+  ```
    model                    existing value      new value
   SERIALIZE_CONNECTIONS           0               1000
   SERIALIZE_ALL_REQUESTS          1               2000
   SERIALIZE_REQUESTS              2               3000
   PARALLEL                        3               4000
+  ```
 
   This allows new thread models to be inserted before and between the
-  existing ones.  In particular SERIALIZE_RETIREMENT has been
-  suggested above (inserted between SERIALIZE_REQUESTS and PARALLEL).
-  We could also imagine a thread model more like the one VDDK really
-  wants which calls open and close from the main thread.
+  existing ones.  In particular `SERIALIZE_RETIREMENT` has been
+  suggested above (inserted between `SERIALIZE_REQUESTS` and
+  `PARALLEL`).  We could also imagine a thread model more like the one
+  VDDK really wants which calls open and close from the main thread.
 
   For backwards compatibility the old numbers 0-3 can be transparently
   mapped to the new values.
