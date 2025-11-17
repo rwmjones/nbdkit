@@ -1738,11 +1738,13 @@ TESTS += \
 	test-checkwrite.sh \
 	test-checkwrite-bounds.sh \
 	test-checkwrite-fail.sh \
+	test-checkwrite-fastzero.sh \
 	$(NULL)
 EXTRA_DIST += \
 	test-checkwrite.sh \
 	test-checkwrite-bounds.sh \
 	test-checkwrite-fail.sh \
+	test-checkwrite-fastzero.sh \
 	$(NULL)
 
 # count filter test.

@@ -331,6 +331,12 @@ nbdkit_extents_full (struct context *next_c,
       = nbdkit_extents_new (offset, offset+count);
     if (t == NULL) goto error1;
 
+    if (ret->extents.len == MAX_EXTENTS) {
+      *err = ENOMEM;
+      nbdkit_error ("nbdkit_extents_full: too many extents in region");
+      goto error0;
+    }
+
     if (next->extents (next_c, count, offset, flags, t, err) == -1)
       goto error0;
 

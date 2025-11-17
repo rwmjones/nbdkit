@@ -1019,7 +1019,7 @@ Returns a copy of the C<i>'th extent.
 
 A convenience function is provided to filters only which makes one or
 more requests to the underlying plugin until we have a full set of
-extents covering the region C<[offset..offset+count-1]>.
+extents covering the exact region C<[offset..offset+count-1]>.
 
  struct nbdkit_extents *nbdkit_extents_full (
                              nbdkit_next *next,
@@ -1030,7 +1030,8 @@ Note this allocates a new C<struct nbdkit_extents> which the caller
 must free.  C<flags> is passed through to the underlying plugin, but
 C<NBDKIT_FLAG_REQ_ONE> is removed from the set of flags so that the
 plugin returns as much information as possible (this is usually what
-you want).
+you want).  Any information the plugin provides beyond C<count+offset>
+is discarded.
 
 On error this function can return C<NULL>.  In this case it calls
 L<nbdkit_error(3)> and/or L<nbdkit_set_error(3)> as required.  C<*err> will

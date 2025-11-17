@@ -165,6 +165,8 @@ checkwrite_trim_zero (nbdkit_next *next,
                       void *handle, uint32_t count, uint64_t offset,
                       uint32_t flags, int *err)
 {
+  CLEANUP_FREE char *buf = NULL;
+
   /* If the plugin supports extents, speed this up by using them. */
   if (next->can_extents (next)) {
     size_t i, n;
@@ -174,16 +176,14 @@ checkwrite_trim_zero (nbdkit_next *next,
       return -1;
 
     n = nbdkit_extents_count (exts);
-    for (i = 0; i < n && count > 0; ++i) {
+    for (i = 0; i < n; ++i) {
       const struct nbdkit_extent e = nbdkit_get_extent (exts, i);
       const uint64_t next_extent_offset = e.offset + e.length;
 
       /* Anything that reads back as zero is good. */
       if ((e.type & NBDKIT_EXTENT_ZERO) != 0) {
-        const uint64_t zerolen = MIN (count, next_extent_offset - offset);
-
-        offset += zerolen;
-        count -= zerolen;
+        offset += e.length;
+        count -= e.length;
         continue;
       }
 
@@ -192,17 +192,18 @@ checkwrite_trim_zero (nbdkit_next *next,
         *err = ENOTSUP;
         return -1;
       }
-      while (offset < next_extent_offset && count > 0) {
+      while (offset < next_extent_offset) {
         size_t buflen = MIN (MAX_REQUEST_SIZE, count);
-        buflen = MIN (buflen, next_extent_offset - offset);
 
-        CLEANUP_FREE char *buf = malloc (buflen);
+        if (buf == NULL)
+          buf = malloc (buflen);
         if (buf == NULL) {
           *err = errno;
           nbdkit_error ("malloc: %m");
           return -1;
         }
 
+        buflen = MIN (buflen, next_extent_offset - offset);
         if (next->pread (next, buf, buflen, offset, 0, err) == -1)
           return -1;
         if (! is_zero (buf, buflen))
@@ -225,8 +226,6 @@ checkwrite_trim_zero (nbdkit_next *next,
    * slow way.
    */
   else {
-    CLEANUP_FREE char *buf;
-
     if (flags & NBDKIT_FLAG_FAST_ZERO) {
       *err = ENOTSUP;
       return -1;
