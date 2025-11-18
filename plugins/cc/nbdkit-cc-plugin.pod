@@ -5,8 +5,9 @@ nbdkit-cc-plugin - write small nbdkit plugins in inline C
 
 =head1 SYNOPSIS
 
- nbdkit cc /path/to/plugin.c [CC=<CC>] [CFLAGS=<CFLAGS>]
-                             [EXTRA_CFLAGS=<EXTRA_CFLAGS>]
+ nbdkit cc /path/to/plugin.c [CC=...] [CFLAGS="..."]
+                             [EXTRA_CFLAGS="..."]
+                             [other plugin parameters ...]
 
 =for paragraph
 
