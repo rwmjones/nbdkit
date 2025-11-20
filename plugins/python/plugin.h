@@ -33,12 +33,6 @@
 #ifndef NBDKIT_PYTHON_PLUGIN_H
 #define NBDKIT_PYTHON_PLUGIN_H
 
-/* Include these headers from one place because we have to make sure
- * we always set these #defines identically before inclusion.
- */
-#define PY_SSIZE_T_CLEAN 1
-#include <Python.h>
-
 #define NBDKIT_API_VERSION 2
 #include <nbdkit-plugin.h>
 

@@ -30,6 +30,10 @@
  * SUCH DAMAGE.
  */
 
+/* Python is broken, this MUST come first. */
+#define PY_SSIZE_T_CLEAN 1
+#include <Python.h>
+
 #include <config.h>
 
 #include <stdio.h>
