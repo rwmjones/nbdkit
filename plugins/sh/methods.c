@@ -1046,6 +1046,8 @@ parse_extents (const char *script,
       nbdkit_error ("%s: extents: cannot parse %s", script, line);
       goto out;
     }
+    if (*p == '#')
+      continue;
     offset = nbdkit_parse_size (p);
     if (offset == -1)
       goto out;

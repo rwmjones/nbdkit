@@ -92,7 +92,9 @@ test 1M
 
 # Extent list covering 1-2M with data.
 cat > $input <<'EOF'
+# Missing type field implies data
 1M 1M
+ #another comment
 EOF
 
 cat > $expected <<'EOF'

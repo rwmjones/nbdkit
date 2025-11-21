@@ -554,9 +554,10 @@ which correspond to the inputs of the C C<nbdkit_add_extent> function
 (see L<nbdkit-plugin(3)>).  The C<offset> and C<length> fields may use
 any format understood by L<nbdkit_parse_size(3)>.  The optional
 C<type> field may be an integer, missing (same as 0), or a
-comma-separated list of the words C<hole> and C<zero>.  An example of
-a valid set of extents covering a C<10M> disk where the first megabyte
-only is allocated data:
+comma-separated list of the words C<hole> and C<zero>.  Lines
+beginning with C<#> are comments.  An example of a valid set of
+extents covering a C<10M> disk where the first megabyte only is
+allocated data:
 
  0  1M
  1M 9M  hole,zero

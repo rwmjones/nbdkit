@@ -158,6 +158,8 @@ parse_extentlist (void)
       nbdkit_error ("%s: cannot parse %s", extentlist, line);
       exit (EXIT_FAILURE);
     }
+    if (*p == '#')
+      continue;
     offset = nbdkit_parse_size (p);
     if (offset == -1)
       exit (EXIT_FAILURE);

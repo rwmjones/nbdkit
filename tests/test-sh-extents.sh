@@ -82,7 +82,6 @@ esac
 EOF
 
 # Completely allocated disk.
-# type field missing means allocated data.
 cat > $expected <<'EOF'
 {"start":0,"length":65536,"data":true,"zero":false}
 EOF
@@ -92,7 +91,9 @@ case "$1" in
      get_size) echo 64K ;;
      can_extents) exit 0 ;;
      extents)
+         echo "# type field missing means allocated data."
          echo "0 64K"
+         echo " #another comment"
          ;;
      *) exit 2 ;;
 esac
