@@ -1041,19 +1041,18 @@ parse_extents (const char *script,
       len--;
     }
 
-    if ((p = strtok_r (line, delim, &sp)) == NULL) {
-    parse_error:
-      nbdkit_error ("%s: extents: cannot parse %s", script, line);
-      goto out;
-    }
+    if ((p = strtok_r (line, delim, &sp)) == NULL)
+      continue;
     if (*p == '#')
       continue;
     offset = nbdkit_parse_size (p);
     if (offset == -1)
       goto out;
 
-    if ((p = strtok_r (NULL, delim, &sp)) == NULL)
-      goto parse_error;
+    if ((p = strtok_r (NULL, delim, &sp)) == NULL) {
+      nbdkit_error ("%s: extents: cannot parse %s", script, line);
+      goto out;
+    }
     length = nbdkit_parse_size (p);
     if (length == -1)
       goto out;

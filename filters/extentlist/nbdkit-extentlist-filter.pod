@@ -31,8 +31,8 @@ in read-only mode (I<-r> option).
 =head1 FILE FORMAT
 
 The list of extents is specified in a text file.  There is one extent
-specified per line.  Each line, other than comment lines beginning
-with C<#>, has the format:
+specified per line.  Each line, other than blank lines or comment
+lines beginning with C<#>, has the format:
 
  offset length type
 

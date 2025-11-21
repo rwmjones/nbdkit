@@ -93,6 +93,7 @@ case "$1" in
      extents)
          echo "# type field missing means allocated data."
          echo "0 64K"
+         echo
          echo " #another comment"
          ;;
      *) exit 2 ;;

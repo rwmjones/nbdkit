@@ -153,19 +153,18 @@ parse_extentlist (void)
       len--;
     }
 
-    if ((p = strtok_r (line, delim, &sp)) == NULL) {
-    parse_error:
-      nbdkit_error ("%s: cannot parse %s", extentlist, line);
-      exit (EXIT_FAILURE);
-    }
+    if ((p = strtok_r (line, delim, &sp)) == NULL)
+      continue;
     if (*p == '#')
       continue;
     offset = nbdkit_parse_size (p);
     if (offset == -1)
       exit (EXIT_FAILURE);
 
-    if ((p = strtok_r (NULL, delim, &sp)) == NULL)
-      goto parse_error;
+    if ((p = strtok_r (NULL, delim, &sp)) == NULL) {
+      nbdkit_error ("%s: cannot parse %s", extentlist, line);
+      exit (EXIT_FAILURE);
+    }
     length = nbdkit_parse_size (p);
     if (length == -1)
       exit (EXIT_FAILURE);

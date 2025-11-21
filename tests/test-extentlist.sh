@@ -94,6 +94,7 @@ test 1M
 cat > $input <<'EOF'
 # Missing type field implies data
 1M 1M
+
  #another comment
 EOF
 
