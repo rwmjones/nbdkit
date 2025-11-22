@@ -48,7 +48,6 @@ string_append_format (string *s, const char *fs, ...)
   CLEANUP_FREE char *s2 = NULL;
   va_list ap;
   size_t len;
-  ssize_t need;
   int r;
 
   va_start (ap, fs);
@@ -60,8 +59,7 @@ string_append_format (string *s, const char *fs, ...)
    * reservation is 1 byte longer than we need.
    */
   len = strlen (s2);
-  need = s->len + len + 1 - s->cap;
-  if (need > 0 && string_reserve (s, need) == -1)
+  if (string_reserve (s, len + 1) == -1)
     return -1;
 
   string_append_array (s, s2, len);

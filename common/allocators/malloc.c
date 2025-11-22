@@ -91,7 +91,7 @@ extend_without_mlock (struct m_alloc *ma, uint64_t new_size)
     old_size = ma->ba.cap;
     n = new_size - ma->ba.cap;
 
-    if (bytearray_reserve (&ma->ba, n) == -1) {
+    if (bytearray_reserve (&ma->ba, new_size - ma->ba.len) == -1) {
       nbdkit_error ("realloc: %m");
       return -1;
     }
@@ -121,7 +121,7 @@ extend_with_mlock (struct m_alloc *ma, uint64_t new_size)
       munlock (ma->ba.ptr, ma->ba.cap);
 #endif
 
-    if (bytearray_reserve_page_aligned (&ma->ba, n) == -1) {
+    if (bytearray_reserve_page_aligned (&ma->ba, new_size - ma->ba.len) == -1) {
       nbdkit_error ("realloc: %m");
       return -1;
     }

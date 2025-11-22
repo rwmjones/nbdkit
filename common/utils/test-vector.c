@@ -134,8 +134,18 @@ test_string_concat (string *s, const char *append)
   size_t i;
   int r;
 
+  /* Reserve is a no-op if capacity is already adequate; but when it
+   * must grow, it favors geometric growth.
+   */
   r = string_reserve (s, len);
   assert (r == 0);
+  i = s->cap;
+  r = string_reserve (s, 1);
+  assert (r == 0);
+  assert (s->cap == i);
+  r = string_reserve (s, s->cap - s->len + 1); /* Save room for \0 */
+  assert (r == 0);
+  assert (s->cap > i + 1);
 
   /* The contract is that after calling string_reserve with 'n', we
    * can append up to 'n' items to the vector without failing.
@@ -160,6 +170,7 @@ test_string (void)
 
   assert (strcmp (s.ptr, "hello world") == 0);
   assert (s.len == 12); /* hello + space + world + \0 */
+  assert (s.cap >= 12);
   string_reset (&s);
 }
 
@@ -171,8 +182,17 @@ test_string_concat_exactly (string *s, const char *append)
   size_t i;
   int r;
 
+  /* Reserve_exactly can shrink capacity. */
+  i = s->len;
   r = string_reserve_exactly (s, len);
   assert (r == 0);
+  assert (s->cap == i + len);
+  r = string_reserve_exactly (s, 1);
+  assert (r == 0);
+  assert (s->cap == i + 1);
+  r = string_reserve_exactly (s, len + 1); /* Save room for \0 */
+  assert (r == 0);
+  assert (s->cap == i + len + 1);
 
   /* The contract is that after calling string_reserve with 'n', we
    * can append up to 'n' items to the vector without failing.
@@ -197,6 +217,7 @@ test_string_exactly (void)
 
   assert (strcmp (s.ptr, "hello world") == 0);
   assert (s.len == 12); /* hello + space + world + \0 */
+  assert (s.cap == 12);
   string_reset (&s);
 }
 

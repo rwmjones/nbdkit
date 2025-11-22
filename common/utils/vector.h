@@ -56,11 +56,11 @@
  * This also defines functions called "<name>_reserve",
  * "<name>_append", etc.
  *
- * <name>_reserve (&vector, n) reserves n additional elements beyond
- * the current capacity.  This is a wrapper around "realloc" and might
- * fail (returning -1).  If it succeeds (returning 0) then you are
- * allowed to call <name>_append (&vector, elem) up to n times and it
- * will not fail.
+ * <name>_reserve (&vector, n) reserves at least n additional elements
+ * beyond the current capacity.  This is a wrapper around "realloc"
+ * and might fail (returning -1).  If it succeeds (returning 0) then
+ * you are allowed to call <name>_append (&vector, elem) up to n times
+ * and it will not fail.
  *
  * <name>_append (&vector, elem) appends the new element at the end of
  * the array (at ptr[len]), increasing the length.  This may need to
@@ -117,9 +117,9 @@
   };                                                                    \
   typedef struct name name;                                             \
                                                                         \
-  /* Reserve n elements at the end of the vector.  Note space is        \
-   * allocated and capacity is increased, but the vector length is      \
-   * not increased and the new elements are not initialized.            \
+  /* Reserve at least n elements at the end of the vector.  Note        \
+   * space is allocated and capacity is increased, but the vector       \
+   * length is not increased and the new elements are not initialized.  \
    */                                                                   \
   static inline int __attribute__ ((__unused__))                        \
   name##_reserve (name *v, size_t n)                                    \

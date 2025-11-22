@@ -51,21 +51,22 @@ calculate_capacity (struct generic_vector *v, size_t n, size_t itemsize,
   size_t reqcap, reqbytes, newcap, newbytes, t;
 
   /* New capacity requested.  We must allocate this minimum (or fail).
-   *   reqcap = v->cap + n
+   *   reqcap = v->len + n
    *   reqbytes = reqcap * itemsize
    */
-  if (ADD_OVERFLOW (v->cap, n, &reqcap) ||
+  if (ADD_OVERFLOW (v->len, n, &reqcap) ||
       MUL_OVERFLOW (reqcap, itemsize, &reqbytes)) {
     errno = ENOMEM;
     return -1;
   }
 
-  /* However for the sake of optimization, scale buffer by 3/2 so that
-   * repeated reservations don't call realloc often.
+  /* However for the sake of optimization, scale buffer growth by at
+   * least 3/2 so that repeated reservations don't call realloc often.
    *   newcap = v->cap + (v->cap + 1) / 2
    *   newbytes = newcap * itemsize
    */
   if (exactly ||
+      reqcap < v->cap ||
       ADD_OVERFLOW (v->cap, 1u, &t) ||
       ADD_OVERFLOW (v->cap, t/2, &newcap) ||
       MUL_OVERFLOW (newcap, itemsize, &newbytes) ||
@@ -91,6 +92,9 @@ generic_vector_reserve (struct generic_vector *v, size_t n, size_t itemsize,
 
   if (calculate_capacity (v, n, itemsize, &newcap, &newbytes, exactly) == -1)
     return -1;
+
+  if (!exactly && newcap < v->cap)
+    return 0;
 
   newptr = realloc (v->ptr, newbytes);
   if (newptr == NULL)
