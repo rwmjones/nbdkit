@@ -454,7 +454,8 @@ ssh_open (int readonly)
   struct ssh_handle *h;
   const int set = 1;
   size_t i;
-  int r;
+  int r, openssh_version;
+  unsigned n;
 
   h = calloc (1, sizeof *h);
   if (h == NULL) {
@@ -601,6 +602,22 @@ ssh_open (int readonly)
                   ssh_get_error (h->session));
     goto err;
   }
+
+  /* Print some information about the connection if debugging is enabled. */
+  nbdkit_debug ("server banner: %s",
+                ssh_get_serverbanner (h->session) ? : "(none)");
+  openssh_version = ssh_get_openssh_version (h->session);
+  if (openssh_version > 0)
+    nbdkit_debug ("OpenSSH version: %d (%d.%d.%d)",
+                  openssh_version,
+                  openssh_version >> 16,
+                  (openssh_version >> 8) & 0xff,
+                  openssh_version & 0xff);
+  nbdkit_debug ("SFTP protocol version: %d", sftp_server_version (h->sftp));
+  n = sftp_extensions_get_count (h->sftp);
+  for (i = 0; i < n; ++i)
+    nbdkit_debug ("SFTP extension: %s",
+                  sftp_extensions_get_name (h->sftp, i));
 
   /* Open or create the remote file. */
   h->file = open_or_create_path (h->session, h->sftp, readonly);
