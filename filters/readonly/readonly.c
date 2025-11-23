@@ -75,7 +75,7 @@ readonly_open (nbdkit_next_open *next, nbdkit_context *nxdata,
    * cannot do that.
    */
   if (ro_file == NULL)
-    readonly = 0;
+    readonly = 1;
   if (next (nxdata, readonly, exportname) == -1)
     return NULL;
   return NBDKIT_HANDLE_NOT_NEEDED;
