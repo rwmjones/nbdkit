@@ -64,9 +64,7 @@ f=test-readonly.sentinel
 cleanup_fn rm -f $f
 rm -f $f
 
-export f
-nbdkit -v null 1M --filter=readonly readonly-file=$f \
-       --run 'nbdsh -u "$uri" -c -' <<'EOF'
+define script <<'EOF'
 
 import os
 
@@ -109,3 +107,7 @@ os.remove(f)
 h.pwrite(bytearray(512), 0)
 
 EOF
+
+export f script
+nbdkit -v null 1M --filter=readonly readonly-file=$f \
+       --run 'nbdsh -u "$uri" -c "$script"'
