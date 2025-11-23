@@ -249,6 +249,8 @@ struct ssh_handle {
   ssh_session session;
   sftp_session sftp;
   sftp_file file;
+  sftp_attributes attrs;
+  bool is_block_device;
 };
 
 /* Verify the remote host.
@@ -454,7 +456,8 @@ ssh_open (int readonly)
   struct ssh_handle *h;
   const int set = 1;
   size_t i;
-  int r;
+  int r, openssh_version;
+  unsigned n;
 
   h = calloc (1, sizeof *h);
   if (h == NULL) {
@@ -602,16 +605,59 @@ ssh_open (int readonly)
     goto err;
   }
 
+  /* Print some information about the connection if debugging is enabled. */
+  nbdkit_debug ("server banner: %s",
+                ssh_get_serverbanner (h->session) ? : "(none)");
+  openssh_version = ssh_get_openssh_version (h->session);
+  if (openssh_version > 0)
+    nbdkit_debug ("OpenSSH version: %d (%d.%d.%d)",
+                  openssh_version,
+                  openssh_version >> 16,
+                  (openssh_version >> 8) & 0xff,
+                  openssh_version & 0xff);
+  nbdkit_debug ("SFTP protocol version: %d", sftp_server_version (h->sftp));
+  n = sftp_extensions_get_count (h->sftp);
+  for (i = 0; i < n; ++i)
+    nbdkit_debug ("SFTP extension: %s",
+                  sftp_extensions_get_name (h->sftp, i));
+
   /* Open or create the remote file. */
   h->file = open_or_create_path (h->session, h->sftp, readonly);
   if (!h->file)
     goto err;
+
+  /* Get the file attributes and store in the handle. */
+  h->attrs = sftp_fstat (h->file);
+  if (h->attrs == NULL) {
+    nbdkit_error ("sftp_fstat: %s", ssh_get_error (h->session));
+    goto err;
+  }
+
+  /* Check if this is a file or block device (cf. ssh_get_size).
+   *
+   * Note ignore h->attrs->type.  The actual type is stored in greater
+   * fidelity in the top bits of h->attrs->permissions.
+   */
+  switch (h->attrs->permissions & SSH_S_IFMT) {
+  case SSH_S_IFREG:
+    h->is_block_device = false;
+    break;
+  case SSH_S_IFBLK:
+    h->is_block_device = true;
+    break;
+  default:
+    nbdkit_error ("unknown file type %" PRIu32,
+                  h->attrs->permissions & SSH_S_IFMT);
+    goto err;
+  }
 
   nbdkit_debug ("opened libssh handle");
 
   return h;
 
  err:
+  if (h->attrs)
+    sftp_attributes_free (h->attrs);
   if (h->file)
     sftp_close (h->file);
   if (h->sftp)
@@ -631,6 +677,8 @@ ssh_close (void *handle)
   struct ssh_handle *h = handle;
   int r;
 
+  sftp_attributes_free (h->attrs);
+
   r = sftp_close (h->file);
   if (r != SSH_OK)
     nbdkit_error ("cannot close file: %s", ssh_get_error (h->session));
@@ -641,19 +689,57 @@ ssh_close (void *handle)
   free (h);
 }
 
+/* There's no direct way to get the size of a block device such as an
+ * sftp call that translates to BLKGETSIZE64.  Seek/tell won't work
+ * because sftp_seek64 only sets an offset in the libssh handle.
+ * However we can use a binary search.
+ */
+static int64_t
+get_size_of_block_device (struct ssh_handle *h)
+{
+  int64_t size = 0, mask;
+  int bit, r;
+  ssize_t rs;
+  char c;
+
+  nbdkit_debug ("using binary search to determine the size of the file");
+
+  for (bit = 62; bit >= 0; --bit) {
+    /* Try setting the bit and reading at this position. */
+    mask = INT64_C(1) << bit;
+    size |= mask;
+
+    r = sftp_seek64 (h->file, size);
+    if (r != SSH_OK) {
+      nbdkit_error ("seek64 failed: %s", ssh_get_error (h->session));
+      return -1;
+    }
+    rs = sftp_read (h->file, &c, 1);
+    if (rs < 0) {
+      nbdkit_debug ("bit %d: size %" PRIi64 ": too large (read error: %s)",
+                    bit, size, ssh_get_error (h->session));
+      /* No good, so clear the bit. */
+      size &= ~mask;
+    }
+    else {
+      nbdkit_debug ("bit %d: size %" PRIi64 ": smaller or equal",
+                    bit, size);
+    }
+  }
+
+  return size;
+}
+
 /* Get the file size. */
 static int64_t
 ssh_get_size (void *handle)
 {
   struct ssh_handle *h = handle;
-  sftp_attributes attrs;
-  int64_t r;
 
-  attrs = sftp_fstat (h->file);
-  r = attrs->size;
-  sftp_attributes_free (attrs);
-
-  return r;
+  if (!h->is_block_device)
+    return h->attrs->size;
+  else
+    return get_size_of_block_device (h);
 }
 
 /* Read data from the remote server. */
