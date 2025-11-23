@@ -496,7 +496,7 @@ an error message and return C<-1>.
 This intercepts the plugin C<.list_exports> method and can be used to
 filter which exports are advertised.
 
-The C<readonly> parameter matches what is passed to <.preconnect> and
+The C<readonly> parameter matches what is passed to C<.preconnect> and
 C<.open>, and may be changed by the filter when calling into the
 plugin.  The C<is_tls> parameter informs the filter whether TLS
 negotiation has been completed by the client, but is not passed on to
@@ -572,7 +572,7 @@ Returns a copy of the C<i>'th export.
 This intercepts the plugin C<.default_export> method and can be used to
 alter the canonical export name used in place of the default C<"">.
 
-The C<readonly> parameter matches what is passed to <.preconnect> and
+The C<readonly> parameter matches what is passed to C<.preconnect> and
 C<.open>, and may be changed by the filter when calling into the
 plugin.  The C<is_tls> parameter informs the filter whether TLS
 negotiation has been completed by the client, but is not passed on to
@@ -812,7 +812,7 @@ error message and return C<-1>.  These functions are called at most
 once per connection and cached by nbdkit. Similarly, repeated calls to
 any of the C<nbdkit_next> counterparts will return a cached value; by
 calling into the plugin during C<.prepare>, you can ensure that later
-use of the cached values during data commands like <.pwrite> will not
+use of the cached values during data commands like C<.pwrite> will not
 fail.
 
 =head2 C<.pread>
