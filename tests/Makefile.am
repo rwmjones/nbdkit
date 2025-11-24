@@ -2042,6 +2042,12 @@ TESTS += test-nozero.sh
 endif HAVE_LIBNBD
 EXTRA_DIST += test-nozero.sh
 
+if HAVE_LIBNBD
+# noextents filter test.
+TESTS += test-noextents.sh
+endif HAVE_LIBNBD
+EXTRA_DIST += test-noextents.sh
+
 # offset filter test.
 LIBGUESTFS_TESTS += test-offset
 
