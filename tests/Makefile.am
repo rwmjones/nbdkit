@@ -306,6 +306,8 @@ TESTS += \
 	test-long-name.sh \
 	test-flush.sh \
 	test-crippled-extents.sh \
+	test-export-handshake.sh \
+	test-export-handshake-tls.sh \
 	test-swap.sh \
 	test-disconnect.sh \
 	test-disconnect-tls.sh \
@@ -352,6 +354,8 @@ EXTRA_DIST += \
 	test-client-death-tls.sh \
 	test-client-death.sh \
 	test-crippled-extents.sh \
+	test-export-handshake.sh \
+	test-export-handshake-tls.sh \
 	test-debug-flags.sh \
 	test-disconnect-tls.sh \
 	test-disconnect.sh \
