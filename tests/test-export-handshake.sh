@@ -162,4 +162,25 @@ h.opt_go()
 must_fail(h.can_meta_context, nbd.CONTEXT_BASE_ALLOCATION)
 must_fail(h.block_status, 1, 0, check_extents)
 h.shutdown()
+
+# Test 5: a later SET_META_CONTEXT overrides an earlier one
+
+h = nbd.NBD()
+h.set_request_meta_context(False)
+h.set_strict_mode(0)
+h.set_opt_mode(True)
+h.connect_unix(os.environ["sock"])
+assert h.get_structured_replies_negotiated()
+
+h.set_export_name("five")
+h.add_meta_context(nbd.CONTEXT_BASE_ALLOCATION)
+assert h.opt_set_meta_context(check_context) == 1
+assert h.can_meta_context(nbd.CONTEXT_BASE_ALLOCATION)
+h.clear_meta_contexts()
+assert h.opt_set_meta_context(check_context) == 0
+assert not h.can_meta_context(nbd.CONTEXT_BASE_ALLOCATION)
+h.opt_go()
+assert not h.can_meta_context(nbd.CONTEXT_BASE_ALLOCATION)
+must_fail(h.block_status, 1, 0, check_extents)
+h.shutdown()
 '
