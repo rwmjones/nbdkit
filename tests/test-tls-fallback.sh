@@ -120,6 +120,7 @@ h.set_tls_psk_file(os.getenv("pskfile"))
 h.set_tls_username("qemu")
 h.connect_unix(os.environ["sock"])
 assert h.opt_list(f) == 2
+assert h.opt_list(f) == 2
 h.opt_info()
 assert h.get_canonical_export_name() == "hello"
 assert h.get_export_description() == "=hello="

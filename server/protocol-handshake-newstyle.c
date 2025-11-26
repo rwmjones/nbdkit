@@ -387,7 +387,6 @@ negotiate_handshake_newstyle_options (void)
   GET_CONN;
   struct nbd_new_option new_option;
   size_t nr_options;
-  bool list_seen = false;
   uint64_t version;
   uint32_t option;
   uint32_t optlen;
@@ -503,21 +502,11 @@ negotiate_handshake_newstyle_options (void)
         continue;
       }
 
-      if (list_seen) {
-        debug ("newstyle negotiation: %s: export list already advertised",
-               name_of_nbd_opt (option));
-        if (send_newstyle_option_reply (option, NBD_REP_ERR_INVALID) == -1)
-          return -1;
-        continue;
-      }
-      else {
-        /* Send back the exportname list. */
-        debug ("newstyle negotiation: %s: advertising exports",
-               name_of_nbd_opt (option));
-        if (send_newstyle_option_reply_exportnames (option, &nr_options) == -1)
-          return -1;
-        list_seen = true;
-      }
+      /* Send back the exportname list. */
+      debug ("newstyle negotiation: %s: advertising exports",
+             name_of_nbd_opt (option));
+      if (send_newstyle_option_reply_exportnames (option, &nr_options) == -1)
+        return -1;
       break;
 
     case NBD_OPT_STARTTLS:
