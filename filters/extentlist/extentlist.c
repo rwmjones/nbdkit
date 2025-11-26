@@ -308,8 +308,10 @@ extentlist_extents (nbdkit_next *next,
 
     end = extents.ptr[i].offset + extents.ptr[i].length;
     if (nbdkit_add_extent (ret_extents, offset, end - offset,
-                           extents.ptr[i].type) == -1)
+                           extents.ptr[i].type) == -1) {
+      *err = errno;
       return -1;
+    }
 
     count -= MIN (count, end-offset);
     offset = end;
