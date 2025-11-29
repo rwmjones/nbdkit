@@ -1143,8 +1143,16 @@ EXTRA_DIST += \
 
 # random plugin test.
 LIBNBD_TESTS += test-random
-TESTS += test-random-copy.sh
-EXTRA_DIST += test-random-copy.sh
+TESTS += \
+	test-random-copy.sh \
+	test-random-seed.sh \
+	test-random-seed-fast.sh \
+	$(NULL)
+EXTRA_DIST += \
+	test-random-copy.sh \
+	test-random-seed.sh \
+	test-random-seed-fast.sh \
+	$(NULL)
 
 test_random_SOURCES = test-random.c
 test_random_CPPFLAGS = -I $(top_srcdir)/common/include
