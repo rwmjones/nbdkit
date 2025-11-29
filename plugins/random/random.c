@@ -52,6 +52,37 @@ static int64_t size = 0;
 /* Seed. */
 static uint32_t seed;
 
+/* Underlying function that generates repeatable data.
+ *
+ * We use nbdkit common/include/random.h to make random numbers.
+ *
+ * However we're not quite using it in the ordinary way.  In order to
+ * be able to read any byte of data without needing to run the PRNG
+ * from the start, the random data is computed from the index and seed
+ * through three rounds of PRNG:
+ *
+ * index i     PRNG(seed+i)   -> PRNG -> PRNG -> mod 256 -> buf[i]
+ * index i+1   PRNG(seed+i+1) -> PRNG -> PRNG -> mod 256 -> buf[i+1]
+ * etc
+ */
+static void
+generate (uint64_t offset, uint32_t count, unsigned char *buf)
+{
+  uint64_t s;
+  uint32_t i;
+
+  for (i = 0; i < count; ++i) {
+    struct random_state state;
+
+    xsrandom (seed + offset + i, &state);
+    xrandom (&state);
+    xrandom (&state);
+    s = xrandom (&state);
+    s &= 255;
+    buf[i] = s;
+  }
+}
+
 static void
 random_load (void)
 {
@@ -127,31 +158,7 @@ static int
 random_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
               uint32_t flags)
 {
-  uint32_t i;
-  unsigned char *b = buf;
-  uint64_t s;
-
-  for (i = 0; i < count; ++i) {
-    /* We use nbdkit common/include/random.h to make random numbers.
-     *
-     * However we're not quite using it in the ordinary way.  In order
-     * to be able to read any byte of data without needing to run the
-     * PRNG from the start, the random data is computed from the index
-     * and seed through three rounds of PRNG:
-     *
-     * index i     PRNG(seed+i)   -> PRNG -> PRNG -> mod 256 -> b[i]
-     * index i+1   PRNG(seed+i+1) -> PRNG -> PRNG -> mod 256 -> b[i+1]
-     * etc
-     */
-    struct random_state state;
-
-    xsrandom (seed + offset + i, &state);
-    xrandom (&state);
-    xrandom (&state);
-    s = xrandom (&state);
-    s &= 255;
-    b[i] = s;
-  }
+  generate (offset, count, buf);
   return 0;
 }
 
