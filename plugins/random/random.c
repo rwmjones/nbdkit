@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <inttypes.h>
 #include <string.h>
 #include <errno.h>
@@ -44,6 +45,7 @@
 #include <nbdkit-plugin.h>
 
 #include "cleanup.h"
+#include "minmax.h"
 #include "random.h"
 
 /* The size of disk in bytes (initialized by size=<SIZE> parameter). */
@@ -51,6 +53,41 @@ static int64_t size = 0;
 
 /* Seed. */
 static uint32_t seed;
+
+/* Fast mode. */
+static bool fast = false;
+static unsigned char fastbuffer[512];
+
+/* Underlying function that generates repeatable data.
+ *
+ * We use nbdkit common/include/random.h to make random numbers.
+ *
+ * However we're not quite using it in the ordinary way.  In order to
+ * be able to read any byte of data without needing to run the PRNG
+ * from the start, the random data is computed from the index and seed
+ * through three rounds of PRNG:
+ *
+ * index i     PRNG(seed+i)   -> PRNG -> PRNG -> mod 256 -> buf[i]
+ * index i+1   PRNG(seed+i+1) -> PRNG -> PRNG -> mod 256 -> buf[i+1]
+ * etc
+ */
+static void
+generate (uint64_t offset, uint32_t count, unsigned char *buf)
+{
+  uint64_t s;
+  uint32_t i;
+
+  for (i = 0; i < count; ++i) {
+    struct random_state state;
+
+    xsrandom (seed + offset + i, &state);
+    xrandom (&state);
+    xrandom (&state);
+    s = xrandom (&state);
+    s &= 255;
+    buf[i] = s;
+  }
+}
 
 static void
 random_load (void)
@@ -65,17 +102,21 @@ random_load (void)
 static int
 random_config (const char *key, const char *value)
 {
-  int64_t r;
-
   if (strcmp (key, "seed") == 0) {
     if (nbdkit_parse_uint32_t ("seed", value, &seed) == -1)
       return -1;
   }
   else if (strcmp (key, "size") == 0) {
-    r = nbdkit_parse_size (value);
+    int64_t r = nbdkit_parse_size (value);
     if (r == -1)
       return -1;
     size = r;
+  }
+  else if (strcmp (key, "fast") == 0) {
+    int r = nbdkit_parse_bool (value);
+    if (r == -1)
+      return -1;
+    fast = r;
   }
   else {
     nbdkit_error ("unknown parameter '%s'", key);
@@ -87,9 +128,18 @@ random_config (const char *key, const char *value)
 
 #define random_config_help \
   "size=<SIZE>  (required) Size of the backing disk\n" \
-  "seed=<SEED>             Random number generator seed"
+  "seed=<SEED>             Random number generator seed\n" \
+  "fast=true               Generate repeated data (much faster)"
 
 #define THREAD_MODEL NBDKIT_THREAD_MODEL_PARALLEL
+
+static int
+random_get_ready (void)
+{
+  if (fast)
+    generate (0, sizeof fastbuffer, fastbuffer);
+  return 0;
+}
 
 /* Create the per-connection handle. */
 static void *
@@ -127,30 +177,39 @@ static int
 random_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
               uint32_t flags)
 {
-  uint32_t i;
-  unsigned char *b = buf;
-  uint64_t s;
+  if (!fast) {
+    /* In slow mode we generate the data properly. */
+    generate (offset, count, buf);
+  }
+  else {
+    /* In fast mode we just duplicate the same buffer. */
+    uint64_t bufoffs;
 
-  for (i = 0; i < count; ++i) {
-    /* We use nbdkit common/include/random.h to make random numbers.
-     *
-     * However we're not quite using it in the ordinary way.  In order
-     * to be able to read any byte of data without needing to run the
-     * PRNG from the start, the random data is computed from the index
-     * and seed through three rounds of PRNG:
-     *
-     * index i     PRNG(seed+i)   -> PRNG -> PRNG -> mod 256 -> b[i]
-     * index i+1   PRNG(seed+i+1) -> PRNG -> PRNG -> mod 256 -> b[i+1]
-     * etc
-     */
-    struct random_state state;
+    bufoffs = offset % sizeof fastbuffer; /* offset within the buffer */
 
-    xsrandom (seed + offset + i, &state);
-    xrandom (&state);
-    xrandom (&state);
-    s = xrandom (&state);
-    s &= 255;
-    b[i] = s;
+    /* Unaligned head */
+    if (bufoffs) {
+      uint64_t n = MIN (sizeof fastbuffer - bufoffs, count);
+
+      memcpy (buf, &fastbuffer[bufoffs], n);
+      buf += n;
+      count -= n;
+      offset += n;
+    }
+
+    /* Aligned body */
+    while (count >= sizeof fastbuffer) {
+      memcpy (buf, fastbuffer, sizeof fastbuffer);
+
+      buf += sizeof fastbuffer;
+      count -= sizeof fastbuffer;
+      offset += sizeof fastbuffer;
+    }
+
+    /* Unaligned tail */
+    if (count) {
+      memcpy (buf, fastbuffer, count);
+    }
   }
   return 0;
 }
@@ -204,6 +263,7 @@ static struct nbdkit_plugin plugin = {
   .config            = random_config,
   .config_help       = random_config_help,
   .magic_config_key  = "size",
+  .get_ready         = random_get_ready,
   .open              = random_open,
   .get_size          = random_get_size,
   .can_multi_conn    = random_can_multi_conn,
