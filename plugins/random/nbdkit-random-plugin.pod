@@ -4,7 +4,7 @@ nbdkit-random-plugin - plugin to serve random data
 
 =head1 SYNOPSIS
 
- nbdkit random [size=]SIZE [seed=SEED]
+ nbdkit random [size=]SIZE [seed=SEED] [fast=true]
 
 =head1 DESCRIPTION
 
@@ -17,6 +17,10 @@ predictable test pattern see L<nbdkit-pattern-plugin(1)>.
 The size of the virtual disk must be specified using the C<size>
 parameter.  If you specify the C<seed> parameter then you will get the
 same random data over multiple runs with the same seed.
+
+In C<fast=true> mode, the same sector of random data is repeated
+across the disk.  As the name suggests, this is much faster, and is
+usually sufficient for testing.
 
 The random data is generated using an I<insecure> method.
 
@@ -36,6 +40,12 @@ See also L<nbdkit-checkwrite-filter(1)>.
 =head1 PARAMETERS
 
 =over 4
+
+=item B<fast=true>
+
+Instead of generating completely random data, a single sector of
+random data is generated when the plugin starts up, which is
+duplicated across the disk.
 
 =item [B<size=>]SIZE
 

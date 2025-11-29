@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <inttypes.h>
 #include <string.h>
 #include <unistd.h>
@@ -56,14 +57,15 @@ static unsigned histogram[256];
 #define NR_READS 50
 static char rdata[RSIZE];
 
-int
-main (int argc, char *argv[])
+void
+test (bool fast)
 {
   struct nbd_handle *nbd;
   struct random_state random_state;
   int i;
   unsigned offset;
   char sizearg[32];
+  char *fastarg;
 
   nbd = nbd_create ();
   if (nbd == NULL) {
@@ -72,10 +74,12 @@ main (int argc, char *argv[])
   }
 
   snprintf (sizearg, sizeof sizearg, "%d", SIZE);
+  fastarg = fast ? "fast=true" : "fast=false";
   if (nbd_connect_command (nbd,
                            (char *[]) {
                              "nbdkit", "-s", "--exit-with-parent",
                              "random", sizearg,
+                             fastarg,
                              NULL }) == -1) {
     fprintf (stderr, "%s\n", nbd_get_error ());
     exit (EXIT_FAILURE);
@@ -123,5 +127,12 @@ main (int argc, char *argv[])
   }
 
   nbd_close (nbd);
+}
+
+int
+main (int argc, char *argv[])
+{
+  test (false);
+  test (true);                  /* test in fast mode */
   exit (EXIT_SUCCESS);
 }

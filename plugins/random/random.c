@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <inttypes.h>
 #include <string.h>
 #include <errno.h>
@@ -44,6 +45,7 @@
 #include <nbdkit-plugin.h>
 
 #include "cleanup.h"
+#include "minmax.h"
 #include "random.h"
 
 /* The size of disk in bytes (initialized by size=<SIZE> parameter). */
@@ -51,6 +53,10 @@ static int64_t size = 0;
 
 /* Seed. */
 static uint32_t seed;
+
+/* Fast mode. */
+static bool fast = false;
+static unsigned char fastbuffer[512];
 
 /* Underlying function that generates repeatable data.
  *
@@ -96,17 +102,21 @@ random_load (void)
 static int
 random_config (const char *key, const char *value)
 {
-  int64_t r;
-
   if (strcmp (key, "seed") == 0) {
     if (nbdkit_parse_uint32_t ("seed", value, &seed) == -1)
       return -1;
   }
   else if (strcmp (key, "size") == 0) {
-    r = nbdkit_parse_size (value);
+    int64_t r = nbdkit_parse_size (value);
     if (r == -1)
       return -1;
     size = r;
+  }
+  else if (strcmp (key, "fast") == 0) {
+    int r = nbdkit_parse_bool (value);
+    if (r == -1)
+      return -1;
+    fast = r;
   }
   else {
     nbdkit_error ("unknown parameter '%s'", key);
@@ -118,9 +128,18 @@ random_config (const char *key, const char *value)
 
 #define random_config_help \
   "size=<SIZE>  (required) Size of the backing disk\n" \
-  "seed=<SEED>             Random number generator seed"
+  "seed=<SEED>             Random number generator seed\n" \
+  "fast=true               Generate repeated data (much faster)"
 
 #define THREAD_MODEL NBDKIT_THREAD_MODEL_PARALLEL
+
+static int
+random_get_ready (void)
+{
+  if (fast)
+    generate (0, sizeof fastbuffer, fastbuffer);
+  return 0;
+}
 
 /* Create the per-connection handle. */
 static void *
@@ -158,7 +177,40 @@ static int
 random_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
               uint32_t flags)
 {
-  generate (offset, count, buf);
+  if (!fast) {
+    /* In slow mode we generate the data properly. */
+    generate (offset, count, buf);
+  }
+  else {
+    /* In fast mode we just duplicate the same buffer. */
+    uint64_t bufoffs;
+
+    bufoffs = offset % sizeof fastbuffer; /* offset within the buffer */
+
+    /* Unaligned head */
+    if (bufoffs) {
+      uint64_t n = MIN (sizeof fastbuffer - bufoffs, count);
+
+      memcpy (buf, &fastbuffer[bufoffs], n);
+      buf += n;
+      count -= n;
+      offset += n;
+    }
+
+    /* Aligned body */
+    while (count >= sizeof fastbuffer) {
+      memcpy (buf, fastbuffer, sizeof fastbuffer);
+
+      buf += sizeof fastbuffer;
+      count -= sizeof fastbuffer;
+      offset += sizeof fastbuffer;
+    }
+
+    /* Unaligned tail */
+    if (count) {
+      memcpy (buf, fastbuffer, count);
+    }
+  }
   return 0;
 }
 
@@ -211,6 +263,7 @@ static struct nbdkit_plugin plugin = {
   .config            = random_config,
   .config_help       = random_config_help,
   .magic_config_key  = "size",
+  .get_ready         = random_get_ready,
   .open              = random_open,
   .get_size          = random_get_size,
   .can_multi_conn    = random_can_multi_conn,
