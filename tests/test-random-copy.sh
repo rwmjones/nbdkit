@@ -30,7 +30,7 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-# Test the sparse-random plugin.
+# Test the random plugin.
 
 source ./functions.sh
 set -e
