@@ -19,8 +19,8 @@ parameter.  If you specify the C<seed> parameter then you will get the
 same random data over multiple runs with the same seed.
 
 In C<fast=true> mode, the same sector of random data is repeated
-across the disk.  As the name suggests, this is much faster, and is
-usually sufficient for testing.
+across the disk with small variations.  As the name suggests, this is
+much faster, and is usually sufficient for testing.
 
 The random data is generated using an I<insecure> method.
 
@@ -45,7 +45,7 @@ See also L<nbdkit-checkwrite-filter(1)>.
 
 Instead of generating completely random data, a single sector of
 random data is generated when the plugin starts up, which is
-duplicated across the disk.
+duplicated across the disk with variations.
 
 =item [B<size=>]SIZE
 

@@ -89,6 +89,23 @@ generate (uint64_t offset, uint32_t count, unsigned char *buf)
   }
 }
 
+/* In fast mode, we use generate() above to generate a fixed sector
+ * which is repeated across the whole disk.  However to prevent the
+ * data from being too easily compressible, we do a simple
+ * manipulation of the buffer depending on the sector number.
+ */
+static void
+get_fast_sector (uint64_t bufnum, uint8_t *buf)
+{
+  size_t i;
+  const uint8_t o = bufnum & 0xff;
+
+  /* GCC unrolls and vectorizes this. */
+  for (i = 0; i < sizeof fastbuffer; ++i) {
+    buf[i] = fastbuffer[i] ^ o;
+  }
+}
+
 static void
 random_load (void)
 {
@@ -183,32 +200,39 @@ random_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
   }
   else {
     /* In fast mode we just duplicate the same buffer. */
-    uint64_t bufoffs;
+    uint8_t bounce[sizeof fastbuffer];
+    uint64_t bufnum, bufoffs;
 
+    bufnum = offset / sizeof fastbuffer;  /* buffer number */
     bufoffs = offset % sizeof fastbuffer; /* offset within the buffer */
 
     /* Unaligned head */
     if (bufoffs) {
       uint64_t n = MIN (sizeof fastbuffer - bufoffs, count);
 
-      memcpy (buf, &fastbuffer[bufoffs], n);
+      get_fast_sector (bufnum, bounce);
+      memcpy (buf, &bounce[bufoffs], n);
+
       buf += n;
       count -= n;
       offset += n;
+      bufnum++;
     }
 
     /* Aligned body */
     while (count >= sizeof fastbuffer) {
-      memcpy (buf, fastbuffer, sizeof fastbuffer);
+      get_fast_sector (bufnum, buf);
 
       buf += sizeof fastbuffer;
       count -= sizeof fastbuffer;
       offset += sizeof fastbuffer;
+      bufnum++;
     }
 
     /* Unaligned tail */
     if (count) {
-      memcpy (buf, fastbuffer, count);
+      get_fast_sector (bufnum, bounce);
+      memcpy (buf, bounce, count);
     }
   }
   return 0;
