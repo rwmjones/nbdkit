@@ -1932,6 +1932,7 @@ feature "linker script"       test "x$USE_LINKER_SCRIPT" = "x"
 feature "manual pages"        test "x$HAVE_POD_TRUE" = "x"
 feature "SELinux"             test "x$LIBSELINUX_LIBS" != "x"
 feature "TLS"                 test "x$GNUTLS_LIBS" != "x"
+print "TLS priority"          "$tls_priority"
 feature "USDT probes"         test "x$enable_probes" = "xyes"
 
 echo
