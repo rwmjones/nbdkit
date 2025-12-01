@@ -141,7 +141,13 @@ plugin_guestfs_config (const char *key, const char *value)
       m->type = mount_inspect;
       m->dev = m->mp = NULL;
     }
-    else if ((p = strchr (value, ':')) != NULL) {
+    /* strchr in C23 correctly returns 'const char *' here (because
+     * 'value' is also const).  However we happen to know that this
+     * string may be modified.  Allocating a new string isn't
+     * convenient here, but we should probably fix this eventually
+     * instead of the bad cast to 'char *' XXX
+     */
+    else if ((p = (char *) strchr (value, ':')) != NULL) {
       *p = '\0';
       m->type = mount_fs;
       m->dev = value;

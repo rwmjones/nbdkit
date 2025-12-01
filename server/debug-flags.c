@@ -85,7 +85,7 @@ void
 add_debug_flag (const char *arg)
 {
   struct debug_flag *flag;
-  char *p, *q;
+  const char *p, *q;
 
   p = strchr (arg, '.');
   q = strchr (arg, '=');
