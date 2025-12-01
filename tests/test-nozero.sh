@@ -113,7 +113,7 @@ start_nbdkit -P nozero4b.pid -U $sock4b --filter=log \
 start_nbdkit -P nozero4a.pid -U $sock4a --filter=log --filter=nozero \
        file logfile=nozero4a.log nozero4.img
 start_nbdkit -P nozero5.pid -U $sock5 --filter=nozero --filter=log \
-       file logfile=nozero5.log nozero5.img zeromode=notrim
+       file logfile=nozero5.log nozero5.img zero-mode=notrim
 
 # Perform the zero write.
 nbdsh -u "nbd+unix://?socket=$sock2" -c '

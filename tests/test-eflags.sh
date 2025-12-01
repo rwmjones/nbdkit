@@ -472,12 +472,12 @@ EOF
 
 #----------------------------------------------------------------------
 # -r
-# --filter=nocache cachemode=none
+# --filter=nocache cache-mode=none
 # can_cache=emulate
 #
 # Filters override the plugin's choice of caching.
 
-late_args="cachemode=none" do_nbdkit -r --filter=nocache <<'EOF'
+late_args="cache-mode=none" do_nbdkit -r --filter=nocache <<'EOF'
 case "$1" in
      get_size) echo 1M ;;
      can_cache) echo "emulate" ;;

@@ -59,7 +59,8 @@ fua_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
 {
   int r;
 
-  if (strcmp (key, "fuamode") == 0) {
+  if (strcmp (key, "fuamode") == 0 ||
+      strcmp (key, "fua-mode") == 0) {
     if (strcmp (value, "none") == 0)
       fuamode = NONE;
     if (strcmp (value, "emulate") == 0)
@@ -73,7 +74,7 @@ fua_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
     else if (strcmp (value, "discard") == 0)
       fuamode = DISCARD;
     else {
-      nbdkit_error ("unknown fuamode '%s'", value);
+      nbdkit_error ("unknown fua-mode '%s'", value);
       return -1;
     }
     return 0;
@@ -90,7 +91,7 @@ fua_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
 }
 
 #define fua_config_help \
-  "fuamode=<MODE>       One of 'none' (default), 'emulate', 'native',\n" \
+  "fua-mode=<MODE>      One of 'none' (default), 'emulate', 'native',\n" \
   "                       'force', 'pass'.\n" \
   "flush-on-close=true  Force flush on client close"
 
@@ -114,7 +115,7 @@ fua_prepare (nbdkit_next *next, void *handle, int readonly)
     if (r == -1)
       return -1;
     if (r == 0) {
-      nbdkit_error ("fuamode 'emulate' requires plugin flush support");
+      nbdkit_error ("fua-mode 'emulate' requires plugin flush support");
       return -1;
     }
     break;
@@ -124,7 +125,7 @@ fua_prepare (nbdkit_next *next, void *handle, int readonly)
     if (r == -1)
       return -1;
     if (r == NBDKIT_FUA_NONE) {
-      nbdkit_error ("fuamode '%s' requires plugin fua support",
+      nbdkit_error ("fua-mode '%s' requires plugin fua support",
                     fuamode == EMULATE ? "emulate" : "force");
       return -1;
     }

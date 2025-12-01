@@ -50,7 +50,7 @@ nbdkit -fv eval \
        flush="echo flushed > $f" \
        pwrite="dd of=/dev/null" \
        --filter=fua \
-       fuamode=pass \
+       fua-mode=pass \
        --run 'nbdsh -u "$uri" -c "h.pwrite(bytearray(512), 0)"'
 
 ! test -f $f
@@ -61,7 +61,7 @@ nbdkit -fv eval \
        flush="echo flushed > $f" \
        pwrite="dd of=/dev/null" \
        --filter=fua \
-       fuamode=pass flush-on-close=true \
+       fua-mode=pass flush-on-close=true \
        --run 'nbdsh -u "$uri" -c "h.pwrite(bytearray(512), 0)"'
 
 # The flush method must have been called.

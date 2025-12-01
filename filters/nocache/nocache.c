@@ -53,14 +53,15 @@ static int
 nocache_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
                 const char *key, const char *value)
 {
-  if (strcmp (key, "cachemode") == 0) {
+  if (strcmp (key, "cachemode") == 0 ||
+      strcmp (key, "cache-mode") == 0) {
     if (strcmp (value, "emulate") == 0)
       cachemode = EMULATE;
     else if (strcmp (value, "nop") == 0 ||
              strcmp (value, "no-op") == 0)
       cachemode = NOP;
     else if (strcmp (value, "none") != 0) {
-      nbdkit_error ("unknown cachemode '%s'", value);
+      nbdkit_error ("unknown cache-mode '%s'", value);
       return -1;
     }
     return 0;
@@ -69,7 +70,7 @@ nocache_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
 }
 
 #define nocache_config_help \
-  "cachemode=<MODE>     Either 'none' (default), 'emulate', or 'nop'.\n" \
+  "cache-mode=<MODE>     Either 'none' (default), 'emulate', or 'nop'.\n" \
 
 /* Advertise desired FLAG_SEND_CACHE mode. */
 static int

@@ -67,7 +67,8 @@ static int
 nozero_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
                const char *key, const char *value)
 {
-  if (strcmp (key, "zeromode") == 0) {
+  if (strcmp (key, "zeromode") == 0 ||
+      strcmp (key, "zero-mode") == 0) {
     if (strcmp (value, "emulate") == 0)
       zeromode = EMULATE;
     else if (strcmp (value, "notrim") == 0)
@@ -75,13 +76,14 @@ nozero_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
     else if (strcmp (value, "plugin") == 0)
       zeromode = PLUGIN;
     else if (strcmp (value, "none") != 0) {
-      nbdkit_error ("unknown zeromode '%s'", value);
+      nbdkit_error ("unknown zero-mode '%s'", value);
       return -1;
     }
     return 0;
   }
 
-  if (strcmp (key, "fastzeromode") == 0) {
+  if (strcmp (key, "fastzeromode") == 0 ||
+      strcmp (key, "fast-zero-mode") == 0) {
     if (strcmp (value, "none") == 0)
       fastzeromode = NOFAST;
     else if (strcmp (value, "ignore") == 0)
@@ -89,7 +91,7 @@ nozero_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
     else if (strcmp (value, "slow") == 0)
       fastzeromode = SLOW;
     else if (strcmp (value, "default") != 0) {
-      nbdkit_error ("unknown fastzeromode '%s'", value);
+      nbdkit_error ("unknown fast-zero-mode '%s'", value);
       return -1;
     }
     return 0;
@@ -98,10 +100,10 @@ nozero_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
   return next (nxdata, key, value);
 }
 
-#define nozero_config_help                                               \
-  "zeromode=<MODE>      One of 'none' (default), 'emulate', 'notrim',\n" \
-  "                     'plugin'.\n"                                     \
-  "fastzeromode=<MODE>  One of 'default', 'none', 'slow', 'ignore'.\n"
+#define nozero_config_help                                                 \
+  "zero-mode=<MODE>       One of 'none' (default), 'emulate', 'notrim',\n" \
+  "                       'plugin'.\n"                                     \
+  "fast-zero-mode=<MODE>  One of 'default', 'none', 'slow', 'ignore'.\n"
 
 /* Check that desired mode is supported by plugin. */
 static int
@@ -119,7 +121,7 @@ nozero_prepare (nbdkit_next *next, void *handle,
     if (r == -1)
       return -1;
     if (!r) {
-      nbdkit_error ("zeromode '%s' requires plugin zero support",
+      nbdkit_error ("zero-mode '%s' requires plugin zero support",
                     zeromode == NOTRIM ? "notrim" : "plugin");
       return -1;
     }

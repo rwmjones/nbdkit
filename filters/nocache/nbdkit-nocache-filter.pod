@@ -4,7 +4,7 @@ nbdkit-nocache-filter - nbdkit nocache filter
 
 =head1 SYNOPSIS
 
- nbdkit --filter=nocache plugin [cachemode=MODE] [plugin-args...]
+ nbdkit --filter=nocache plugin [cache-mode=MODE] [plugin-args...]
 
 =head1 DESCRIPTION
 
@@ -22,6 +22,12 @@ timings.
 =head1 PARAMETERS
 
 =over 4
+
+=item B<cache-mode=none>
+
+=item B<cache-mode=emulate>
+
+=item B<cache-mode=nop>
 
 =item B<cachemode=none>
 
@@ -52,7 +58,7 @@ rather than being forwarded on to the file plugin (which attempts to
 use L<posix_fadvise(3)>), to compare against the timings without the
 filter and determine whether the file plugin caching was worthwhile:
 
- nbdkit --filter=nocache file disk.img cachemode=nop
+ nbdkit --filter=nocache file disk.img cache-mode=nop
 
 =head1 FILES
 
