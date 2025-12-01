@@ -133,6 +133,7 @@ unsigned threads;               /* -t */
 unsigned timeout_secs, timeout_nsecs; /* --timeout */
 int tls;                        /* --tls : 0=off 1=on 2=require */
 const char *tls_certificates_dir; /* --tls-certificates */
+const char *tls_priority;       /* --tls-priority */
 const char *tls_psk;            /* --tls-psk */
 bool tls_verify_peer;           /* --tls-verify-peer */
 char *unixsocket;               /* -U */
@@ -484,6 +485,10 @@ main (int argc, char *argv[])
 
     case TLS_CERTIFICATES_OPTION:
       tls_certificates_dir = optarg;
+      break;
+
+    case TLS_PRIORITY_OPTION:
+      tls_priority = optarg;
       break;
 
     case TLS_PSK_OPTION:

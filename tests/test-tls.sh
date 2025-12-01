@@ -54,11 +54,12 @@ cleanup_fn rm -f $out
 
 nbdkit --tls=require --tls-certificates="$pkidir" --tls-verify-peer \
        -D nbdkit.tls.session=1 \
+       -v \
        example1 \
        --run '
        # Run nbdinfo against the server.
        nbdinfo "$uri"
-       ' > $out
+       ' > $out 2>&1
 
 cat $out
 

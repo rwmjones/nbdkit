@@ -297,6 +297,7 @@ TESTS += \
 	test-captive-tls-psk.sh \
 	test-random-sock.sh \
 	test-tls.sh \
+	test-tls-priority.sh \
 	test-tls-psk.sh \
 	test-not-linked-to-libssl.sh \
 	test-ipv4-lo.sh \
@@ -404,6 +405,7 @@ EXTRA_DIST += \
 	test-timeout.sh \
 	test-timeout.py \
 	test-timeout-cancel.sh \
+	test-tls-priority.sh \
 	test-tls-psk.sh \
 	test-tls.sh \
 	test-version-example1.sh \
