@@ -66,9 +66,19 @@ The Certificate Authority certificate.
 
 The server certificate.
 
+=item F<server-cert-N.pem>
+
+(Optional) Additional server certificates (where C<N> is C<0>, C<1>,
+...)
+
 =item F<server-key.pem>
 
 The server private key.
+
+=item F<server-key-N.pem>
+
+(Optional) Additional server private keys (where C<N> is C<0>, C<1>,
+...)
 
 =item F<ca-crl.pem>
 
