@@ -101,17 +101,10 @@ load_certificates (const char *path)
   CLEANUP_FREE char *server_cert_filename = NULL;
   CLEANUP_FREE char *server_key_filename = NULL;
   CLEANUP_FREE char *ca_crl_filename = NULL;
-  int err;
+  int i, err;
+  unsigned server_keys = 0;
 
   if (asprintf (&ca_cert_filename, "%s/ca-cert.pem", path) == -1) {
-    perror ("asprintf");
-    exit (EXIT_FAILURE);
-  }
-  if (asprintf (&server_cert_filename, "%s/server-cert.pem", path) == -1) {
-    perror ("asprintf");
-    exit (EXIT_FAILURE);
-  }
-  if (asprintf (&server_key_filename, "%s/server-key.pem", path) == -1) {
     perror ("asprintf");
     exit (EXIT_FAILURE);
   }
@@ -120,17 +113,12 @@ load_certificates (const char *path)
     exit (EXIT_FAILURE);
   }
 
-  /* Our test for a certificate directory is that ca-cert.pem,
-   * server-cert.pem and server-key.pem must all exist in the path.
+  /* Our test for a certificate directory is that at least
+   * 'ca-cert.pem' must exist in the path.  We will check later that
+   * at least one server key was loaded.
    */
   if (access (ca_cert_filename, R_OK) == -1)
     return 0;
-  if (access (server_cert_filename, R_OK) == -1)
-    return 0;
-  if (access (server_key_filename, R_OK) == -1)
-    return 0;
-
-  /* Any problem past here is a hard error. */
 
   err = gnutls_certificate_allocate_credentials (&x509_creds);
   if (err < 0) {
@@ -153,14 +141,74 @@ load_certificates (const char *path)
     }
   }
 
-  err = gnutls_certificate_set_x509_key_file (x509_creds,
-                                              server_cert_filename,
-                                              server_key_filename,
-                                              GNUTLS_X509_FMT_PEM);
-  if (err < 0) {
-    print_gnutls_error (err, "loading server certificate and key (%s, %s)",
-                        server_cert_filename, server_key_filename);
+  /* Load the main server certificate and key. */
+  if (asprintf (&server_cert_filename, "%s/server-cert.pem", path) == -1) {
+    perror ("asprintf");
     exit (EXIT_FAILURE);
+  }
+  if (asprintf (&server_key_filename, "%s/server-key.pem", path) == -1) {
+    perror ("asprintf");
+    exit (EXIT_FAILURE);
+  }
+
+  if (access (server_cert_filename, R_OK) == 0 &&
+      access (server_key_filename, R_OK) == 0) {
+    err = gnutls_certificate_set_x509_key_file (x509_creds,
+                                                server_cert_filename,
+                                                server_key_filename,
+                                                GNUTLS_X509_FMT_PEM);
+    if (err < 0) {
+      print_gnutls_error (err, "loading server certificate and key (%s, %s)",
+                          server_cert_filename, server_key_filename);
+      exit (EXIT_FAILURE);
+    }
+    server_keys++;
+  }
+
+  /* Load additional server certificates and keys called
+   * 'server-cert-N.pem' and 'server-key-N.pem' for N = 0, 1, ...
+   * This is used by hybrid PQC.  See also:
+   * https://gitlab.com/berrange/gnutls-qemu-pqc-test-scenarios/
+   */
+  for (i = 0; ; ++i) {
+    free (server_cert_filename);
+    server_cert_filename = NULL;
+    if (asprintf (&server_cert_filename, "%s/server-cert-%d.pem",
+                  path, i) == -1) {
+      perror ("asprintf");
+      exit (EXIT_FAILURE);
+    }
+    free (server_key_filename);
+    server_key_filename = NULL;
+    if (asprintf (&server_key_filename, "%s/server-key-%d.pem",
+                  path, i) == -1) {
+      perror ("asprintf");
+      exit (EXIT_FAILURE);
+    }
+
+    if (access (server_cert_filename, R_OK) == -1 ||
+        access (server_key_filename, R_OK) == -1)
+      break;
+
+    err = gnutls_certificate_set_x509_key_file (x509_creds,
+                                                server_cert_filename,
+                                                server_key_filename,
+                                                GNUTLS_X509_FMT_PEM);
+    if (err < 0) {
+      print_gnutls_error (err, "loading server certificate and key (%s, %s)",
+                          server_cert_filename, server_key_filename);
+      exit (EXIT_FAILURE);
+    }
+
+    server_keys++;
+  }
+
+  if (server_keys == 0) {
+    debug ("no server certificates and keys "
+           "(server-cert.pem, server-key.pem, "
+           "server-cert-0.pem, server-key-0.pem, etc) "
+           "found in directory %s", path);
+    return 0;
   }
 
   debug ("successfully loaded TLS certificates from %s", path);
