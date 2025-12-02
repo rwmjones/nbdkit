@@ -183,6 +183,7 @@ extern unsigned threads;
 extern unsigned timeout_secs, timeout_nsecs;
 extern int tls;
 extern const char *tls_certificates_dir;
+extern const char *tls_priority;
 extern const char *tls_psk;
 extern bool tls_verify_peer;
 extern char *unixsocket;

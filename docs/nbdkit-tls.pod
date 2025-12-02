@@ -359,10 +359,13 @@ C<&tls-certificates=/path/to/certificates> to URIs.
 
 =head2 Choice of TLS algorithms
 
-TLS has a bewildering choice of algorithms that can be used.  To
-enable you to choose a default set of algorithms, there is a configure
-setting I<--with-tls-priority>.  This defaults to C<NORMAL> which, to
-quote the GnuTLS documentation:
+TLS has a bewildering choice of algorithms that can be used.  These
+are controlled by the TLS priority string, described in full in the
+section L<"Priority strings" in the GnuTLS
+manual|https://gnutls.org/manual/html_node/Priority-Strings.html>
+
+If not set anywhere, this defaults to C<NORMAL> which, to quote the
+GnuTLS documentation:
 
 =over 4
 
@@ -372,20 +375,23 @@ margin."
 
 =back
 
-You could also set the TLS priority so that it can be configured from
-a file at runtime:
+The nbdkit default can also be set either at C<./configure> time or at
+run time.
+
+You can set the TLS priority so that it can be read from a file:
 
  ./configure --with-tls-priority=@SYSTEM
 
-means use the policy from F</etc/crypto-policies/config>.
+which means use the policy from F</etc/crypto-policies/config>, or
 
  ./configure --with-tls-priority=@NBDKIT,SYSTEM
 
-means use the policy from
+which means use the policy from
 F</etc/crypto-policies/local.d/nbdkit.config> and fall back to
 F</etc/crypto-policies/config> if the first file does not exist.
 
-More information can be found in L<gnutls_priority_init(3)>.
+At run time, the TLS priority string can be overridden using the
+nbdkit I<--tls-priority> option.
 
 =head2 Debugging TLS connections
 
@@ -422,7 +428,6 @@ L<nbdsh(1)>,
 L<nbd_connect_uri(3)>,
 L<nbd_set_tls(3)>,
 L<nbd_set_tls_certificates(3)>,
-L<gnutls_priority_init(3)>,
 L<psktool(1)>,
 L<https://github.com/NetworkBlockDevice/nbd/blob/master/doc/proto.md>,
 L<https://github.com/NetworkBlockDevice/nbd/blob/master/doc/uri.md>,

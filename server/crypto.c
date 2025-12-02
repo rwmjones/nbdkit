@@ -664,6 +664,22 @@ debug_session (gnutls_session_t session)
   }
 }
 
+static int
+set_priority (gnutls_session_t session, const char *priority)
+{
+  int err;
+
+  debug ("TLS: priority string: %s", priority);
+
+  err = gnutls_priority_set_direct (session, priority, NULL);
+  if (err < 0) {
+    nbdkit_error ("failed to set TLS session priority to %s: %s",
+                  priority, gnutls_strerror (err));
+    return -1;
+  }
+  return 0;
+}
+
 /* Upgrade an existing connection to TLS.  Also this should do access
  * control if enabled.  The protocol code ensures this function can
  * only be called once per connection.
@@ -673,7 +689,7 @@ crypto_negotiate_tls (int sockin, int sockout)
 {
   GET_CONN;
   gnutls_session_t session;
-  CLEANUP_FREE char *priority = NULL;
+  CLEANUP_FREE char *default_priority = NULL;
   int err;
 
   /* Create the GnuTLS session. */
@@ -706,8 +722,8 @@ crypto_negotiate_tls (int sockin, int sockout)
       gnutls_session_set_verify_cert (session, NULL, 0);
     }
 
-    priority = strdup (TLS_PRIORITY);
-    if (priority == NULL) {
+    default_priority = strdup (TLS_PRIORITY);
+    if (default_priority == NULL) {
       nbdkit_error ("strdup: %m");
       goto error;
     }
@@ -721,7 +737,7 @@ crypto_negotiate_tls (int sockin, int sockout)
       goto error;
     }
 
-    if (asprintf (&priority,
+    if (asprintf (&default_priority,
                   "%s:+ECDHE-PSK:+DHE-PSK:+PSK", TLS_PRIORITY) == -1) {
       nbdkit_error ("asprintf: %m");
       goto error;
@@ -732,12 +748,13 @@ crypto_negotiate_tls (int sockin, int sockout)
     abort ();
   }
 
-  assert (priority != NULL);
-  err = gnutls_priority_set_direct (session, priority, NULL);
-  if (err < 0) {
-    nbdkit_error ("failed to set TLS session priority to %s: %s",
-                  priority, gnutls_strerror (err));
-    goto error;
+  if (tls_priority) {
+    if (set_priority (session, tls_priority) == -1)
+      goto error;
+  }
+  else if (default_priority) {
+    if (set_priority (session, default_priority) == -1)
+      goto error;
   }
 
   /* Set up GnuTLS so it reads and writes on the raw sockets. */
