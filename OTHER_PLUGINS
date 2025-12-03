@@ -26,3 +26,9 @@ http://tom7.org/harder/
 
 This is a C++ nbdkit plugin which stores data "in flight" in ping
 packets.
+
+* Proxmox backup server plugin
+
+https://github.com/abbbi/cpbsnbd
+
+Export your virtual machine disk backups from a Proxmox Backup Server via NBD.
