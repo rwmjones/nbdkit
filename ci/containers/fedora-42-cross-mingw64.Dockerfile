@@ -4,7 +4,7 @@
 #
 # https://gitlab.com/libvirt/libvirt-ci
 
-FROM registry.fedoraproject.org/fedora:41
+FROM registry.fedoraproject.org/fedora:42
 
 RUN dnf install -y nosync && \
     printf '#!/bin/sh\n\
@@ -64,10 +64,10 @@ exec "$@"\n' > /usr/bin/nosync && \
     nosync dnf clean all -y && \
     rm -f /usr/lib*/python3*/EXTERNALLY-MANAGED
 
-ENV CCACHE_WRAPPERSDIR "/usr/libexec/ccache-wrappers"
-ENV LANG "en_US.UTF-8"
-ENV MAKE "/usr/bin/make"
-ENV PYTHON "/usr/bin/python3"
+ENV CCACHE_WRAPPERSDIR="/usr/libexec/ccache-wrappers"
+ENV LANG="en_US.UTF-8"
+ENV MAKE="/usr/bin/make"
+ENV PYTHON="/usr/bin/python3"
 
 RUN nosync dnf install -y \
                mingw64-bzip2 \
@@ -85,5 +85,5 @@ RUN nosync dnf install -y \
     ln -s /usr/bin/ccache /usr/libexec/ccache-wrappers/x86_64-w64-mingw32-g++ && \
     ln -s /usr/bin/ccache /usr/libexec/ccache-wrappers/x86_64-w64-mingw32-gcc
 
-ENV ABI "x86_64-w64-mingw32"
-ENV CONFIGURE_OPTS "--host=x86_64-w64-mingw32"
+ENV ABI="x86_64-w64-mingw32"
+ENV CONFIGURE_OPTS="--host=x86_64-w64-mingw32"

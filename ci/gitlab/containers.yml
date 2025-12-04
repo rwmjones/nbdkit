@@ -14,18 +14,18 @@ x86_64-almalinux-9-container:
     NAME: almalinux-9
 
 
-x86_64-alpine-320-container:
-  extends: .container_job
-  allow_failure: false
-  variables:
-    NAME: alpine-320
-
-
 x86_64-alpine-321-container:
   extends: .container_job
   allow_failure: false
   variables:
     NAME: alpine-321
+
+
+x86_64-alpine-322-container:
+  extends: .container_job
+  allow_failure: false
+  variables:
+    NAME: alpine-322
 
 
 x86_64-alpine-edge-container:
@@ -51,7 +51,7 @@ x86_64-debian-12-container:
 
 x86_64-debian-13-container:
   extends: .container_job
-  allow_failure: true
+  allow_failure: false
   variables:
     NAME: debian-13
 
@@ -63,18 +63,18 @@ x86_64-debian-sid-container:
     NAME: debian-sid
 
 
-x86_64-fedora-41-container:
-  extends: .container_job
-  allow_failure: false
-  variables:
-    NAME: fedora-41
-
-
 x86_64-fedora-42-container:
   extends: .container_job
   allow_failure: false
   variables:
     NAME: fedora-42
+
+
+x86_64-fedora-43-container:
+  extends: .container_job
+  allow_failure: false
+  variables:
+    NAME: fedora-43
 
 
 x86_64-fedora-rawhide-container:
@@ -115,15 +115,15 @@ x86_64-ubuntu-2404-container:
 
 # Cross container jobs
 
-mingw32-fedora-41-container:
+mingw32-fedora-42-container:
   extends: .container_job
   allow_failure: false
   variables:
-    NAME: fedora-41-cross-mingw32
+    NAME: fedora-42-cross-mingw32
 
 
-mingw64-fedora-41-container:
+mingw64-fedora-42-container:
   extends: .container_job
   allow_failure: false
   variables:
-    NAME: fedora-41-cross-mingw64
+    NAME: fedora-42-cross-mingw64

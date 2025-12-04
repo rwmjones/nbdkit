@@ -4,7 +4,7 @@
 #
 # https://gitlab.com/libvirt/libvirt-ci
 
-FROM registry.fedoraproject.org/fedora:41
+FROM registry.fedoraproject.org/fedora:43
 
 RUN dnf install -y nosync && \
     printf '#!/bin/sh\n\
@@ -23,22 +23,35 @@ exec "$@"\n' > /usr/bin/nosync && \
                bash \
                bash-completion-devel \
                bzip2 \
+               bzip2-devel \
                ca-certificates \
                cargo \
                ccache \
+               clang \
                clippy \
                e2fsprogs \
                expect \
                gawk \
+               gcc \
+               gcc-c++ \
                genisoimage \
                git \
                glibc-langpack-en \
+               glibc-utils \
+               gnutls-devel \
                golang \
                gzip \
                iproute \
                jq \
+               libcurl-devel \
+               libguestfs-devel \
                libnbd-devel \
+               libselinux-devel \
+               libssh-devel \
                libtool \
+               libtorrent-devel \
+               libvirt-devel \
+               libzstd-devel \
                lua-devel \
                make \
                ocaml \
@@ -47,6 +60,7 @@ exec "$@"\n' > /usr/bin/nosync && \
                perl-base \
                perl-devel \
                perl-podlators \
+               pkgconfig \
                python3 \
                python3-boto3 \
                python3-devel \
@@ -56,34 +70,25 @@ exec "$@"\n' > /usr/bin/nosync && \
                qemu-img \
                rust \
                socat \
+               systemtap-sdt-dtrace \
                tcl-devel \
                util-linux \
                xorriso \
-               xz && \
+               xz \
+               xz-devel \
+               zlib-devel && \
     nosync dnf autoremove -y && \
     nosync dnf clean all -y && \
-    rm -f /usr/lib*/python3*/EXTERNALLY-MANAGED
-
-ENV CCACHE_WRAPPERSDIR "/usr/libexec/ccache-wrappers"
-ENV LANG "en_US.UTF-8"
-ENV MAKE "/usr/bin/make"
-ENV PYTHON "/usr/bin/python3"
-
-RUN nosync dnf install -y \
-               mingw32-bzip2 \
-               mingw32-curl \
-               mingw32-gcc \
-               mingw32-gcc-c++ \
-               mingw32-gnutls \
-               mingw32-libvirt \
-               mingw32-pkg-config && \
-    nosync dnf clean all -y && \
+    rm -f /usr/lib*/python3*/EXTERNALLY-MANAGED && \
     rpm -qa | sort > /packages.txt && \
     mkdir -p /usr/libexec/ccache-wrappers && \
-    ln -s /usr/bin/ccache /usr/libexec/ccache-wrappers/i686-w64-mingw32-c++ && \
-    ln -s /usr/bin/ccache /usr/libexec/ccache-wrappers/i686-w64-mingw32-cc && \
-    ln -s /usr/bin/ccache /usr/libexec/ccache-wrappers/i686-w64-mingw32-g++ && \
-    ln -s /usr/bin/ccache /usr/libexec/ccache-wrappers/i686-w64-mingw32-gcc
+    ln -s /usr/bin/ccache /usr/libexec/ccache-wrappers/c++ && \
+    ln -s /usr/bin/ccache /usr/libexec/ccache-wrappers/cc && \
+    ln -s /usr/bin/ccache /usr/libexec/ccache-wrappers/clang && \
+    ln -s /usr/bin/ccache /usr/libexec/ccache-wrappers/g++ && \
+    ln -s /usr/bin/ccache /usr/libexec/ccache-wrappers/gcc
 
-ENV ABI "i686-w64-mingw32"
-ENV CONFIGURE_OPTS "--host=i686-w64-mingw32"
+ENV CCACHE_WRAPPERSDIR="/usr/libexec/ccache-wrappers"
+ENV LANG="en_US.UTF-8"
+ENV MAKE="/usr/bin/make"
+ENV PYTHON="/usr/bin/python3"
