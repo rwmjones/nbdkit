@@ -38,7 +38,7 @@ function install_buildenv() {
            libtorrent-devel \
            libvirt-devel \
            libzstd-devel \
-           lua-devel \
+           lua54-devel \
            make \
            mkisofs \
            ocaml \
