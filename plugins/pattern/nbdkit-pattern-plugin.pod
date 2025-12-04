@@ -4,7 +4,7 @@ nbdkit-pattern-plugin - plugin to serve a fixed pattern of data for testing
 
 =head1 SYNOPSIS
 
- nbdkit pattern [size=]SIZE
+ nbdkit pattern [size=]SIZE [stride=BLOCK_SIZE]
 
 =head1 DESCRIPTION
 
@@ -33,6 +33,28 @@ The fixed pattern is the offset, as a 64 bit big endian integer, every
 The size of the virtual disk must be specified using the C<size>
 parameter.  If the size is not a multiple of 8 then the last 8 byte
 offset in the pattern is truncated.
+
+=head2 Strides
+
+Using the C<stride> parameter you can create a pattern where each
+block of data has a unique number.  This is useful for tracking down
+disk corruption where blocks of data may be transposed.  For example,
+with 4096 byte block-based storage, using C<stride=4k> will produce a
+pattern like this:
+
+ offset                         data
+  0000:   00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00
+  0010:   00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00
+  ...
+  ...                          block at offset 0x1000 (4k)
+  ...                        ↙
+  1000:   00 00 00 00 00 00 10 00   00 00 00 00 00 00 00 00
+  1010:   00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00
+  ...
+  ...                          block at offset 0x2000 (8k)
+  ...                        ↙
+  2000:   00 00 00 00 00 00 20 00   00 00 00 00 00 00 00 00
+  2010:   00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00
 
 =head2 Largest possible size
 
@@ -65,6 +87,14 @@ Specify the virtual size of the disk image.
 This parameter is required.
 
 C<size=> __IS_MAGIC__
+
+=item B<stride=>BLOCK_SIZE
+
+Instead of writing the 64 bit integers sequentially, place them at the
+beginning of each C<BLOCK_SIZE> block.  See L</Strides> above.
+
+The minimum, and default, stride is 8 which places the integers
+sequentially with no gaps.  The stride must be a power of two.
 
 =back
 
