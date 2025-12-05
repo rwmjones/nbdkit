@@ -56,6 +56,19 @@ pattern like this:
   2000:   00 00 00 00 00 00 20 00   00 00 00 00 00 00 00 00
   2010:   00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00
 
+=head2 Writes and testing copying
+
+Writing to the disk is possible.  If you do this the plugin will check
+that what you are writing exactly matches what would be read at the
+same offset (if not, it returns EIO error).  You can use this to test
+copying programs by making the source and destination NBD URIs be the
+same:
+
+ nbdkit pattern size=100M --run 'nbdcopy "$uri" "$uri"'
+
+C<qemu-img convert> could be used in place of nbdcopy.
+See also L<nbdkit-checkwrite-filter(1)>.
+
 =head2 Largest possible size
 
 nbdkit itself limits plugins to S<2⁶³-1> bytes
@@ -118,6 +131,7 @@ C<nbdkit-pattern-plugin> first appeared in nbdkit 1.6.
 
 L<nbdkit(1)>,
 L<nbdkit-plugin(3)>,
+L<nbdkit-checkwrite-filter(1)>,
 L<nbdkit-data-plugin(1)>,
 L<nbdkit-full-plugin(1)>,
 L<nbdkit-null-plugin(1)>,

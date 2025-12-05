@@ -43,6 +43,7 @@
 #include <nbdkit-plugin.h>
 
 #include "byte-swapping.h"
+#include "cleanup.h"
 #include "isaligned.h"
 #include "ispowerof2.h"
 #include "minmax.h"
@@ -179,6 +180,35 @@ pattern_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
   return 0;
 }
 
+/* Write data.
+ *
+ * This verifies that the data matches what is read.  This is
+ * implemented by calling pattern_pread above internally and comparing
+ * the two buffers.
+ */
+static int
+pattern_pwrite (void *handle, const void *buf,
+                uint32_t count, uint64_t offset,
+                uint32_t flags)
+{
+  CLEANUP_FREE char *expected = malloc (count);
+  if (expected == NULL) {
+    nbdkit_error ("malloc: %m");
+    return -1;
+  }
+
+  if (pattern_pread (handle, expected, count, offset, flags) == -1)
+    return -1;
+
+  if (memcmp (buf, expected, count) != 0) {
+    errno = EIO;
+    nbdkit_error ("data written does not match expected");
+    return -1;
+  }
+
+  return 0;
+}
+
 static struct nbdkit_plugin plugin = {
   .name              = "pattern",
   .version           = PACKAGE_VERSION,
@@ -190,6 +220,7 @@ static struct nbdkit_plugin plugin = {
   .can_multi_conn    = pattern_can_multi_conn,
   .can_cache         = pattern_can_cache,
   .pread             = pattern_pread,
+  .pwrite            = pattern_pwrite,
   /* In this plugin, errno is preserved properly along error return
    * paths from failed system calls.
    */

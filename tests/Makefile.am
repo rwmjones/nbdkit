@@ -1137,12 +1137,14 @@ TESTS += \
 	test-pattern-largest.sh \
 	test-pattern-largest-for-qemu.sh \
 	test-pattern-stride.sh \
+	test-pattern-copy.sh \
 	$(NULL)
 EXTRA_DIST += \
 	test-pattern.sh \
 	test-pattern-largest.sh \
 	test-pattern-largest-for-qemu.sh \
 	test-pattern-stride.sh \
+	test-pattern-copy.sh \
 	$(NULL)
 
 # random plugin test.
