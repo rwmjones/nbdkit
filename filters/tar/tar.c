@@ -231,8 +231,8 @@ calculate_offset_of_entry (nbdkit_next *next)
     }
     for (j = 0; j < count;) {
       size_t written = fwrite (&buf[j], 1, count-j, fp);
-      if (written == 0) {
-        nbdkit_error ("tar: error writing to subprocess");
+      if (written < count-j) {
+        nbdkit_error ("tar: error writing to subprocess: %m");
         pclose (fp);
         return -1;
       }

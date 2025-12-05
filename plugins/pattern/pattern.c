@@ -37,17 +37,21 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <string.h>
-#include <errno.h>
-#include <time.h>
+#include <assert.h>
 
 #define NBDKIT_API_VERSION 2
 #include <nbdkit-plugin.h>
 
 #include "byte-swapping.h"
+#include "cleanup.h"
+#include "isaligned.h"
+#include "ispowerof2.h"
 #include "minmax.h"
+#include "rounding.h"
 
 /* The size of disk in bytes (initialized by size=<SIZE> parameter). */
-static int64_t size = 0;
+static uint64_t size = 0;
+static uint64_t stride = 8;
 
 static int
 pattern_config (const char *key, const char *value)
@@ -60,6 +64,16 @@ pattern_config (const char *key, const char *value)
       return -1;
     size = r;
   }
+  else if (strcmp (key, "stride") == 0) {
+    r = nbdkit_parse_size (value);
+    if (r == -1)
+      return -1;
+    if (r < 8 || !is_power_of_2 (r)) {
+      nbdkit_error ("stride must be >= 8 and a power of two");
+      return -1;
+    }
+    stride = r;
+  }
   else {
     nbdkit_error ("unknown parameter '%s'", key);
     return -1;
@@ -69,7 +83,8 @@ pattern_config (const char *key, const char *value)
 }
 
 #define pattern_config_help \
-  "size=<SIZE>  (required) Size of the backing disk"
+  "size=<SIZE>  (required) Size of the backing disk\n" \
+  "stride=<BLOCK_SIZE>     Block size (stride) of pattern"
 
 #define THREAD_MODEL NBDKIT_THREAD_MODEL_PARALLEL
 
@@ -109,19 +124,86 @@ static int
 pattern_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
                uint32_t flags)
 {
-  char *b = buf;
-  uint64_t d;
-  uint64_t o;
-  uint32_t n;
+  uint8_t *b = buf;
+  uint64_t d, rem, o, n;
+
+  /* If stride > 8 then there are gaps between the offsets.  It's
+   * easier and faster to zero out the whole buffer first in this
+   * unusual case.
+   */
+  if (stride > 8)
+    memset (buf, 0, count);
 
   while (count > 0) {
-    d = htobe64 (offset & ~7);
-    o = offset & 7;
-    n = MIN (count, 8-o);
-    memcpy (b, (char *)&d + o, n);
-    b += n;
-    offset += n;
-    count -= n;
+    /* If the request is aligned to the stride, we can go ahead and
+     * write into the buffer directly.
+     */
+    if (IS_ALIGNED (offset, stride) && IS_ALIGNED (count, stride)) {
+      while (count > 0) {
+        assert (count >= stride); /* must be true because of alignment */
+        d = htobe64 (offset);
+        memcpy (b, (uint8_t *) &d, 8);
+        count -= stride;
+        offset += stride;
+        b += stride;
+      }
+    }
+    /* The slow path case. */
+    else {
+      /* rem = bytes remaining until next stride boundary
+       * example: stride is 32
+       * |oooooooo------------------------|oooooooo----...
+       *     ^ offset                     ^ next stride boundary
+       *     rem = 32-3
+       */
+      rem = ROUND_UP (offset, stride) - offset;
+      if (rem == 0) rem = stride;
+      if (rem > stride-8) {     /* writing the offset */
+        d = htobe64 (ROUND_DOWN (offset, stride));
+        o = offset & 7;
+        n = MIN (count, 8-o);
+        memcpy (b, (char *) &d + o, n);
+      }
+      else {                    /* after the offset, skip zeroes */
+        n = MIN (count, rem);
+      }
+      b += n;
+      offset += n;
+      count -= n;
+      /* We're (probably) on a stride boundary now which may mean we're
+       * on the fast path.  If not, we'll end up back here on the slow
+       * path.
+       */
+    }
+  }
+
+  return 0;
+}
+
+/* Write data.
+ *
+ * This verifies that the data matches what is read.  This is
+ * implemented by calling pattern_pread above internally and comparing
+ * the two buffers.
+ */
+static int
+pattern_pwrite (void *handle, const void *buf,
+                uint32_t count, uint64_t offset,
+                uint32_t flags)
+{
+  CLEANUP_FREE char *expected = malloc (count);
+  if (expected == NULL) {
+    nbdkit_error ("malloc: %m");
+    return -1;
+  }
+
+  if (pattern_pread (handle, expected, count, offset, flags) == -1)
+    return -1;
+
+  if (memcmp (buf, expected, count) != 0) {
+    errno = EIO;
+    nbdkit_error ("data written does not match expected");
+    return -1;
   }
 
   return 0;
@@ -138,6 +220,7 @@ static struct nbdkit_plugin plugin = {
   .can_multi_conn    = pattern_can_multi_conn,
   .can_cache         = pattern_can_cache,
   .pread             = pattern_pread,
+  .pwrite            = pattern_pwrite,
   /* In this plugin, errno is preserved properly along error return
    * paths from failed system calls.
    */

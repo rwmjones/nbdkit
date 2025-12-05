@@ -4,15 +4,18 @@ nbdkit-pattern-plugin - plugin to serve a fixed pattern of data for testing
 
 =head1 SYNOPSIS
 
- nbdkit pattern [size=]SIZE
+ nbdkit pattern [size=]SIZE [stride=BLOCK_SIZE]
 
 =head1 DESCRIPTION
 
 C<nbdkit-pattern-plugin> is a plugin for L<nbdkit(1)> which serves a
 fixed pattern of data, read only.  This is used for testing nbdkit
-filters and NBD clients.  To create test disks filled with other
-repeated patterns use L<nbdkit-data-plugin(1)> or
-L<nbdkit-ones-plugin(1)> instead.
+filters and NBD clients.
+
+To create test disks filled with other repeated patterns use
+L<nbdkit-data-plugin(1)> or L<nbdkit-ones-plugin(1)> instead.  To
+create disks filled with random data, use L<nbdkit-random-plugin(1)>
+or L<nbdkit-sparse-random-plugin(1)>.
 
 The fixed pattern is the offset, as a 64 bit big endian integer, every
 8 bytes.  In hexadecimal this looks like:
@@ -30,6 +33,41 @@ The fixed pattern is the offset, as a 64 bit big endian integer, every
 The size of the virtual disk must be specified using the C<size>
 parameter.  If the size is not a multiple of 8 then the last 8 byte
 offset in the pattern is truncated.
+
+=head2 Strides
+
+Using the C<stride> parameter you can create a pattern where each
+block of data has a unique number.  This is useful for tracking down
+disk corruption where blocks of data may be transposed.  For example,
+with 4096 byte block-based storage, using C<stride=4k> will produce a
+pattern like this:
+
+ offset                         data
+  0000:   00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00
+  0010:   00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00
+  ...
+  ...                          block at offset 0x1000 (4k)
+  ...                        ↙
+  1000:   00 00 00 00 00 00 10 00   00 00 00 00 00 00 00 00
+  1010:   00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00
+  ...
+  ...                          block at offset 0x2000 (8k)
+  ...                        ↙
+  2000:   00 00 00 00 00 00 20 00   00 00 00 00 00 00 00 00
+  2010:   00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00
+
+=head2 Writes and testing copying
+
+Writing to the disk is possible.  If you do this the plugin will check
+that what you are writing exactly matches what would be read at the
+same offset (if not, it returns EIO error).  You can use this to test
+copying programs by making the source and destination NBD URIs be the
+same:
+
+ nbdkit pattern size=100M --run 'nbdcopy "$uri" "$uri"'
+
+C<qemu-img convert> could be used in place of nbdcopy.
+See also L<nbdkit-checkwrite-filter(1)>.
 
 =head2 Largest possible size
 
@@ -63,6 +101,14 @@ This parameter is required.
 
 C<size=> __IS_MAGIC__
 
+=item B<stride=>BLOCK_SIZE
+
+Instead of writing the 64 bit integers sequentially, place them at the
+beginning of each C<BLOCK_SIZE> block.  See L</Strides> above.
+
+The minimum, and default, stride is 8 which places the integers
+sequentially with no gaps.  The stride must be a power of two.
+
 =back
 
 =head1 FILES
@@ -85,6 +131,7 @@ C<nbdkit-pattern-plugin> first appeared in nbdkit 1.6.
 
 L<nbdkit(1)>,
 L<nbdkit-plugin(3)>,
+L<nbdkit-checkwrite-filter(1)>,
 L<nbdkit-data-plugin(1)>,
 L<nbdkit-full-plugin(1)>,
 L<nbdkit-null-plugin(1)>,
