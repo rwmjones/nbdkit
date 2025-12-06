@@ -61,6 +61,7 @@ function install_buildenv() {
         rust \
         socat \
         systemtap-sdt-dtrace \
+        tar \
         tcl-devel \
         util-linux \
         xorriso \

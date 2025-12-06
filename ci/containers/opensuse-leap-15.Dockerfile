@@ -57,6 +57,7 @@ RUN zypper update -y && \
            rust \
            socat \
            systemtap-sdt-devel \
+           tar \
            tcl-devel \
            util-linux \
            xorriso \

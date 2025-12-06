@@ -54,6 +54,7 @@ RUN apk update && \
         rust-clippy \
         sfdisk \
         socat \
+        tar \
         tcl \
         xz \
         xz-dev \

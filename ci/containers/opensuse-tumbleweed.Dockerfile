@@ -56,6 +56,7 @@ RUN zypper dist-upgrade -y && \
            rust \
            socat \
            systemtap-dtrace \
+           tar \
            tcl-devel \
            util-linux \
            xorriso \
