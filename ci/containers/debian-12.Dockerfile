@@ -65,6 +65,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
                       rustc \
                       socat \
                       systemtap-sdt-dev \
+                      tar \
                       tcl-dev \
                       xz-utils \
                       zlib1g-dev && \

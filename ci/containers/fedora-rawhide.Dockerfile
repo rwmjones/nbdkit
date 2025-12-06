@@ -72,6 +72,7 @@ exec "$@"\n' > /usr/bin/nosync && \
                rust \
                socat \
                systemtap-sdt-dtrace \
+               tar \
                tcl-devel \
                util-linux \
                xorriso \

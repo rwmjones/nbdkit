@@ -53,6 +53,7 @@ function install_buildenv() {
         rust-clippy \
         sfdisk \
         socat \
+        tar \
         tcl \
         xz \
         xz-dev \

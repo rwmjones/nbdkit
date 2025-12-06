@@ -45,6 +45,7 @@ function install_buildenv() {
         qemu-img \
         rust \
         socat \
+        tar \
         tcl-devel \
         util-linux \
         xorriso \

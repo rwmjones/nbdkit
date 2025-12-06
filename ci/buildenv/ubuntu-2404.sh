@@ -63,6 +63,7 @@ function install_buildenv() {
             rustc \
             socat \
             systemtap-sdt-dev \
+            tar \
             tcl-dev \
             xz-utils \
             zlib1g-dev

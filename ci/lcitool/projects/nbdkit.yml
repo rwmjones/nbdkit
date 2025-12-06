@@ -58,6 +58,7 @@ packages:
   - sfdisk
   - socat
   - ss
+  - tar
   - tcl
   - xz
   - zlib

@@ -56,6 +56,7 @@ exec "$@"\n' > /usr/bin/nosync && \
                qemu-img \
                rust \
                socat \
+               tar \
                tcl-devel \
                util-linux \
                xorriso \
