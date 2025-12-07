@@ -414,6 +414,11 @@ should return the appropriate error indication, eg. C<NULL> or C<-1>.
 More information about these functions and L<nbdkit_verror(3)> can be
 found in the separate manual page about them.
 
+If your plugin does not overwrite global C<errno> when returning from
+system call failures (usually true for plugins written in C, often
+false for plugins written in high level scripting languages), then you
+can set S<< C<.errno_is_preserved = 1> >> in the plugin struct.
+
 =head1 CALLBACKS
 
 =head2 C<.name>
