@@ -54,7 +54,9 @@
 #define NBDKIT_API_VERSION 2
 #include <nbdkit-plugin.h>
 
+#include "cleanup.h"
 #include "isaligned.h"
+#include "strndup.h"
 
 static char *filename = NULL;
 
@@ -105,6 +107,34 @@ winfile_dump_plugin (void)
   printf ("winfile=yes\n");
 }
 
+/* Return string corresponding to Windows error number.
+ * https://learn.microsoft.com/en-us/windows/win32/debug/retrieving-the-last-error-code
+ * https://stackoverflow.com/questions/1387064/how-to-get-the-error-message-from-the-error-code-returned-by-getlasterror
+ * XXX Maybe we should make nbdkit_error ("...%m") do the right thing?
+ */
+static char *
+windows_error (DWORD err)
+{
+  LPSTR *msg = NULL;
+  size_t len;
+  char *ret;
+
+  if (err == 0)
+    ret = strdup ("no error");
+  else {
+    len = FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                          FORMAT_MESSAGE_FROM_SYSTEM |
+                          FORMAT_MESSAGE_IGNORE_INSERTS,
+                          NULL, err,
+                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                          (LPSTR)&msg, 0, NULL);
+    ret = strndup ((char *) msg, len);
+    LocalFree (msg);
+  }
+
+  return ret;
+}
+
 /* Per-connection handle. */
 struct handle {
   HANDLE fh;
@@ -133,16 +163,23 @@ winfile_open (int readonly)
   fh = CreateFile (filename, flags, FILE_SHARE_READ|FILE_SHARE_WRITE,
                    NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (fh == INVALID_HANDLE_VALUE && !readonly) {
+    DWORD err = GetLastError ();
+    CLEANUP_FREE char *msg = windows_error (err);
+
     nbdkit_debug ("open for writing failed, falling back to read-only: "
-                  "%s: %lu",
-                  filename, GetLastError ());
+                  "%s: %lu: %s",
+                  filename, err, msg);
+
     flags &= ~GENERIC_WRITE;
     readonly = true;
     fh = CreateFile (filename, flags, FILE_SHARE_READ|FILE_SHARE_WRITE,
                      NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   }
   if (fh == INVALID_HANDLE_VALUE) {
-    nbdkit_error ("%s: error %lu", filename, GetLastError ());
+    DWORD err = GetLastError ();
+    CLEANUP_FREE char *msg = windows_error (err);
+
+    nbdkit_error ("%s: CreateFile: %lu: %s", filename, err, msg);
     return NULL;
   }
 
@@ -158,8 +195,11 @@ winfile_open (int readonly)
 
     if (!DeviceIoControl (fh, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0,
                           (LPVOID) &li, lisz, &obsz, NULL)) {
-      nbdkit_error ("%s: DeviceIoControl: IOCTL_DISK_GET_LENGTH_INFO: %lu",
-                    filename, GetLastError ());
+      DWORD err = GetLastError ();
+      CLEANUP_FREE char *msg = windows_error (err);
+
+      nbdkit_error ("%s: DeviceIoControl: IOCTL_DISK_GET_LENGTH_INFO: %lu: %s",
+                    filename, err, msg);
       CloseHandle (fh);
       return NULL;
     }
@@ -167,8 +207,12 @@ winfile_open (int readonly)
 
     if (!DeviceIoControl (fh, IOCTL_DISK_GET_DRIVE_GEOMETRY, NULL, 0,
                           (LPVOID) &dg, sizeof dg, &obsz, NULL)) {
-      nbdkit_error ("%s: DeviceIoControl: IOCTL_DISK_GET_DRIVE_GEOMETRY: %lu",
-                    filename, GetLastError ());
+      DWORD err = GetLastError ();
+      CLEANUP_FREE char *msg = windows_error (err);
+
+      nbdkit_error ("%s: DeviceIoControl: IOCTL_DISK_GET_DRIVE_GEOMETRY: "
+                    "%lu: %s",
+                    filename, err, msg);
       CloseHandle (fh);
       return NULL;
     }
@@ -177,7 +221,10 @@ winfile_open (int readonly)
   else {
     /* Regular file.  Get the size. */
     if (!GetFileSizeEx (fh, &size)) {
-      nbdkit_error ("%s: GetFileSizeEx: %lu", filename, GetLastError ());
+      DWORD err = GetLastError ();
+      CLEANUP_FREE char *msg = windows_error (err);
+
+      nbdkit_error ("%s: GetFileSizeEx: %lu: %s", filename, err, msg);
       CloseHandle (fh);
       return NULL;
     }
@@ -199,7 +246,10 @@ winfile_open (int readonly)
 
   h = malloc (sizeof *h);
   if (!h) {
-    nbdkit_error ("malloc: %lu", GetLastError ());
+    DWORD err = GetLastError ();
+    CLEANUP_FREE char *msg = windows_error (err);
+
+    nbdkit_error ("malloc: %lu: %s", err, msg);
     CloseHandle (fh);
     return NULL;
   }
@@ -284,9 +334,11 @@ winfile_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
 
   /* XXX Will fail weirdly if count is larger than 32 bits. */
   if (!ReadFile (h->fh, buf, count, &r, &ovl)) {
-    int lasterror = GetLastError();
-    nbdkit_error ("%s: ReadFile: %lu (offset: %llx count: %d",
-                  filename, lasterror, offset, count);
+    DWORD lasterror = GetLastError();
+    CLEANUP_FREE char *msg = windows_error (lasterror);
+
+    nbdkit_error ("%s: ReadFile: %lu: %s (offset: %llx count: %d",
+                  filename, lasterror, msg, offset, count);
     if (lasterror == ERROR_INVALID_PARAMETER &&
         h->blocksize == 4096 &&
         (! IS_ALIGNED (offset, 4096) || ! IS_ALIGNED (count, 4096))) {
@@ -313,13 +365,19 @@ winfile_pwrite (void *handle, const void *buf, uint32_t count, uint64_t offset,
 
   /* XXX Will fail weirdly if count is larger than 32 bits. */
   if (!WriteFile (h->fh, buf, count, &r, &ovl)) {
-    nbdkit_error ("%s: WriteFile: %lu", filename, GetLastError ());
+    DWORD err = GetLastError ();
+    CLEANUP_FREE char *msg = windows_error (err);
+
+    nbdkit_error ("%s: WriteFile: %lu: %s", filename, err, msg);
     return -1;
   }
 
   if (flags & NBDKIT_FLAG_FUA) {
     if (!FlushFileBuffers (h->fh)) {
-      nbdkit_error ("%s: FlushFileBuffers: %lu", filename, GetLastError ());
+      DWORD err = GetLastError ();
+      CLEANUP_FREE char *msg = windows_error (err);
+
+      nbdkit_error ("%s: FlushFileBuffers: %lu: %s", filename, err, msg);
       return -1;
     }
   }
@@ -333,7 +391,10 @@ winfile_flush (void *handle, uint32_t flags)
   struct handle *h = handle;
 
   if (!FlushFileBuffers (h->fh)) {
-    nbdkit_error ("%s: FlushFileBuffers: %lu", filename, GetLastError ());
+    DWORD err = GetLastError ();
+    CLEANUP_FREE char *msg = windows_error (err);
+
+    nbdkit_error ("%s: FlushFileBuffers: %lu: %s", filename, err, msg);
     return -1;
   }
 
@@ -353,14 +414,20 @@ winfile_trim (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
   info.BeyondFinalZero.QuadPart = offset + count;
   if (!DeviceIoControl (h->fh, FSCTL_SET_ZERO_DATA, &info, sizeof info,
                         NULL, 0, &t, NULL)) {
-    nbdkit_error ("%s: DeviceIoControl: FSCTL_SET_ZERO_DATA: %lu",
-                  filename, GetLastError ());
+    DWORD err = GetLastError ();
+    CLEANUP_FREE char *msg = windows_error (err);
+
+    nbdkit_error ("%s: DeviceIoControl: FSCTL_SET_ZERO_DATA: %lu: %s",
+                  filename, err, msg);
     return -1;
   }
 
   if (flags & NBDKIT_FLAG_FUA) {
     if (!FlushFileBuffers (h->fh)) {
-      nbdkit_error ("%s: FlushFileBuffers: %lu", filename, GetLastError ());
+      DWORD err = GetLastError ();
+      CLEANUP_FREE char *msg = windows_error (err);
+
+      nbdkit_error ("%s: FlushFileBuffers: %lu", filename, err, msg);
       return -1;
     }
   }
@@ -390,18 +457,26 @@ winfile_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
   info.BeyondFinalZero.QuadPart = offset + count;
   if (!DeviceIoControl (h->fh, FSCTL_SET_ZERO_DATA, &info, sizeof info,
                         NULL, 0, &t, NULL)) {
-    if (GetLastError () == ERROR_NOT_SUPPORTED) {
+    DWORD err = GetLastError ();
+    CLEANUP_FREE char *msg = NULL;
+
+    if (err == ERROR_NOT_SUPPORTED) {
       errno = ENOTSUP;
       return -1;
     }
-    nbdkit_error ("%s: DeviceIoControl: FSCTL_SET_ZERO_DATA: %lu",
-                  filename, GetLastError ());
+
+    msg = windows_error (err);
+    nbdkit_error ("%s: DeviceIoControl: FSCTL_SET_ZERO_DATA: %lu: %s",
+                  filename, err, msg);
     return -1;
   }
 
   if (flags & NBDKIT_FLAG_FUA) {
     if (!FlushFileBuffers (h->fh)) {
-      nbdkit_error ("%s: FlushFileBuffers: %lu", filename, GetLastError ());
+      DWORD err = GetLastError ();
+      CLEANUP_FREE char *msg = windows_error (err);
+
+      nbdkit_error ("%s: FlushFileBuffers: %lu: %s", filename, err, msg);
       return -1;
     }
   }
@@ -429,13 +504,17 @@ winfile_extents (void *handle, uint32_t count, uint64_t offset,
                          &query, sizeof query, ranges, sizeof ranges,
                          &nb, NULL);
     err = GetLastError ();
+
     /* This can return an error with ERROR_MORE_DATA which is not
      * really an error, it means there is more data to be fetched
      * after the set of ranges returned in this call.
      */
     if (!r && err != ERROR_MORE_DATA) {
-      nbdkit_error ("%s: DeviceIoControl: FSCTL_QUERY_ALLOCATED_RANGES: %lu",
-                    filename, err);
+      CLEANUP_FREE char *msg = windows_error (err);
+
+      nbdkit_error ("%s: DeviceIoControl: FSCTL_QUERY_ALLOCATED_RANGES: "
+                    "%lu: %s",
+                    filename, err, msg);
       return -1;
     }
 
