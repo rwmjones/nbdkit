@@ -200,10 +200,7 @@ file_unload (void)
   free (directory);
 }
 
-/* Called for each key=value passed on the command line.  This plugin
- * only accepts file=<filename> and dir=<dirname>, where exactly
- * one is required.
- */
+/* Called for each key=value passed on the command line. */
 static int
 file_config (const char *key, const char *value)
 {
