@@ -318,7 +318,7 @@ file_config_complete (void)
   switch (mode) {
   case mode_none:
     nbdkit_error ("you must supply [file=]<FILENAME>, "
-                  "dir=<DIRNAME> or fd=<FD> "
+                  "dir=<DIRNAME>, fd=<FD> or dirfd=<FD> "
                   "parameter after the plugin name "
                   "on the command line");
     return -1;
