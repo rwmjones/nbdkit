@@ -101,6 +101,7 @@ requires_not_valgrind (const char *reason)
     skip_because ("%s", reason ? reason : "running under valgrind");
 }
 
+#ifndef WIN32
 void
 requires_root (void)
 {
@@ -108,3 +109,10 @@ requires_root (void)
     skip_because ("not running as root.\n"
                   "Use ‘sudo make check-root’ to run these tests.");
 }
+#else
+void
+requires_root (void)
+{
+  skip_because ("Windows requires_root not implemented");
+}
+#endif

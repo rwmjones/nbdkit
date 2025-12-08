@@ -45,6 +45,7 @@ set -u
 
 requires_run
 requires_nbdcopy
+requires_plugin partitioning
 
 # This test requires the partitioning plugin to open at least 768
 # files (say 800 to make it a round number).  On OpenBSD the limit on

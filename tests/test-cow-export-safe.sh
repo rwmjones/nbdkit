@@ -35,6 +35,13 @@ set -e
 set -x
 set -u
 
+# Requires the Unix version of the file plugin that supports the dir
+# parameter.  XXX Maybe we will fix the winfile plugin in future.
+if is_windows; then
+   echo "$0: the winfile plugin does not support dir parameter"
+   exit 77
+fi
+
 requires_nbdsh_uri
 requires_plugin file
 requires $TRUNCATE --version

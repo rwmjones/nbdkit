@@ -41,6 +41,7 @@ set -u
 
 requires_run
 requires_nbdcopy
+requires_plugin partitioning
 
 files="partitioning1.out partitioning1-p1 partitioning1-p2 partitioning1-p3 partitioning1-p4 partitioning1-p5 partitioning1-p6"
 rm -f $files

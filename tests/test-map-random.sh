@@ -41,6 +41,7 @@ requires_plugin sparse-random
 requires_nbdsh_uri
 # Uses explicit h.close() method, added in 1.16
 requires_libnbd_version 1.16
+requires_single_mode
 
 # Use a random seed for the test so the test could be reproduced
 # by setting this seed.

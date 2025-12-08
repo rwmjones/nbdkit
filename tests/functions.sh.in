@@ -391,6 +391,13 @@ requires_filter ()
 # Return true if nbdkit was built (or cross-compiled) for Windows.
 is_windows ()
 {
+    # Test that nbdkit is generally working on this platform, in
+    # case Wine is broken again.
+    if ! nbdkit --dump-config; then
+        echo "$0: something is broken about nbdkit on this platform" >&2
+        exit 1
+    fi
+
     host_os="$(nbdkit --dump-config | grep ^host_os | $CUT -d= -f2)"
     [[ "$host_os" =~ mingw|msys ]]
 }
