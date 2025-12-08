@@ -51,7 +51,7 @@ cleanup_fn rm -f $out
 #
 # Note here we have to run the server directly because the wrapper
 # will rewrite the filter name.
-../server/nbdkit $null_plugin --filter=nosuchname 2>$out ||:
+../server/nbdkit$EXEEXT $null_plugin --filter=nosuchname 2>$out ||:
 cat $out
 grep 'nosuchname' $out
 # The error message should suggest a Fedora or Debian package name:
