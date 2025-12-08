@@ -40,6 +40,7 @@ set -x
 set -u
 
 requires guestfish --version
+requires_plugin partitioning
 
 sock=$(mktemp -u /tmp/nbdkit-test-sock.XXXXXX)
 files="partitioning3.pid $sock partitioning3.p1 partitioning3.p2 partitioning3.p3 partitioning3.out"

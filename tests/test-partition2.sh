@@ -38,6 +38,7 @@ set -u
 requires_run
 requires_nbdinfo
 requires test -f disk
+requires_plugin partitioning
 
 files="partition2.log"
 rm -f $files
