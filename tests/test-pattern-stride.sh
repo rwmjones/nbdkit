@@ -37,6 +37,13 @@ set -e
 set -x
 set -u
 
+# This won't work on Windows because systemd socket activation
+# isn't supported.
+if is_windows; then
+   echo "$0: systemd socket activation not supported on Windows"
+   exit 77
+fi
+
 requires hexdump --version
 
 requires nbdsh --version
