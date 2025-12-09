@@ -28,11 +28,35 @@ New L<nbdkit-vram-plugin(1)> which allows Video RAM to be turned into
 an NBD disk, using OpenCL.
 
 L<nbdkit-vddk-plugin(1)> C<export> parameter (added in 1.44) now
-allows exports from subdirectories on the ESXi server.
+allows exports from subdirectories on the ESXi server (thanks Ming
+Xie).
 
 L<nbdkit-data-plugin(1)> now supports C<base64:...> in format strings.
 
+L<nbdkit-sh-plugin(3)> and L<nbdkit-extentlist-filter(1)> both now
+allow blank lines and comments in the list of extents (Eric Blake).
+
+L<nbdkit-ssh-plugin(1)> can now handle remote block devices properly
+(thanks trainzkid).  Also we display information about the remote SSH
+server in debug output.
+
+L<nbdkit-random-plugin(1)> has a new C<fast=true> mode which trades
+increased performance for less randomness.
+
+L<nbdkit-pattern-plugin(1)> has a new C<stride> parameter for creating
+patterns that align to filesystem or device block boundaries.  Also
+this plugin now supports checking writes.
+
+L<nbdkit-file-plugin(1)> prints more useful debugging (when the I<-v>
+option is used).  On Windows this plugin now displays complete error
+messages instead of just error codes.
+
 =head2 Filters
+
+nbdkit-cacheextents-filter was deprecated before and has been removed
+in this release of nbdkit.  If you used this filter before, the advice
+is simply to remove it from the filter chain as it usually wasn't
+effective.
 
 New L<nbdkit-count-filter(1)> which produces a simple summary of the
 number of bytes read, written, etc.
@@ -44,11 +68,6 @@ New L<nbdkit-map-filter(1)> which can remap disk blocks arbitrarily.
 
 L<nbdkit-delay-filter(1)> has a new C<delay-trigger=FILE> option that
 lets you enable the filter based on the existence of a file.
-
-nbdkit-cacheextents-filter was deprecated before and has been removed
-in this release of nbdkit.  If you used this filter before, the advice
-is simply to remove it from the filter chain as it usually wasn't
-effective.
 
 =head2 Language bindings
 
@@ -63,7 +82,7 @@ you must use systemd socket activation instead.
 New nbdkit I<--name> parameter which allows you to name nbdkit
 instances.  This is useful when you have multiple copies of nbdkit
 running, especially if they are all writing debug or error messages
-into a single log file so you can tell which instance produced a
+into a single log file, so you can tell which instance produced a
 particular message (thanks Ming Xie).
 
 You can now read nbdkit command line parameters from an external file
@@ -72,6 +91,15 @@ using C<@PATH> syntax.
 nbdkit I<--long-options> and I<--short-options> are used to implement
 bash completion.  Previously they were hidden, implementation-specific
 options.  However they are useful enough to support and document.
+
+During the negotiation phase we now allow the client to send more than
+one C<OPT_LIST> request (Eric Blake).
+
+Post-Quantum Cryptography (PQC) is now fully supported (thanks Dan
+Berrange).
+
+New command line option I<--tls-priority> allows you to temporarily
+override the system TLS priority string.
 
 =begin comment
 
@@ -101,6 +129,14 @@ Fix our use of L<mke2fs(8)> when creating a test disk for
 L<nbdkit-ext2-filter(1)>.  This greatly reduces the amount of disk
 space used for nbdkit builds (Mykola Ivanets).
 
+Fix crashing bugs in L<nbdkit-checkwrite-filter(1)> (Eric Blake).
+
+Fix order of inclusion of Python header file because of changes in
+recent Python 3.14.
+
+L<nbdkit-readonly-filter(1)> now advertises the correct readonly
+status down to plugins (Eric Blake).
+
 =head2 Documentation
 
 Document how to attach NBD devices to QEMU VMs, either when using qemu
@@ -126,6 +162,9 @@ Several extensions to the internal vector type, including
 C<vector_uniq>, C<vector_append_array>, C<vector_insert_array>,
 C<vector_remove_range>.
 
+Fix the memory allocation behaviour of the internal vector library,
+which should reduce memory usage in some situations (Eric Blake).
+
 New tests functions C<requires_tls>, C<requires_tls_certificates>,
 C<requires_tls_psk>.
 
@@ -146,6 +185,8 @@ git shortlog -s v1.44.0..
 =over 4
 
 =item Eric Blake
+
+=item Michael Ablassmeier
 
 =item Mykola Ivanets
 
