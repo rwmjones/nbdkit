@@ -759,6 +759,14 @@ file_open (int readonly)
   h->can_blkzeroout = h->is_block_device;
   h->can_blkdiscard = h->is_block_device;
 
+  nbdkit_debug ("%s: fd=%d mode=%o is_block_device=%s "
+                "sector_size=%d rotational=%s "
+                "blocksizes=(%" PRIu32 ",%" PRIu32 ",%" PRIu32 ")",
+                h->name, h->fd, h->statbuf.st_mode,
+                h->is_block_device ? "true" : "false",
+                h->sector_size, h->rotational ? "true" : "false",
+                h->minimum, h->preferred, h->maximum);
+
   return h;
 
  err:
