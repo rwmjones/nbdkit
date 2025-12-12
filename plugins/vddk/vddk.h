@@ -93,7 +93,7 @@ extern int vddk_debug_stats;
  */
 #define VDDK_CALL_START(fn, fs, ...)                                    \
   do {                                                                  \
-  struct timeval start_t;                                               \
+  struct timeval start_t = { 0 };                                       \
   /* GCC can optimize this away at compile time: */                     \
   const bool datapath =                                                 \
     strcmp (#fn, "VixDiskLib_Read") == 0 ||                             \
