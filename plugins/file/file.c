@@ -1280,7 +1280,9 @@ file_can_extents (void *handle)
   ACQUIRE_LOCK_FOR_CURRENT_SCOPE (&lseek_lock);
   r = lseek (h->fd, 0, SEEK_HOLE);
   if (r == -1) {
-    nbdkit_debug ("extents disabled: lseek: SEEK_HOLE: %m");
+    nbdkit_debug ("lseek: SEEK_HOLE: error (ignored): %m");
+    nbdkit_debug ("extents disabled because the kernel does not support "
+                  "lseek and SEEK_HOLE for this file type");
     return 0;
   }
   return 1;
