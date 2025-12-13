@@ -760,11 +760,12 @@ file_open (int readonly)
   h->can_blkdiscard = h->is_block_device;
 
   nbdkit_debug ("%s: fd=%d mode=%o "
-                "%s"
+                "%s%s"
                 "sector_size=%d rotational=%s "
                 "blocksizes=(%" PRIu32 ",%" PRIu32 ",%" PRIu32 ")",
                 h->name, h->fd, h->statbuf.st_mode,
                 h->is_block_device ? "block_device " : "",
+                h->can_write       ? "can_write " : "readonly ",
                 h->sector_size, h->rotational ? "true" : "false",
                 h->minimum, h->preferred, h->maximum);
 
