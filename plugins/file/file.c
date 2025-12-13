@@ -1041,6 +1041,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
       return -1;
     }
 
+    ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_punch_hole"));
     h->can_punch_hole = false;
   }
 #endif
@@ -1078,6 +1079,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
         return -1;
       }
 
+      ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_blkdiscard"));
       h->can_blkdiscard = false;
     }
     else {
@@ -1087,6 +1089,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
         return -1;
       }
 
+      ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_fallocate"));
       h->can_fallocate = false;
     }
   }
@@ -1110,6 +1113,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
       return -1;
     }
 
+    ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_zero_range"));
     h->can_zero_range = false;
   }
 #endif
@@ -1139,6 +1143,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
         return -1;
       }
 
+      ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_fallocate"));
       h->can_fallocate = false;
     } else {
       if (!is_enotsup (errno)) {
@@ -1147,6 +1152,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
         return -1;
       }
 
+      ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_punch_hole"));
       h->can_punch_hole = false;
     }
   }
@@ -1172,6 +1178,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
       return -1;
     }
 
+    ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_blkzeroout"));
     h->can_blkzeroout = false;
   }
 #endif
@@ -1212,6 +1219,7 @@ file_trim (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
         return -1;
       }
 
+      ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_punch_hole"));
       h->can_punch_hole = false;
     }
   }
@@ -1236,6 +1244,7 @@ file_trim (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
         return -1;
       }
 
+      ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_blkdiscard"));
       h->can_blkdiscard = false;
     }
   }
