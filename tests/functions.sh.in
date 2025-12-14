@@ -162,14 +162,14 @@ start_nbdkit ()
     fi
 
     # Kill nbdkit on exit.
-    cleanup_fn kill_nbdkit "$(cat "$_pidfile")"
+    cleanup_fn _kill_nbdkit "$(cat "$_pidfile")"
 }
 
-# kill_nbdkit pid
+# _kill_nbdkit pid
 #
 # End the nbdkit process with the given pid.  Exit this script with an
 # error if nbdkit does not gracefully shutdown in a timely manner.
-kill_nbdkit ()
+_kill_nbdkit ()
 {
     local pid=$1 i
 
