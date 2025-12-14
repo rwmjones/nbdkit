@@ -137,6 +137,8 @@ recent Python 3.14.
 L<nbdkit-readonly-filter(1)> now advertises the correct readonly
 status down to plugins (Eric Blake).
 
+Review Coverity warnings.
+
 =head2 Documentation
 
 Document how to attach NBD devices to QEMU VMs, either when using qemu
