@@ -134,7 +134,12 @@ trap _run_cleanup_hooks INT QUIT TERM EXIT ERR
 # installed automatically which kills nbdkit on exit.
 start_nbdkit ()
 {
-    local _pidfile _i
+    local _is_windows _pidfile _i
+
+    # Save whether we are running on Windows.  We have to do this test
+    # here because 'is_windows' under valgrind doesn't always work
+    # when we are running cleanup functions.
+    if is_windows; then _is_windows=1; else _is_windows=; fi
 
     # -P <pidfile> must be the first two parameters.
     if [ "$1" != "-P" ]; then
@@ -147,7 +152,7 @@ start_nbdkit ()
     #
     # Until Windows supports daemonization we run nbdkit in the
     # foreground (-f) and background it ourselves.
-    if ! is_windows; then nbdkit -v "$@"; else nbdkit -f -v "$@" & fi
+    if ! test "$_is_windows"; then nbdkit -v "$@"; else nbdkit -f -v "$@" & fi
 
     # Wait for the pidfile to appear.
     for _i in {1..60}; do
@@ -162,36 +167,42 @@ start_nbdkit ()
     fi
 
     # Kill nbdkit on exit.
-    cleanup_fn _kill_nbdkit "$(cat "$_pidfile")"
+    if ! test "$_is_windows"; then
+        cleanup_fn _kill_nbdkit_unix "$(cat "$_pidfile")"
+    else
+        cleanup_fn _kill_nbdkit_windows "$(cat "$_pidfile")"
+    fi
 }
 
-# _kill_nbdkit pid
+# _kill_nbdkit_unix pid
 #
 # End the nbdkit process with the given pid.  Exit this script with an
 # error if nbdkit does not gracefully shutdown in a timely manner.
-_kill_nbdkit ()
+_kill_nbdkit_unix ()
 {
     local pid=$1 i
 
-    if ! is_windows; then
-        # Start with SIGTERM, and wait for graceful exit
-        kill $pid
-        for i in {1..60}; do
-            if ! kill -0 $pid 2>/dev/null; then
-                break
-            fi
-            sleep 1
-        done
-        # If nbdkit has not exited, try SIGKILL and fail the test
-        if test $i = 60; then
-            echo "error: nbdkit pid $pid failed to respond to SIGTERM"
-            kill -9 $pid
-            # Append our failure after other cleanups
-            cleanup_fn exit 1
+    # Start with SIGTERM, and wait for graceful exit
+    kill $pid
+    for i in {1..60}; do
+        if ! kill -0 $pid 2>/dev/null; then
+            break
         fi
-    else
-        wine taskkill /f /pid $pid
+        sleep 1
+    done
+    # If nbdkit has not exited, try SIGKILL and fail the test
+    if test $i = 60; then
+        echo "error: nbdkit pid $pid failed to respond to SIGTERM"
+        kill -9 $pid
+        # Append our failure after other cleanups
+        cleanup_fn exit 1
     fi
+}
+
+# Same as above, for Windows.
+_kill_nbdkit_windows ()
+{
+    wine taskkill /f /pid $1
 }
 
 #----------------------------------------------------------------------
