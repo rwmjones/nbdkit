@@ -759,11 +759,18 @@ file_open (int readonly)
   h->can_blkzeroout = h->is_block_device;
   h->can_blkdiscard = h->is_block_device;
 
-  nbdkit_debug ("%s: fd=%d mode=%o is_block_device=%s "
+  nbdkit_debug ("%s: fd=%d mode=%o "
+                "%s%s%s%s%s%s%s"
                 "sector_size=%d rotational=%s "
                 "blocksizes=(%" PRIu32 ",%" PRIu32 ",%" PRIu32 ")",
                 h->name, h->fd, h->statbuf.st_mode,
-                h->is_block_device ? "true" : "false",
+                h->is_block_device ? "block_device " : "",
+                h->can_write       ? "can_write " : "readonly ",
+                h->can_punch_hole  ? "can_punch_hole " : "",
+                h->can_zero_range  ? "can_zero_range " : "",
+                h->can_fallocate   ? "can_fallocate " : "",
+                h->can_blkdiscard  ? "can_blkdiscard " : "",
+                h->can_blkzeroout  ? "can_blkzeroout " : "",
                 h->sector_size, h->rotational ? "true" : "false",
                 h->minimum, h->preferred, h->maximum);
 
@@ -1034,6 +1041,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
       return -1;
     }
 
+    ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_punch_hole"));
     h->can_punch_hole = false;
   }
 #endif
@@ -1071,6 +1079,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
         return -1;
       }
 
+      ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_blkdiscard"));
       h->can_blkdiscard = false;
     }
     else {
@@ -1080,6 +1089,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
         return -1;
       }
 
+      ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_fallocate"));
       h->can_fallocate = false;
     }
   }
@@ -1103,6 +1113,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
       return -1;
     }
 
+    ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_zero_range"));
     h->can_zero_range = false;
   }
 #endif
@@ -1132,6 +1143,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
         return -1;
       }
 
+      ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_fallocate"));
       h->can_fallocate = false;
     } else {
       if (!is_enotsup (errno)) {
@@ -1140,6 +1152,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
         return -1;
       }
 
+      ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_punch_hole"));
       h->can_punch_hole = false;
     }
   }
@@ -1165,6 +1178,7 @@ file_zero (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
       return -1;
     }
 
+    ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_blkzeroout"));
     h->can_blkzeroout = false;
   }
 #endif
@@ -1205,6 +1219,7 @@ file_trim (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
         return -1;
       }
 
+      ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_punch_hole"));
       h->can_punch_hole = false;
     }
   }
@@ -1229,6 +1244,7 @@ file_trim (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
         return -1;
       }
 
+      ONCE (nbdkit_debug ("%s: setting %s=false", h->name, "can_blkdiscard"));
       h->can_blkdiscard = false;
     }
   }
@@ -1264,7 +1280,9 @@ file_can_extents (void *handle)
   ACQUIRE_LOCK_FOR_CURRENT_SCOPE (&lseek_lock);
   r = lseek (h->fd, 0, SEEK_HOLE);
   if (r == -1) {
-    nbdkit_debug ("extents disabled: lseek: SEEK_HOLE: %m");
+    nbdkit_debug ("lseek: SEEK_HOLE: error (ignored): %m");
+    nbdkit_debug ("extents disabled because the kernel does not support "
+                  "lseek and SEEK_HOLE for this file type");
     return 0;
   }
   return 1;
