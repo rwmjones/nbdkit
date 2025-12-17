@@ -151,6 +151,8 @@ evict_writes (int fd, uint64_t offset, size_t len)
 
   /* Evict the oldest window from the page cache (synchronously). */
   if (oldest.len > 0) {
+    int r;
+
     if (sync_file_range (oldest.fd, oldest.offset, oldest.len,
                          SYNC_FILE_RANGE_WAIT_BEFORE |
                          SYNC_FILE_RANGE_WRITE |
@@ -158,9 +160,12 @@ evict_writes (int fd, uint64_t offset, size_t len)
       nbdkit_error ("sync_file_range: cache=none: evicting oldest window: %m");
       return -1;
     }
-    if (posix_fadvise (oldest.fd, oldest.offset, oldest.len,
-                       POSIX_FADV_DONTNEED) == -1)
+    r = posix_fadvise (oldest.fd, oldest.offset, oldest.len,
+                       POSIX_FADV_DONTNEED);
+    if (r != 0) {
+      errno = r;
       nbdkit_debug ("posix_fadvise: POSIX_FADV_DONTNEED: (ignored): %m");
+    }
   }
 
   return 0;
@@ -685,8 +690,10 @@ file_open (int readonly)
     /* This is a hint so we ignore failures. */
 #ifdef HAVE_POSIX_FADVISE
     int r = posix_fadvise (h->fd, 0, 0, fadvise_mode);
-    if (r == -1)
-      nbdkit_debug ("posix_fadvise: %s: %m (ignored)", h->name);
+    if (r != 0) {
+      errno = r;
+      nbdkit_debug ("posix_fadvise: %s: (ignored): %m", h->name);
+    }
 #else
     nbdkit_debug ("fadvise is not supported");
 #endif
