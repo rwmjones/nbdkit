@@ -34,6 +34,21 @@ The size of the virtual disk must be specified using the C<size>
 parameter.  If the size is not a multiple of 8 then the last 8 byte
 offset in the pattern is truncated.
 
+=head2 Upper bits
+
+The C<upper> parameter can be used to set the top 16 bits of each word
+in the pattern.  This can be used to distinguish between different
+instances of nbdkit-pattern-plugin, or when testing copies to ensure
+that different data is copied each time.  For example setting
+C<upper=0x1234> changes the pattern to:
+
+ offset                         data
+  0000:   12 34 00 00 00 00 00 00   12 34 00 00 00 00 00 08
+  0010:   12 34 00 00 00 00 00 10   12 34 00 00 00 00 00 18
+  0020:   12 34 00 00 00 00 00 20   12 34 00 00 00 00 00 28
+
+The upper value is XOR-ed into the top 16 bits, the default is 0.
+
 =head2 Strides
 
 Using the C<stride> parameter you can create a pattern where each
@@ -108,6 +123,16 @@ beginning of each C<BLOCK_SIZE> block.  See L</Strides> above.
 
 The minimum, and default, stride is 8 which places the integers
 sequentially with no gaps.  The stride must be a power of two.
+
+=item B<upper=>N
+
+XOR C<N> (N=0..65535) with the top 16 bits of the pattern word.  You
+can prefix the value with C<0x> for hexadecimal.  The default is 0.
+
+=item B<upper=random>
+
+On each run of nbdkit, a random number in the range 1..65535 (not 0)
+is chosen for the upper 16 bits of each word.
 
 =back
 

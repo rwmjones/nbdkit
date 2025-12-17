@@ -47,11 +47,21 @@
 #include "isaligned.h"
 #include "ispowerof2.h"
 #include "minmax.h"
+#include "random.h"
 #include "rounding.h"
 
 /* The size of disk in bytes (initialized by size=<SIZE> parameter). */
 static uint64_t size = 0;
 static uint64_t stride = 8;
+static uint64_t upper = 0;      /* already shifted up by 48 bits */
+
+static struct random_state random_state;
+
+static void
+pattern_load (void)
+{
+  xsrandom (time (NULL), &random_state);
+}
 
 static int
 pattern_config (const char *key, const char *value)
@@ -74,6 +84,21 @@ pattern_config (const char *key, const char *value)
     }
     stride = r;
   }
+  else if (strcmp (key, "upper") == 0) {
+    if (strcmp (value, "random") == 0) {
+      do {
+        upper = xrandom (&random_state) & 0xffff;
+      } while (upper == 0);
+    }
+    else {
+      uint16_t u16;
+
+      if (nbdkit_parse_uint16_t ("upper", value, &u16) == -1)
+        return -1;
+      upper = u16;
+    }
+    upper <<= 48;
+  }
   else {
     nbdkit_error ("unknown parameter '%s'", key);
     return -1;
@@ -84,7 +109,8 @@ pattern_config (const char *key, const char *value)
 
 #define pattern_config_help \
   "size=<SIZE>  (required) Size of the backing disk\n" \
-  "stride=<BLOCK_SIZE>     Block size (stride) of pattern"
+  "stride=<BLOCK_SIZE>     Block size (stride) of pattern\n" \
+  "upper=BITS|random       Set upper 16 bits"
 
 #define THREAD_MODEL NBDKIT_THREAD_MODEL_PARALLEL
 
@@ -141,7 +167,7 @@ pattern_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
     if (IS_ALIGNED (offset, stride) && IS_ALIGNED (count, stride)) {
       while (count > 0) {
         assert (count >= stride); /* must be true because of alignment */
-        d = htobe64 (offset);
+        d = htobe64 (upper ^ offset);
         memcpy (b, (uint8_t *) &d, 8);
         count -= stride;
         offset += stride;
@@ -159,7 +185,7 @@ pattern_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
       rem = ROUND_UP (offset, stride) - offset;
       if (rem == 0) rem = stride;
       if (rem > stride-8) {     /* writing the offset */
-        d = htobe64 (ROUND_DOWN (offset, stride));
+        d = htobe64 (upper ^ ROUND_DOWN (offset, stride));
         o = offset & 7;
         n = MIN (count, 8-o);
         memcpy (b, (char *) &d + o, n);
@@ -212,6 +238,7 @@ pattern_pwrite (void *handle, const void *buf,
 static struct nbdkit_plugin plugin = {
   .name              = "pattern",
   .version           = PACKAGE_VERSION,
+  .load              = pattern_load,
   .config            = pattern_config,
   .config_help       = pattern_config_help,
   .magic_config_key  = "size",

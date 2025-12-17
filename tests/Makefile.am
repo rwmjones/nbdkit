@@ -1137,6 +1137,8 @@ TESTS += \
 	test-pattern-largest.sh \
 	test-pattern-largest-for-qemu.sh \
 	test-pattern-stride.sh \
+	test-pattern-upper.sh \
+	test-pattern-upper-random.sh \
 	test-pattern-copy.sh \
 	$(NULL)
 EXTRA_DIST += \
@@ -1144,6 +1146,8 @@ EXTRA_DIST += \
 	test-pattern-largest.sh \
 	test-pattern-largest-for-qemu.sh \
 	test-pattern-stride.sh \
+	test-pattern-upper.sh \
+	test-pattern-upper-random.sh \
 	test-pattern-copy.sh \
 	$(NULL)
 
