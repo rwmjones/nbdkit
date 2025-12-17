@@ -938,10 +938,10 @@ TESTS += \
 	test-file-extents.sh \
 	test-file-dir.sh \
 	test-file-dirfd.sh \
-	test-file-cache-none-read-consistent.sh \
-	test-file-cache-none-read-effective.sh \
-	test-file-cache-none-write-consistent.sh \
-	test-file-cache-none-write-effective.sh \
+	test-file-reduce-memory-pressure-read-consistent.sh \
+	test-file-reduce-memory-pressure-read-effective.sh \
+	test-file-reduce-memory-pressure-write-consistent.sh \
+	test-file-reduce-memory-pressure-write-effective.sh \
 	$(NULL)
 EXTRA_DIST += \
 	test-file.sh \
@@ -951,10 +951,10 @@ EXTRA_DIST += \
 	test-file-extents.sh \
 	test-file-dir.sh \
 	test-file-dirfd.sh \
-	test-file-cache-none-read-consistent.sh \
-	test-file-cache-none-read-effective.sh \
-	test-file-cache-none-write-consistent.sh \
-	test-file-cache-none-write-effective.sh \
+	test-file-reduce-memory-pressure-read-consistent.sh \
+	test-file-reduce-memory-pressure-read-effective.sh \
+	test-file-reduce-memory-pressure-write-consistent.sh \
+	test-file-reduce-memory-pressure-write-effective.sh \
 	$(NULL)
 LIBGUESTFS_TESTS += test-file-block
 LIBNBD_TESTS += test-file-block-nbd

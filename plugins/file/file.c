@@ -94,11 +94,12 @@ static int fadvise_mode =
 #endif
   ;
 
-/* cache mode */
-static enum { cache_default, cache_none } cache_mode = cache_default;
+/* Reduce memory pressure. */
+static bool reduce_memory_pressure = false;
 
 /* Define EVICT_WRITES if we are going to evict the page cache
- * (cache=none) after writing.  This is only known to work on Linux.
+ * (reduce-memory-pressure=true) after writing.  This is only known to
+ * work on Linux.
  */
 #ifdef __linux__
 #define EVICT_WRITES 1
@@ -138,7 +139,8 @@ evict_writes (int fd, uint64_t offset, size_t len)
      * (asynchronously).
      */
     if (sync_file_range (fd, offset, len, SYNC_FILE_RANGE_WRITE) == -1) {
-      nbdkit_error ("sync_file_range: cache=none: starting eviction: %m");
+      nbdkit_error ("sync_file_range: reduce-memory-pressure: "
+                    "starting eviction: %m");
       return -1;
     }
 
@@ -157,7 +159,8 @@ evict_writes (int fd, uint64_t offset, size_t len)
                          SYNC_FILE_RANGE_WAIT_BEFORE |
                          SYNC_FILE_RANGE_WRITE |
                          SYNC_FILE_RANGE_WAIT_AFTER) == -1) {
-      nbdkit_error ("sync_file_range: cache=none: evicting oldest window: %m");
+      nbdkit_error ("sync_file_range: reduce-memory-pressure: "
+                    "evicting oldest window: %m");
       return -1;
     }
     r = posix_fadvise (oldest.fd, oldest.offset, oldest.len,
@@ -286,11 +289,20 @@ file_config (const char *key, const char *value)
       return -1;
     }
   }
+  else if (strcmp (key, "reduce-memory-pressure") == 0) {
+    int r;
+
+    r = nbdkit_parse_bool (value);
+    if (r == -1)
+      return -1;
+    reduce_memory_pressure = r;
+  }
+  /* For compatibility with nbdkit < 1.46 */
   else if (strcmp (key, "cache") == 0) {
     if (strcmp (value, "default") == 0)
-      cache_mode = cache_default;
+      reduce_memory_pressure = false;
     else if (strcmp (value, "none") == 0)
-      cache_mode = cache_none;
+      reduce_memory_pressure = true;
     else {
       nbdkit_error ("unknown cache mode: %s", value);
       return -1;
@@ -391,7 +403,7 @@ file_config_complete (void)
   "fd=<FILE_DESCRIPTOR>    Serve file attached to file descriptor\n" \
   "dir=<DIRNAME>           A directory containing files to serve\n" \
   "dirfd=<FILE_DESCRIPTOR> Serve dir attached to file descriptor\n" \
-  "cache=<MODE>            Set use of caching (default, none)\n" \
+  "reduce-memory-pressure=true  Reduce use of page cache (default: false)\n" \
   "fadvise=<LEVEL>         Set fadvise hint (normal, random, sequential)"
 
 /* Print some extra information about how the plugin was compiled. */
@@ -939,7 +951,7 @@ file_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
 
 #if defined (HAVE_POSIX_FADVISE) && defined (POSIX_FADV_DONTNEED)
   /* On Linux this will evict the pages we just read from the page cache. */
-  if (cache_mode == cache_none)
+  if (reduce_memory_pressure)
     posix_fadvise (h->fd, orig_offset, orig_count, POSIX_FADV_DONTNEED);
 #endif
 
@@ -973,7 +985,7 @@ file_pwrite (void *handle, const void *buf, uint32_t count, uint64_t offset,
     return -1;
 
 #if EVICT_WRITES
-  if (cache_mode == cache_none) {
+  if (reduce_memory_pressure) {
     if (evict_writes (h->fd, orig_offset, orig_count) == -1)
       return -1;
   }

@@ -58,7 +58,8 @@ main (int argc, char *argv[])
   requires_exists (disk);
 
   if (test_start_nbdkit ("file", "--filter=bzip2", disk,
-                         "fadvise=sequential", "cache=none",
+                         "fadvise=sequential",
+                         "reduce-memory-pressure=true",
                          NULL) == -1)
     exit (EXIT_FAILURE);
 

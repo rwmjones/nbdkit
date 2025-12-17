@@ -30,10 +30,11 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-# Test the file plugin, writing with cache=none.
+# Test the file plugin, reading with reduce-memory-pressure=true.
 #
-# Unlike test-file-cache-none-write-effective.sh, this test doesn't
-# require cachestats.  It's more about testing integrity of writing.
+# Unlike test-file-reduce-memory-pressure-read-effective.sh, this test
+# doesn't require cachestats.  It's more about testing integrity of
+# reading.
 
 source ./functions.sh
 set -e
@@ -45,11 +46,10 @@ requires_run
 requires_nbdcopy
 requires test -f disk
 requires md5sum --version
-requires $TRUNCATE --version
 
-out=file-cache-none-write-consistent.out
+out=file-reduce-memory-pressure-read-consistent.out
 cleanup_fn rm -f $out
 
-rm -f $out; $TRUNCATE -r disk $out
-nbdkit file $out cache=none --run 'nbdcopy disk "$uri"'
+export out
+nbdkit file disk reduce-memory-pressure=true --run 'nbdcopy "$uri" "$out"'
 test "$(md5sum < disk)" = "$(md5sum < $out)"

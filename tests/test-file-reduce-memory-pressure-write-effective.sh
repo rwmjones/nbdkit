@@ -30,8 +30,8 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-# Test the file plugin, writing with cache=none, is effective at
-# reducing page cache usage.
+# Test the file plugin, writing with reduce-memory-pressure=true, is
+# effective at reducing page cache usage.
 
 source ./functions.sh
 set -e
@@ -53,36 +53,37 @@ requires $SED --version
 # It doesn't support --version or --help, so use 'type' instead.
 requires type cachestats
 
-inp=file-cache-none-write-effective.in
-out=file-cache-none-write-effective.out
-stats1=file-cache-none-write-effective.s1
-stats2=file-cache-none-write-effective.s2
+inp=file-reduce-memory-pressure-write-effective.in
+out=file-reduce-memory-pressure-write-effective.out
+stats1=file-reduce-memory-pressure-write-effective.s1
+stats2=file-reduce-memory-pressure-write-effective.s2
 rm -f $inp $out $stats1 $stats2
 cleanup_fn rm -f $inp $out $stats1 $stats2
 
 # Create a large random file as input.
 dd if=/dev/urandom of=$inp bs=1024k count=1024
 
-# Copy to output using cache=default and collect the stats.
-# We expect to see the output file mostly or completely in cache after.
+# Copy to output using reduce-memory-pressure=false and collect the
+# stats.  We expect to see the output file mostly or completely in
+# cache after.
 rm -f $out; truncate -r $inp $out
 export inp
-nbdkit file $out --run 'nbdcopy $inp "$uri"' cache=default
+nbdkit file $out --run 'nbdcopy $inp "$uri"' reduce-memory-pressure=false
 cachestats $out > $stats1
 cat $stats1
 
-# The same, with cache=none.
+# The same, with reduce-memory-pressure=true.
 # We expect to see the output file not cached after.
 rm -f $out; truncate -r $inp $out
 export inp
-nbdkit file $out --run 'nbdcopy $inp "$uri"' cache=none
+nbdkit file $out --run 'nbdcopy $inp "$uri"' reduce-memory-pressure=true
 cachestats $out > $stats2
 cat $stats2
 
 # The output of cachestats looks like this:
 # pages in cache: 262144/262144 (100.0%)  [filesize=1048576.0K, pagesize=4K]
-# We want to check that % pages in cache using cache=none is much
-# lower than the default case.
+# We want to check that % pages in cache using
+# reduce-memory-pressure=true is much lower than the default case.
 pic1="$($SED 's,pages in cache: [0-9/]* (\([0-9]*\)\.[0-9]*%).*,\1,' \
              < $stats1)"
 pic2="$($SED 's,pages in cache: [0-9/]* (\([0-9]*\)\.[0-9]*%).*,\1,' \

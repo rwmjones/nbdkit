@@ -5,7 +5,8 @@ nbdkit-file-plugin - nbdkit file plugin
 =head1 SYNOPSIS
 
  nbdkit file [file=]FILENAME
-             [cache=default|none] [fadvise=normal|random|sequential]
+             [fadvise=normal|random|sequential]
+             [reduce-memory-pressure=true]
 
 =for paragraph
 
@@ -47,24 +48,6 @@ files in a directory, a single file descriptor, or the files in the
 directory of the file descriptor.
 
 =over 4
-
-=item B<cache=default>
-
-=item B<cache=none>
-
-(nbdkit E<ge> 1.22, not Windows)
-
-If the file is very large and the plugin will read or write the whole
-file, this can cause the file to be cached in memory (in the page
-cache on Linux), causing other files and processes to be evicted,
-leading to overall slow system performance.  If you know that the file
-will only be read/written once and will not be needed afterwards so
-caching it is pointless, use C<cache=none>.  This causes reads and
-writes to minimize use of the page cache.  The default is to use the
-kernel's default page cache strategy.
-
-See also C<fadvise> below which can be used to hint the access
-pattern.
 
 =item B<dir=>DIRECTORY
 
@@ -132,6 +115,30 @@ C<file=> __IS_MAGIC__
 
 Serve the Windows volume specified by the device name.  See:
 L<https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#win32-device-namespaces>.
+
+=item B<reduce-memory-pressure=true>
+
+(nbdkit E<ge> 1.22, not Windows)
+
+If the file is very large and the plugin will read or write the whole
+file, this can cause the file to be cached in memory (in the page
+cache on Linux), causing other files and processes to be evicted,
+leading to overall slow system performance and I/O storms.
+
+If you know that the file will only be read/written once and will not
+be needed afterwards (so keeping it in memory afterwards is pointless)
+use C<reduce-memory-pressure=true>.  This causes reads and writes to
+minimize use of the page cache.
+
+The default is false, which uses the kernel's normal page cache
+strategy.
+
+See also C<fadvise> above which can be used to hint the access
+pattern.
+
+In nbdkit 1.22 - 1.44 this option was called C<cache=none>, but that
+caused a lot of confusion for people used to qemu and kernel caching
+modes, which are not related to this setting.
 
 =back
 

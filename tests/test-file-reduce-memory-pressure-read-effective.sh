@@ -30,8 +30,8 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-# Test the file plugin, reading with cache=none, is effective at
-# reducing page cache usage.
+# Test the file plugin, reading with reduce-memory-pressure=true, is
+# effective at reducing page cache usage.
 
 source ./functions.sh
 set -e
@@ -54,9 +54,9 @@ requires $SED --version
 requires type cachestats
 requires type cachedel
 
-inp=file-cache-none-read-effective.in
-stats1=file-cache-none-read-effective.s1
-stats2=file-cache-none-read-effective.s2
+inp=file-reduce-memory-pressure-read-effective.in
+stats1=file-reduce-memory-pressure-read-effective.s1
+stats2=file-reduce-memory-pressure-read-effective.s2
 rm -f $inp $stats1 $stats2
 cleanup_fn rm -f $inp $stats1 $stats2
 
@@ -70,17 +70,17 @@ nbdkit file $inp --run 'nbdcopy "$uri" null:'
 cachestats $inp > $stats1
 cat $stats1
 
-# The same, with cache=none.
+# The same, with reduce-memory-pressure=true.
 # We expect to see the input file not cached after.
 cachedel $inp
-nbdkit file $inp --run 'nbdcopy "$uri" null:' cache=none
+nbdkit file $inp --run 'nbdcopy "$uri" null:' reduce-memory-pressure=true
 cachestats $inp > $stats2
 cat $stats2
 
-# The output of cachestats looks like this:
-# pages in cache: 262144/262144 (100.0%)  [filesize=1048576.0K, pagesize=4K]
-# We want to check that % pages in cache using cache=none is much
-# lower than the default case.
+# The output of cachestats looks like this: pages in cache:
+# 262144/262144 (100.0%) [filesize=1048576.0K, pagesize=4K]
+# We want to check that % pages in cache using
+# reduce-memory-pressure=true is much lower than the default case.
 pic1="$($SED 's,pages in cache: [0-9/]* (\([0-9]*\)\.[0-9]*%).*,\1,' \
              < $stats1)"
 pic2="$($SED 's,pages in cache: [0-9/]* (\([0-9]*\)\.[0-9]*%).*,\1,' \
