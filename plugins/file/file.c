@@ -118,13 +118,13 @@ struct write_window {
 };
 
 static pthread_mutex_t window_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t window_fd_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_rwlock_t window_fd_lock = PTHREAD_RWLOCK_INITIALIZER;
 static struct write_window window[NR_WINDOWS];
 
 static int
 evict_writes (int fd, uint64_t offset, size_t len)
 {
-  ACQUIRE_LOCK_FOR_CURRENT_SCOPE (&window_fd_lock);
+  ACQUIRE_RDLOCK_FOR_CURRENT_SCOPE (&window_fd_lock);
   struct write_window oldest = { 0 };
 
   {
@@ -184,7 +184,7 @@ evict_writes (int fd, uint64_t offset, size_t len)
 static void
 remove_fd_from_window (int fd)
 {
-  ACQUIRE_LOCK_FOR_CURRENT_SCOPE (&window_fd_lock);
+  ACQUIRE_WRLOCK_FOR_CURRENT_SCOPE (&window_fd_lock);
   size_t i;
 
   for (i = 0; i < NR_WINDOWS; ++i)
