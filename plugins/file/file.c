@@ -118,11 +118,13 @@ struct write_window {
 };
 
 static pthread_mutex_t window_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t window_fd_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct write_window window[NR_WINDOWS];
 
 static int
 evict_writes (int fd, uint64_t offset, size_t len)
 {
+  ACQUIRE_LOCK_FOR_CURRENT_SCOPE (&window_fd_lock);
   struct write_window oldest = { 0 };
 
   {
@@ -149,7 +151,9 @@ evict_writes (int fd, uint64_t offset, size_t len)
     window[NR_WINDOWS-1].offset = offset;
     window[NR_WINDOWS-1].len = len;
   }
-  /* Release lock here. */
+  /* Release window_lock here, but hold window_fd_lock since we don't
+   * want file_close -> remove_fd_from_window to close oldest.fd
+   */
 
   /* Evict the oldest window from the page cache (synchronously). */
   if (oldest.len > 0) {
@@ -180,7 +184,7 @@ evict_writes (int fd, uint64_t offset, size_t len)
 static void
 remove_fd_from_window (int fd)
 {
-  ACQUIRE_LOCK_FOR_CURRENT_SCOPE (&window_lock);
+  ACQUIRE_LOCK_FOR_CURRENT_SCOPE (&window_fd_lock);
   size_t i;
 
   for (i = 0; i < NR_WINDOWS; ++i)
