@@ -35,13 +35,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdarg.h>
+#include <inttypes.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
 
 #include "ansi-colours.h"
+#include "ascii-ctype.h"
+#include "isaligned.h"
 #include "open_memstream.h"
+#include "rounding.h"
 #include "utils.h"
 
 #include "internal.h"
@@ -165,4 +170,74 @@ debug_in_server (const char *fs, ...)
   va_end (args);
 
   errno = err;
+}
+
+/* Usually this function would be part of server/public.c, but in this
+ * case we want to use nbdkit_debug instead of debug_in_server.
+ */
+NBDKIT_DLL_PUBLIC void
+nbdkit_debug_hexdump (const void *vbuf, size_t len,
+                      const char *prefix, uint64_t start)
+{
+  if (!verbose)
+    return;
+
+  const uint8_t *buf = vbuf;
+  uint64_t offset = start, skip;
+  size_t i;
+  char str_offset[16+1]; /* The offset field */
+  char hex[16*3+1];      /* Sixteen pairs of hex digits (or spaces) */
+  char chars[16+1];      /* The printable chars (or spaces) */
+
+#define HEXDUMP_RESET_STRS()                                    \
+  snprintf (str_offset, sizeof str_offset, "%08" PRIx64,        \
+            ROUND_DOWN (offset, 16));                           \
+  memset (hex, ' ', sizeof hex - 1);                            \
+  hex[sizeof hex - 1] = '\0';                                   \
+  memset (chars, ' ', sizeof chars - 1);                        \
+  chars[sizeof chars - 1] = '\0';
+
+#define HEXDUMP_SET_BYTE(i, b)                          \
+  sprintf (&hex[(i)*3], "%02x", (b));                   \
+  hex[(i)*3+2] = ' ';                                   \
+  chars[i] = ascii_isprint ((b)) ? (b) : '.';
+
+/* Send the final string to nbdkit_debug.  Start by splitting up the
+ * hex digits into two groups of 8.
+ */
+#define HEXDUMP_EMIT_DEBUG()                                            \
+  hex[8*3-1] = '\0';                                                    \
+  nbdkit_debug ("%s%s: %s  %s |%s|",                                    \
+                prefix ? : "",                                          \
+                str_offset, hex, &hex[8*3], chars);
+
+  /* Unaligned head. */
+  if (! IS_ALIGNED (offset, 16)) {
+    HEXDUMP_RESET_STRS ();
+    skip = offset % 16;
+    for (i = skip; i < 16 && len > 0; ++i) {
+      HEXDUMP_SET_BYTE (i, *buf);
+      buf++;
+      offset++;
+      len--;
+    }
+    HEXDUMP_EMIT_DEBUG ();
+  }
+
+  /* Aligned body and unaligned tail. */
+  while (len > 0) {
+    assert (IS_ALIGNED (offset, 16));
+    HEXDUMP_RESET_STRS ();
+    for (i = 0; i < 16 && len > 0; ++i) {
+      HEXDUMP_SET_BYTE (i, *buf);
+      buf++;
+      offset++;
+      len--;
+    }
+    HEXDUMP_EMIT_DEBUG ();
+  }
+
+#undef HEXDUMP_RESET_STRS
+#undef HEXDUMP_SET_BYTE
+#undef HEXDUMP_EMIT_DEBUG
 }

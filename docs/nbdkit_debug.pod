@@ -57,6 +57,7 @@ C<nbdkit_debug> was present in nbdkit 0.1.0.
 =head1 SEE ALSO
 
 L<nbdkit(1)>,
+L<nbdkit_debug_hexdump(3)>,
 L<nbdkit_error(3)>,
 L<nbdkit-plugin(3)>,
 L<nbdkit-filter(3)>.

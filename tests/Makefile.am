@@ -327,6 +327,7 @@ TESTS += \
 	test-log-to-file.sh \
 	test-log-to-file-append.sh \
 	test-at-file.sh \
+	test-debug-hexdump.sh \
 	$(NULL)
 if !IS_WINDOWS
 TESTS += \
@@ -358,6 +359,8 @@ EXTRA_DIST += \
 	test-export-handshake.sh \
 	test-export-handshake-tls.sh \
 	test-debug-flags.sh \
+	test-debug-hexdump.sh \
+	test-debug-hexdump-plugin.c \
 	test-disconnect-tls.sh \
 	test-disconnect.sh \
 	test-dump-plugin-and-single.sh \
@@ -530,6 +533,29 @@ test_shutdown_plugin_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
 test_shutdown_plugin_la_LIBADD = $(IMPORT_LIBRARY_ON_WINDOWS)
+
+# check_LTLIBRARIES won't build a shared library (see automake manual).
+# So we have to do this and add a dependency.
+noinst_LTLIBRARIES += \
+	test-debug-hexdump-plugin.la \
+	$(NULL)
+test-debug-hexdump.sh: test-debug-hexdump-plugin.la
+
+test_debug_hexdump_plugin_la_SOURCES = \
+	test-debug-hexdump-plugin.c \
+	$(top_srcdir)/include/nbdkit-plugin.h \
+	$(NULL)
+test_debug_hexdump_plugin_la_CPPFLAGS = \
+	-I$(top_srcdir)/include \
+	-I$(top_builddir)/include \
+	$(NULL)
+test_debug_hexdump_plugin_la_CFLAGS = $(WARNINGS_CFLAGS)
+# For use of the -rpath option, see:
+# https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
+test_debug_hexdump_plugin_la_LDFLAGS = \
+	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
+	$(NULL)
+test_debug_hexdump_plugin_la_LIBADD = $(IMPORT_LIBRARY_ON_WINDOWS)
 
 endif HAVE_PLUGINS
 

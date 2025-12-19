@@ -38,6 +38,7 @@ EXTRA_DIST = \
 	nbdkit-captive.pod \
 	nbdkit-client.pod \
 	nbdkit_debug.pod \
+	nbdkit_debug_hexdump.pod \
 	nbdkit_error.pod \
 	nbdkit_export_name.pod \
 	nbdkit-filter.pod \
@@ -126,6 +127,7 @@ generated_mans = \
 	nbdkit-captive.1 \
 	nbdkit-client.1 \
 	nbdkit_debug.3 \
+	nbdkit_debug_hexdump.3 \
 	nbdkit_error.3 \
 	nbdkit_export_name.3 \
 	nbdkit-filter.3 \
@@ -202,6 +204,11 @@ nbdkit-client.1: nbdkit-client.pod $(top_builddir)/podwrapper.pl
 	    $<
 
 nbdkit_debug.3: nbdkit_debug.pod $(top_builddir)/podwrapper.pl
+	$(PODWRAPPER) --section=3 --man $@ \
+	    --html $(top_builddir)/html/$@.html \
+	    $<
+
+nbdkit_debug_hexdump.3: nbdkit_debug_hexdump.pod $(top_builddir)/podwrapper.pl
 	$(PODWRAPPER) --section=3 --man $@ \
 	    --html $(top_builddir)/html/$@.html \
 	    $<

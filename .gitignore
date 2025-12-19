@@ -28,6 +28,7 @@ __pycache__
 
 docs/*.1
 docs/nbdkit_debug.3
+docs/nbdkit_debug_hexdump.3
 docs/nbdkit_error.3
 docs/nbdkit_export_name.3
 docs/nbdkit-filter.3
