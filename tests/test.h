@@ -44,7 +44,7 @@ extern const char *server[2];   /* server parameter for add_drive */
 
 /* Can be called more than once (useful for nbd plugin) */
 extern int test_start_nbdkit (const char *arg, ...)
-  __attribute__ ((__nonnull__ (1)))
+  __attribute__ ((__nonnull__(1)))
   __attribute__ ((__sentinel__));
 
 /* Declare program_name. */

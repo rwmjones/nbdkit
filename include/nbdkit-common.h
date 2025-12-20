@@ -37,6 +37,7 @@
 #error this header file should not be directly included
 #endif
 
+#include <stdlib.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <errno.h>
@@ -56,11 +57,34 @@ extern "C" {
 
 #if (defined (__GNUC__) || defined (__clang__)) && \
     defined (HAVE_VFPRINTF_PERCENT_M)
-#define ATTRIBUTE_FORMAT_PRINTF(fmtpos, argpos) \
+#define NBDKIT_ATTRIBUTE_FORMAT_PRINTF(fmtpos, argpos) \
   __attribute__ ((__format__ (__printf__, fmtpos, argpos)))
 #else
-#define ATTRIBUTE_FORMAT_PRINTF(fmtpos, argpos)
+#define NBDKIT_ATTRIBUTE_FORMAT_PRINTF(fmtpos, argpos)
 #endif
+
+#if !defined (NBDKIT_GCC_VERSION) && defined (__GNUC__)
+#define NBDKIT_GCC_VERSION \
+    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#endif
+
+#ifndef NBDKIT_ATTRIBUTE_NONNULL
+#if defined (__GNUC__) && NBDKIT_GCC_VERSION >= 120000 /* gcc >= 12.0 */
+#define NBDKIT_ATTRIBUTE_NONNULL(args) \
+  __attribute__ ((__nonnull__ args))
+#else
+#define NBDKIT_ATTRIBUTE_NONNULL(args)
+#endif
+#endif /* ! defined NBDKIT_ATTRIBUTE_NONNULL */
+
+#ifndef NBDKIT_ATTRIBUTE_MALLOC
+#if defined (__GNUC__) && NBDKIT_GCC_VERSION >= 120000 /* gcc >= 12.0 */
+#define NBDKIT_ATTRIBUTE_MALLOC(free_fn) \
+  __attribute__ ((__malloc__, __malloc__ (free_fn, 1)))
+#else
+#define NBDKIT_ATTRIBUTE_MALLOC(free_fn)
+#endif
+#endif /* ! define NBDKIT_ATTRIBUTE_MALLOC */
 
 #define NBDKIT_THREAD_MODEL_SERIALIZE_CONNECTIONS     0
 #define NBDKIT_THREAD_MODEL_SERIALIZE_ALL_REQUESTS    1
@@ -93,72 +117,103 @@ extern "C" {
 #endif
 
 NBDKIT_EXTERN_DECL (void, nbdkit_error,
-                    (const char *msg, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2));
+                    (const char *msg, ...)
+                    NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 2));
 NBDKIT_EXTERN_DECL (void, nbdkit_verror,
                     (const char *msg, va_list args)
-                    ATTRIBUTE_FORMAT_PRINTF (1, 0));
+                    NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 0));
 NBDKIT_EXTERN_DECL (void, nbdkit_debug,
-                    (const char *msg, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2));
+                    (const char *msg, ...)
+                    NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 2));
 NBDKIT_EXTERN_DECL (void, nbdkit_vdebug,
                     (const char *msg, va_list args)
-                    ATTRIBUTE_FORMAT_PRINTF (1, 0));
+                    NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 0));
 
-NBDKIT_EXTERN_DECL (char *, nbdkit_absolute_path, (const char *path));
+NBDKIT_EXTERN_DECL (char *, nbdkit_absolute_path,
+                    (const char *path)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 NBDKIT_EXTERN_DECL (void, nbdkit_debug_hexdump,
                     (const void *buf, size_t len,
-                     const char *prefix, uint64_t start));
-NBDKIT_EXTERN_DECL (int64_t, nbdkit_parse_size, (const char *str));
+                     const char *prefix, uint64_t start)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
+NBDKIT_EXTERN_DECL (int64_t, nbdkit_parse_size,
+                    (const char *str)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 NBDKIT_EXTERN_DECL (int, nbdkit_parse_probability,
-                    (const char *what, const char *str, double *r));
-NBDKIT_EXTERN_DECL (int, nbdkit_parse_bool, (const char *str));
+                    (const char *what, const char *str, double *r)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
+NBDKIT_EXTERN_DECL (int, nbdkit_parse_bool,
+                    (const char *str)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 NBDKIT_EXTERN_DECL (int, nbdkit_parse_delay,
                     (const char *what, const char *str,
-                     unsigned *sec, unsigned *nsec));
+                     unsigned *sec, unsigned *nsec)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int, nbdkit_parse_int,
-                    (const char *what, const char *str, int *r));
+                    (const char *what, const char *str, int *r)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int, nbdkit_parse_unsigned,
-                    (const char *what, const char *str, unsigned *r));
+                    (const char *what, const char *str, unsigned *r)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int, nbdkit_parse_int8_t,
-                    (const char *what, const char *str, int8_t *r));
+                    (const char *what, const char *str, int8_t *r)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int, nbdkit_parse_uint8_t,
-                    (const char *what, const char *str, uint8_t *r));
+                    (const char *what, const char *str, uint8_t *r)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int, nbdkit_parse_int16_t,
-                    (const char *what, const char *str, int16_t *r));
+                    (const char *what, const char *str, int16_t *r)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int, nbdkit_parse_uint16_t,
-                    (const char *what, const char *str, uint16_t *r));
+                    (const char *what, const char *str, uint16_t *r)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int, nbdkit_parse_int32_t,
-                    (const char *what, const char *str, int32_t *r));
+                    (const char *what, const char *str, int32_t *r)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int, nbdkit_parse_uint32_t,
-                    (const char *what, const char *str, uint32_t *r));
+                    (const char *what, const char *str, uint32_t *r)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int, nbdkit_parse_int64_t,
-                    (const char *what, const char *str, int64_t *r));
+                    (const char *what, const char *str, int64_t *r)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int, nbdkit_parse_uint64_t,
-                    (const char *what, const char *str, uint64_t *r));
+                    (const char *what, const char *str, uint64_t *r)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int, nbdkit_stdio_safe, (void));
 NBDKIT_EXTERN_DECL (int, nbdkit_read_password,
-                    (const char *value, char **password));
-NBDKIT_EXTERN_DECL (char *, nbdkit_realpath, (const char *path));
+                    (const char *value, char **password)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
+NBDKIT_EXTERN_DECL (char *, nbdkit_realpath,
+                    (const char *path)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 NBDKIT_EXTERN_DECL (int, nbdkit_nanosleep, (unsigned sec, unsigned nsec));
 NBDKIT_EXTERN_DECL (int, nbdkit_peer_name,
-                    (struct sockaddr *addr, socklen_t *addrlen));
+                    (struct sockaddr *addr, socklen_t *addrlen)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int64_t, nbdkit_peer_pid, (void));
 NBDKIT_EXTERN_DECL (int64_t, nbdkit_peer_uid, (void));
 NBDKIT_EXTERN_DECL (int64_t, nbdkit_peer_gid, (void));
-NBDKIT_EXTERN_DECL (char *, nbdkit_peer_security_context, (void));
-NBDKIT_EXTERN_DECL (char *, nbdkit_peer_tls_dn, (void));
-NBDKIT_EXTERN_DECL (char *, nbdkit_peer_tls_issuer_dn, (void));
+NBDKIT_EXTERN_DECL (char *, nbdkit_peer_security_context,
+                    (void) NBDKIT_ATTRIBUTE_MALLOC (free));
+NBDKIT_EXTERN_DECL (char *, nbdkit_peer_tls_dn,
+                    (void) NBDKIT_ATTRIBUTE_MALLOC (free));
+NBDKIT_EXTERN_DECL (char *, nbdkit_peer_tls_issuer_dn,
+                    (void) NBDKIT_ATTRIBUTE_MALLOC (free));
 NBDKIT_EXTERN_DECL (void, nbdkit_shutdown, (void));
 NBDKIT_EXTERN_DECL (void, nbdkit_disconnect, (int force));
 
 NBDKIT_EXTERN_DECL (const char *, nbdkit_strdup_intern,
-                    (const char *str));
+                    (const char *str)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 NBDKIT_EXTERN_DECL (const char *, nbdkit_strndup_intern,
-                    (const char *str, size_t n));
+                    (const char *str, size_t n)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 NBDKIT_EXTERN_DECL (const char *, nbdkit_printf_intern,
-                    (const char *msg, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2));
+                    (const char *msg, ...)
+                    NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 2));
 NBDKIT_EXTERN_DECL (const char *, nbdkit_vprintf_intern,
                     (const char *msg, va_list args)
-                    ATTRIBUTE_FORMAT_PRINTF (1, 0));
+                    NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 0));
 
 /* Extent functions. */
 struct nbdkit_extent {
@@ -169,13 +224,16 @@ struct nbdkit_extent {
 
 struct nbdkit_extents;
 
-NBDKIT_EXTERN_DECL (struct nbdkit_extents *, nbdkit_extents_new,
-                    (uint64_t start, uint64_t end));
 NBDKIT_EXTERN_DECL (void, nbdkit_extents_free, (struct nbdkit_extents *));
+NBDKIT_EXTERN_DECL (struct nbdkit_extents *, nbdkit_extents_new,
+                    (uint64_t start, uint64_t end)
+                    NBDKIT_ATTRIBUTE_MALLOC (nbdkit_extents_free));
 NBDKIT_EXTERN_DECL (size_t, nbdkit_extents_count,
-                    (const struct nbdkit_extents *));
+                    (const struct nbdkit_extents *)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 NBDKIT_EXTERN_DECL (struct nbdkit_extent, nbdkit_get_extent,
-                    (const struct nbdkit_extents *, size_t));
+                    (const struct nbdkit_extents *, size_t)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 NBDKIT_EXTERN_DECL (int, nbdkit_add_extent,
                     (struct nbdkit_extents *,
                      uint64_t offset, uint64_t length, uint32_t type));
@@ -183,9 +241,11 @@ NBDKIT_EXTERN_DECL (int, nbdkit_add_extent,
 struct nbdkit_exports;
 NBDKIT_EXTERN_DECL (int, nbdkit_add_export,
                     (struct nbdkit_exports *,
-                     const char *name, const char *description));
+                     const char *name, const char *description)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (int, nbdkit_use_default_export,
-                    (struct nbdkit_exports *));
+                    (struct nbdkit_exports *)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 
 /* A static non-NULL pointer which can be used when you don't need a
  * per-connection handle.

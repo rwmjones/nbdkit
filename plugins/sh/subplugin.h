@@ -70,19 +70,19 @@ struct subplugin {
    * argv[0] is the script filename.  argv[1] is the method name.
    */
   exit_code (*call) (const char **argv)
-    __attribute__ ((__nonnull__ (1)));
+    NBDKIT_ATTRIBUTE_NONNULL ((1));
 
   /* For methods which return a string.  Note that rbuf should be a
    * variable initialized to empty_vector.  On success it is allocated
    * by this function.
    */
   exit_code (*call_read) (string *rbuf, const char **argv)
-    __attribute__ ((__nonnull__ (1, 2)));
+    NBDKIT_ATTRIBUTE_NONNULL ((1, 2));
 
   /* For methods which take an input buffer.  Only pwrite uses this. */
   exit_code (*call_write) (const char *wbuf, size_t wbuflen,
                            const char **argv)
-    __attribute__ ((__nonnull__ (1, 3)));
+    NBDKIT_ATTRIBUTE_NONNULL ((1, 3));
 };
 
 extern struct subplugin sub;

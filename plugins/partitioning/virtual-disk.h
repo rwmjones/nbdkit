@@ -100,7 +100,7 @@ extern int create_virtual_disk_layout (void);
  * characteristics which make them unlike general GUIDs.
  */
 extern int parse_guid (const char *str, char *out)
-  __attribute__ ((__nonnull__ (1, 2)));
+  NBDKIT_ATTRIBUTE_NONNULL ((1, 2));
 
 /* Internal function for creating a single MBR PTE.  The GPT code
  * calls this for creating the protective MBR.
@@ -108,7 +108,7 @@ extern int parse_guid (const char *str, char *out)
 extern void create_mbr_partition_table_entry (const struct region *,
                                               bool bootable, int partition_id,
                                               unsigned char *)
-  __attribute__ ((__nonnull__ (1, 4)));
+  NBDKIT_ATTRIBUTE_NONNULL ((1, 4));
 
 /* Create MBR or GPT layout. */
 extern void create_mbr_layout (void);

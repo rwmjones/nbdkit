@@ -38,11 +38,11 @@
 #include "subplugin.h"
 
 extern exit_code call (const char **argv)
-  __attribute__ ((__nonnull__ (1)));
+  NBDKIT_ATTRIBUTE_NONNULL ((1));
 extern exit_code call_read (string *rbuf, const char **argv)
-  __attribute__ ((__nonnull__ (1, 2)));
+  NBDKIT_ATTRIBUTE_NONNULL ((1, 2));
 extern exit_code call_write (const char *wbuf, size_t wbuflen,
                              const char **argv)
-  __attribute__ ((__nonnull__ (1, 3)));
+  NBDKIT_ATTRIBUTE_NONNULL ((1, 3));
 
 #endif /* NBDKIT_CALL_H */

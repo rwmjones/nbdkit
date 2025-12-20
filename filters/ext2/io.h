@@ -41,9 +41,9 @@
 
 /* Utility functions for encoding nbdkit_next as a name usable by ext2fs */
 extern char *nbdkit_io_encode (const nbdkit_next *next)
-  __attribute__ ((__nonnull__ (1)));
+  NBDKIT_ATTRIBUTE_NONNULL ((1));
 extern int nbdkit_io_decode (const char *name, nbdkit_next **out)
-  __attribute__ ((__nonnull__ (1, 2)));
+  NBDKIT_ATTRIBUTE_NONNULL ((1, 2));
 
 /* Custom io manager that performs all ext2fs I/O on the next nbdkit layer */
 extern io_manager nbdkit_io_manager;
