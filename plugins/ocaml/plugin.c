@@ -221,7 +221,7 @@ static bool
 exception_to_error (const char *func, value rv)
 {
   CAMLparam0 ();
-  CAMLlocal1 (exn);
+  CAMLlocal2 (exn, v);
   const bool is_exn = Is_exception_result (rv);
   const char *exn_name;
 
@@ -236,7 +236,13 @@ exception_to_error (const char *func, value rv)
 
     nbdkit_debug ("ocaml: '%s' raised exception '%s'", func, exn_name);
 
-    if (strcmp (exn_name, "Unix.Unix_error") == 0) {
+    if (strcmp (exn_name, "NBDKit.Error") == 0) {
+      v = Field (exn, 1);
+      if (v != Val_int (0)) /* Some error */
+        nbdkit_set_error (code_of_unix_error (Field (v, 0)));
+      nbdkit_error ("%s", String_val (Field (exn, 2)));
+    }
+    else if (strcmp (exn_name, "Unix.Unix_error") == 0) {
       nbdkit_set_error (code_of_unix_error (Field (exn, 1)));
       nbdkit_error ("%s: %s: %s", func,
                     String_val (Field (exn, 2)),

@@ -33,6 +33,8 @@
 
 open Printf
 
+exception Error of Unix.error option * string
+
 type flags = flag list
 and flag = May_trim | FUA | Req_one
 

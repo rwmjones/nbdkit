@@ -37,6 +37,13 @@
 
     @see <https://libguestfs.org/nbdkit-plugin.3.html> nbdkit-plugin(3) *)
 
+(** {2 Exception that plugins can raise}
+
+    Optionally plugins can raise this exception to control how
+    nbdkit_set_error and nbdkit_error are called. *)
+
+exception Error of Unix.error option * string
+
 (** {2 Flags passed from the server to various callbacks} *)
 
 type flags = flag list
