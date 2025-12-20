@@ -1456,6 +1456,7 @@ if HAVE_PYTHON
 
 TESTS += \
 	test-python.sh \
+	test-python-debug-hexdump.sh \
 	test-python-error.sh \
 	test-python-exception.sh \
 	test-python-export-name.sh \
@@ -1468,6 +1469,7 @@ TESTS += \
 	test-shebang-crlf.sh \
 	$(NULL)
 EXTRA_DIST += \
+	python-debug-hexdump.py \
 	python-error.py \
 	python-exception.py \
 	python-export-name.py \
@@ -1477,6 +1479,7 @@ EXTRA_DIST += \
 	python-peer.py \
 	python-thread-model.py \
 	shebang.py \
+	test-python-debug-hexdump.sh \
 	test-python-error.sh \
 	test-python-exception.sh \
 	test-python-export-name.sh \
