@@ -185,8 +185,9 @@ val debug_hexdump : buf -> string option -> int64 -> unit
 (* Note OCaml has functions already for parsing other integers, so
  * there is no need to bind them here.  We only bind the functions
  * which have special abilities in nbdkit: [parse_size] can parse
- * human sizes, [parse_probability] and [parse_bool] parses a range
- * of nbdkit-specific strings, and [read_password] suppresses echo.
+ * human sizes, [parse_probability], [parse_bool] and [parse_delay]
+ * parse a range of nbdkit-specific strings, and [read_password]
+ * suppresses echo.
  *)
 
 val parse_size : string -> int64
