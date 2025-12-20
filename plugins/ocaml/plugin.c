@@ -242,6 +242,12 @@ exception_to_error (const char *func, value rv)
         nbdkit_set_error (code_of_unix_error (Field (v, 0)));
       nbdkit_error ("%s", String_val (Field (exn, 2)));
     }
+    else if (strcmp (exn_name, "Failure") == 0) {
+      nbdkit_error ("%s", String_val (Field (exn, 1)));
+    }
+    else if (strcmp (exn_name, "Invalid_argument") == 0) {
+      nbdkit_error ("invalid argument: %s", String_val (Field (exn, 1)));
+    }
     else if (strcmp (exn_name, "Unix.Unix_error") == 0) {
       nbdkit_set_error (code_of_unix_error (Field (exn, 1)));
       nbdkit_error ("%s: %s: %s", func,

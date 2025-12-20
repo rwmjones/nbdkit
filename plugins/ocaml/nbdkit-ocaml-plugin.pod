@@ -144,6 +144,13 @@ L<nbdkit_set_error(3)> to set the errno which is sent back to the
 client, and then the function name and string are translated to
 L<nbdkit_error(3)>.
 
+=item * C<Failure (string)>
+
+=item * C<Invalid_argument (string)>
+
+These are converted to simple calls to L<nbdkit_error(3)>.
+L<nbdkit_set_error(3)> is not called.
+
 =item *
 
 Any other exceptions are converted to a string using the OCaml
