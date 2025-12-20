@@ -43,6 +43,7 @@ L<nbdkit(1)>,
 L<nbdkit_debug(3)>,
 L<nbdkit-plugin(3)>,
 L<nbdkit-filter(3)>,
+L<nbddump(1)>,
 L<hexdump(1)>.
 
 =head1 AUTHORS
