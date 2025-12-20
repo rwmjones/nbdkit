@@ -38,6 +38,7 @@
 #include <errno.h>
 
 #include <caml/alloc.h>
+#include <caml/bigarray.h>
 #include <caml/fail.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
@@ -247,6 +248,23 @@ ocaml_nbdkit_debug (value strv)
   nbdkit_debug ("%s", String_val (strv));
 
   return Val_unit;
+}
+
+NBDKIT_DLL_PUBLIC value
+ocaml_nbdkit_debug_hexdump (value bufv, value optprefixv, value startv)
+{
+  CAMLparam3 (bufv, optprefixv, startv);
+  struct caml_ba_array *buf = Caml_ba_array_val (bufv);
+  const void *data = buf->data;
+  const size_t len = caml_ba_byte_size (buf);
+  const char *prefix =
+    optprefixv == Val_int (0)
+    ? NULL /* None */
+    : String_val (Field (optprefixv, 0)) /* Some prefix */;
+  const uint64_t start = Int64_val (startv);
+
+  nbdkit_debug_hexdump (data, len, prefix, start);
+  CAMLreturn (Val_unit);
 }
 
 NBDKIT_DLL_PUBLIC value

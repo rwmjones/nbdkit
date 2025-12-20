@@ -1369,12 +1369,14 @@ TESTS += \
 	test-ocaml-dump-plugin.sh \
 	test-ocaml-list-exports.sh \
 	test-ocamlexample-plugin.sh \
+	test-ocaml-debug-hexdump.sh \
 	$(NULL)
 EXTRA_DIST += \
 	test-ocaml-fork.sh \
 	test-ocaml-dump-plugin.sh \
 	test-ocaml-list-exports.sh \
 	test-ocamlexample-plugin.sh \
+	test-ocaml-debug-hexdump.sh \
 	$(NULL)
 
 test_ocaml_SOURCES = test-ocaml.c test.h requires.c requires.h
@@ -1391,7 +1393,9 @@ test_ocaml_errorcodes_LDADD = $(LIBNBD_LIBS)
 
 check_SCRIPTS += \
 	test-ocaml-plugin.so \
-	test-ocaml-errorcodes-plugin.so
+	test-ocaml-debug-hexdump-plugin.so \
+	test-ocaml-errorcodes-plugin.so \
+	$(NULL)
 
 OCAML_PLUGIN_DEPS = \
 	../plugins/ocaml/libnbdkitocaml.la \
@@ -1404,6 +1408,17 @@ test-ocaml-plugin.so: test_ocaml_plugin.cmx $(OCAML_PLUGIN_DEPS)
 	  $(OCAML_PLUGIN_LIBRARIES) NBDKit.cmx $< \
 	  -cclib -L../plugins/ocaml/.libs -cclib -lnbdkitocaml
 test_ocaml_plugin.cmx: test_ocaml_plugin.ml $(OCAML_PLUGIN_DEPS)
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(OCAML_STD_INCLUDES) -I ../plugins/ocaml \
+	  -c $< -o $@
+
+test-ocaml-debug-hexdump-plugin.so: \
+	    test_ocaml_debug_hexdump_plugin.cmx $(OCAML_PLUGIN_DEPS)
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(OCAML_STD_INCLUDES) -I ../plugins/ocaml \
+	  -output-obj -runtime-variant _pic -o $@ \
+	  $(OCAML_PLUGIN_LIBRARIES) NBDKit.cmx $< \
+	  -cclib -L../plugins/ocaml/.libs -cclib -lnbdkitocaml
+test_ocaml_debug_hexdump_plugin.cmx: \
+	    test_ocaml_debug_hexdump_plugin.ml $(OCAML_PLUGIN_DEPS)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(OCAML_STD_INCLUDES) -I ../plugins/ocaml \
 	  -c $< -o $@
 
@@ -1422,6 +1437,7 @@ endif HAVE_OCAML
 
 EXTRA_DIST += \
 	test_ocaml_plugin.ml \
+	test_ocaml_debug_hexdump_plugin.ml \
 	test_ocaml_errorcodes_plugin.ml \
 	test-ocaml.c \
 	$(NULL)
