@@ -7,7 +7,7 @@ nbdkit-release-notes-1.46 - release notes for nbdkit 1.46
 These are the release notes for nbdkit stable release 1.46.
 This describes the major changes since 1.44.
 
-nbdkit 1.46.0 was released on B<XXX December 2025>.
+nbdkit 1.46.0 was released on B<20 December 2025>.
 
 =head2 Security
 
