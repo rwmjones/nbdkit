@@ -174,6 +174,12 @@ val debug : ('a, unit, string, unit) format4 -> 'a
 
     @see <https://libguestfs.org/nbdkit_debug.3.html> nbdkit_debug(3) *)
 
+val debug_hexdump : buf -> string option -> int64 -> unit
+(** Display buffer in canonical hexdump format, sending the result
+    to debug output (when in verbose mode).
+
+    @see <https://libguestfs.org/nbdkit_debug_hexdump.3.html> nbdkit_debug_hexdump(3) *)
+
 (** {2 Parsing and configuration} *)
 
 (* Note OCaml has functions already for parsing other integers, so

@@ -58,6 +58,21 @@ debug (PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+/* nbdkit.debug_hexdump */
+static PyObject *
+do_debug_hexdump (PyObject *self, PyObject *args)
+{
+  Py_buffer buf = { 0 };
+  const char *prefix;
+  unsigned long long start;
+
+  if (!PyArg_ParseTuple (args, "y*zK:debug_hexdump", &buf, &prefix, &start))
+    return NULL;
+  nbdkit_debug_hexdump (buf.buf, buf.len, prefix, (uint64_t) start);
+  PyBuffer_Release (&buf);
+  Py_RETURN_NONE;
+}
+
 /* nbdkit.export_name */
 static PyObject *
 export_name (PyObject *self, PyObject *args)
@@ -337,6 +352,8 @@ do_read_password (PyObject *self, PyObject *args)
 static PyMethodDef NbdkitMethods[] = {
   { "debug", debug, METH_VARARGS,
     "Print a debug message" },
+  { "debug_hexdump", do_debug_hexdump, METH_VARARGS,
+    "Display buffer in hexdump format" },
   { "disconnect", do_disconnect, METH_VARARGS,
     "Request disconnection from current client" },
   { "export_name", export_name, METH_NOARGS,

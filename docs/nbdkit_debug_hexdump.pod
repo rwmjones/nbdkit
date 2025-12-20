@@ -31,7 +31,14 @@ displayed in the output.
 
 =head1 LANGUAGE BINDINGS
 
-(There are no language bindings of this function in the current version.)
+In L<nbdkit-ocaml-plugin(3)>:
+
+ NBDKit.debug_hexdump : NBDKit.buf -> string option -> int64 -> unit
+
+In L<nbdkit-python-plugin(3)>:
+
+ import nbdkit
+ nbdkit.debug_hexdump(bytes, prefix, start)
 
 =head1 HISTORY
 
