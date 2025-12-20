@@ -70,8 +70,7 @@ extern "C" {
 
 #ifndef NBDKIT_ATTRIBUTE_NONNULL
 #if defined (__GNUC__) && NBDKIT_GCC_VERSION >= 120000 /* gcc >= 12.0 */
-#define NBDKIT_ATTRIBUTE_NONNULL(args) \
-  __attribute__ ((__nonnull__ args))
+#define NBDKIT_ATTRIBUTE_NONNULL(args) __attribute__ ((__nonnull__ args))
 #else
 #define NBDKIT_ATTRIBUTE_NONNULL(args)
 #endif
@@ -239,6 +238,7 @@ NBDKIT_EXTERN_DECL (int, nbdkit_add_extent,
                      uint64_t offset, uint64_t length, uint32_t type));
 
 struct nbdkit_exports;
+
 NBDKIT_EXTERN_DECL (int, nbdkit_add_export,
                     (struct nbdkit_exports *,
                      const char *name, const char *description)
