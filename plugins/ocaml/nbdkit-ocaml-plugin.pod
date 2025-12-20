@@ -122,7 +122,16 @@ C<buf>.  Use C<NBDKit.buf_len buf> to get this.
 
 =head2 Errors
 
-Plugins can return errors from methods by raising an exception.
+Plugins can return errors from methods by raising an exception, which
+is converted automatically into L<nbdkit_error(3)> and possibly
+L<nbdkit_set_error(3)>, according to these rules:
+
+=over 4
+
+=item *
+
+General exceptions are converted to a string using the OCaml function
+C<caml_format_exception>.
 
 If you need to control which errno is sent back to the client you have
 to call C<NBDKit.set_error> before raising the exception.
@@ -132,6 +141,8 @@ library which fails, then the errno of the failing system call will
 not be returned to the client.  You have to catch the exception and
 call C<NBDKit.set_error> before re-raising the exception if you need
 to control this.
+
+=back
 
 =head2 Threads
 
@@ -201,6 +212,8 @@ OCaml plugins first appeared in nbdkit 1.2.
 L<NBDKit(3)>,
 L<nbdkit(1)>,
 L<nbdkit-plugin(3)>,
+L<nbdkit_error(3)>,
+L<nbdkit_set_error(3)>,
 L<Bigarray.Array1(3)>,
 L<ocamlopt(1)>.
 
