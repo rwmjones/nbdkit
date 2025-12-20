@@ -37,6 +37,7 @@
 #error this header file should not be directly included
 #endif
 
+#include <stdlib.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <errno.h>
@@ -75,6 +76,15 @@ extern "C" {
 #define NBDKIT_ATTRIBUTE_NONNULL(args)
 #endif
 #endif /* ! defined NBDKIT_ATTRIBUTE_NONNULL */
+
+#ifndef NBDKIT_ATTRIBUTE_MALLOC
+#if defined (__GNUC__) && NBDKIT_GCC_VERSION >= 120000 /* gcc >= 12.0 */
+#define NBDKIT_ATTRIBUTE_MALLOC(free_fn) \
+  __attribute__ ((__malloc__, __malloc__ (free_fn, 1)))
+#else
+#define NBDKIT_ATTRIBUTE_MALLOC(free_fn)
+#endif
+#endif /* ! define NBDKIT_ATTRIBUTE_MALLOC */
 
 #define NBDKIT_THREAD_MODEL_SERIALIZE_CONNECTIONS     0
 #define NBDKIT_THREAD_MODEL_SERIALIZE_ALL_REQUESTS    1
@@ -183,9 +193,12 @@ NBDKIT_EXTERN_DECL (int, nbdkit_peer_name,
 NBDKIT_EXTERN_DECL (int64_t, nbdkit_peer_pid, (void));
 NBDKIT_EXTERN_DECL (int64_t, nbdkit_peer_uid, (void));
 NBDKIT_EXTERN_DECL (int64_t, nbdkit_peer_gid, (void));
-NBDKIT_EXTERN_DECL (char *, nbdkit_peer_security_context, (void));
-NBDKIT_EXTERN_DECL (char *, nbdkit_peer_tls_dn, (void));
-NBDKIT_EXTERN_DECL (char *, nbdkit_peer_tls_issuer_dn, (void));
+NBDKIT_EXTERN_DECL (char *, nbdkit_peer_security_context,
+                    (void) NBDKIT_ATTRIBUTE_MALLOC (free));
+NBDKIT_EXTERN_DECL (char *, nbdkit_peer_tls_dn,
+                    (void) NBDKIT_ATTRIBUTE_MALLOC (free));
+NBDKIT_EXTERN_DECL (char *, nbdkit_peer_tls_issuer_dn,
+                    (void) NBDKIT_ATTRIBUTE_MALLOC (free));
 NBDKIT_EXTERN_DECL (void, nbdkit_shutdown, (void));
 NBDKIT_EXTERN_DECL (void, nbdkit_disconnect, (int force));
 
@@ -211,9 +224,10 @@ struct nbdkit_extent {
 
 struct nbdkit_extents;
 
-NBDKIT_EXTERN_DECL (struct nbdkit_extents *, nbdkit_extents_new,
-                    (uint64_t start, uint64_t end));
 NBDKIT_EXTERN_DECL (void, nbdkit_extents_free, (struct nbdkit_extents *));
+NBDKIT_EXTERN_DECL (struct nbdkit_extents *, nbdkit_extents_new,
+                    (uint64_t start, uint64_t end)
+                    NBDKIT_ATTRIBUTE_MALLOC (nbdkit_extents_free));
 NBDKIT_EXTERN_DECL (size_t, nbdkit_extents_count,
                     (const struct nbdkit_extents *)
                     NBDKIT_ATTRIBUTE_NONNULL ((1)));

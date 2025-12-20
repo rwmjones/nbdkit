@@ -146,9 +146,9 @@ struct nbdkit_export {
   char *description;
 };
 
-NBDKIT_EXTERN_DECL (struct nbdkit_exports *, nbdkit_exports_new,
-                    (void));
 NBDKIT_EXTERN_DECL (void, nbdkit_exports_free, (struct nbdkit_exports *));
+NBDKIT_EXTERN_DECL (struct nbdkit_exports *, nbdkit_exports_new,
+                    (void) NBDKIT_ATTRIBUTE_MALLOC (nbdkit_exports_free));
 NBDKIT_EXTERN_DECL (size_t, nbdkit_exports_count,
                     (const struct nbdkit_exports *)
                     NBDKIT_ATTRIBUTE_NONNULL ((1)));
