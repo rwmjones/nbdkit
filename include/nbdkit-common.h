@@ -56,10 +56,10 @@ extern "C" {
 
 #if (defined (__GNUC__) || defined (__clang__)) && \
     defined (HAVE_VFPRINTF_PERCENT_M)
-#define ATTRIBUTE_FORMAT_PRINTF(fmtpos, argpos) \
+#define NBDKIT_ATTRIBUTE_FORMAT_PRINTF(fmtpos, argpos) \
   __attribute__ ((__format__ (__printf__, fmtpos, argpos)))
 #else
-#define ATTRIBUTE_FORMAT_PRINTF(fmtpos, argpos)
+#define NBDKIT_ATTRIBUTE_FORMAT_PRINTF(fmtpos, argpos)
 #endif
 
 #define NBDKIT_THREAD_MODEL_SERIALIZE_CONNECTIONS     0
@@ -93,15 +93,17 @@ extern "C" {
 #endif
 
 NBDKIT_EXTERN_DECL (void, nbdkit_error,
-                    (const char *msg, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2));
+                    (const char *msg, ...)
+                    NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 2));
 NBDKIT_EXTERN_DECL (void, nbdkit_verror,
                     (const char *msg, va_list args)
-                    ATTRIBUTE_FORMAT_PRINTF (1, 0));
+                    NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 0));
 NBDKIT_EXTERN_DECL (void, nbdkit_debug,
-                    (const char *msg, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2));
+                    (const char *msg, ...)
+                    NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 2));
 NBDKIT_EXTERN_DECL (void, nbdkit_vdebug,
                     (const char *msg, va_list args)
-                    ATTRIBUTE_FORMAT_PRINTF (1, 0));
+                    NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 0));
 
 NBDKIT_EXTERN_DECL (char *, nbdkit_absolute_path, (const char *path));
 NBDKIT_EXTERN_DECL (void, nbdkit_debug_hexdump,
@@ -155,10 +157,11 @@ NBDKIT_EXTERN_DECL (const char *, nbdkit_strdup_intern,
 NBDKIT_EXTERN_DECL (const char *, nbdkit_strndup_intern,
                     (const char *str, size_t n));
 NBDKIT_EXTERN_DECL (const char *, nbdkit_printf_intern,
-                    (const char *msg, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2));
+                    (const char *msg, ...)
+                    NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 2));
 NBDKIT_EXTERN_DECL (const char *, nbdkit_vprintf_intern,
                     (const char *msg, va_list args)
-                    ATTRIBUTE_FORMAT_PRINTF (1, 0));
+                    NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 0));
 
 /* Extent functions. */
 struct nbdkit_extent {

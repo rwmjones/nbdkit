@@ -71,13 +71,13 @@ get_id (struct handle *h)
  */
 extern void enter (struct handle *h, log_id_t id, const char *act,
                    const char *fmt, ...)
-  ATTRIBUTE_FORMAT_PRINTF (4, 5);
+  NBDKIT_ATTRIBUTE_FORMAT_PRINTF (4, 5);
 extern void leave (struct handle *h, log_id_t id, const char *act,
                    const char *fmt, ...)
-  ATTRIBUTE_FORMAT_PRINTF (4, 5);
+  NBDKIT_ATTRIBUTE_FORMAT_PRINTF (4, 5);
 extern void print (struct handle *h, const char *act,
                    const char *fmt, ...)
-  ATTRIBUTE_FORMAT_PRINTF (3, 4);
+  NBDKIT_ATTRIBUTE_FORMAT_PRINTF (3, 4);
 
 /* In the case where leave() only has to print result-or-error, this
  * simplified version is used instead.

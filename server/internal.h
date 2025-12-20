@@ -208,7 +208,7 @@ extern struct backend *top;
   } while (0)
 
 extern void debug_in_server (const char *msg, ...)
-  ATTRIBUTE_FORMAT_PRINTF (1, 2);
+  NBDKIT_ATTRIBUTE_FORMAT_PRINTF (1, 2);
 
 #define nbdkit_debug _Pragma("GCC error \"Use debug() instead of nbdkit_debug() inside the server\"")
 
@@ -400,9 +400,9 @@ extern void log_verror (const char *fs, va_list args);
 /* log-*.c */
 extern void log_fp_verror (FILE *fp,
                            int orig_errno, const char *fs, va_list args)
-  ATTRIBUTE_FORMAT_PRINTF (3, 0);
+  NBDKIT_ATTRIBUTE_FORMAT_PRINTF (3, 0);
 extern void log_syslog_verror (int orig_errno, const char *fs, va_list args)
-  ATTRIBUTE_FORMAT_PRINTF (2, 0);
+  NBDKIT_ATTRIBUTE_FORMAT_PRINTF (2, 0);
 
 /* vfprintf.c */
 #if !HAVE_VFPRINTF_PERCENT_M
