@@ -34,6 +34,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <assert.h>
 #include <unistd.h>
@@ -215,17 +216,31 @@ plugin_init (void)
 /*----------------------------------------------------------------------*/
 /* Wrapper functions that translate calls from C (ie. nbdkit) to OCaml. */
 
+static bool
+exception_to_error (const char *func, value rv)
+{
+  CAMLparam0 ();
+  CAMLlocal1 (exn);
+  const bool is_exn = Is_exception_result (rv);
+
+  if (is_exn) {
+    exn = Extract_exception (rv);
+
+    /* General exception. */
+    nbdkit_error ("%s: %s", func, caml_format_exception (exn));
+  }
+
+  CAMLreturnT (bool, is_exn);
+}
+
 /* This macro calls nbdkit_error when we get an exception thrown in
  * OCaml callback code.  The 'return_stmt' parameter is usually a call
  * to CAMLreturnT, but may be empty in order to fall through.
  */
 #define EXCEPTION_TO_ERROR(rv, return_stmt)                             \
   do {                                                                  \
-    if (Is_exception_result (rv)) {                                     \
-      nbdkit_error ("%s: %s", __func__,                                 \
-                    caml_format_exception (Extract_exception (rv)));    \
+    if (exception_to_error (__func__, (rv)))                            \
       return_stmt;                                                      \
-    }                                                                   \
   } while (0)
 
 static void
