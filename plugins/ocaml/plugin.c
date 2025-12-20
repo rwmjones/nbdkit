@@ -49,6 +49,7 @@
 #include <caml/mlvalues.h>
 #include <caml/printexc.h>
 #include <caml/threads.h>
+#include <caml/unixsupport.h>
 #include <caml/version.h>
 
 #define NBDKIT_API_VERSION 2
@@ -222,12 +223,29 @@ exception_to_error (const char *func, value rv)
   CAMLparam0 ();
   CAMLlocal1 (exn);
   const bool is_exn = Is_exception_result (rv);
+  const char *exn_name;
 
   if (is_exn) {
+    /* See libguestfs.git daemon/daemon-c.c */
     exn = Extract_exception (rv);
 
-    /* General exception. */
-    nbdkit_error ("%s: %s", func, caml_format_exception (exn));
+    if (Tag_val (Field (exn, 0)) == String_tag)
+      exn_name = String_val (Field (exn, 0));
+    else
+      exn_name = String_val (Field (Field (exn, 0), 0));
+
+    nbdkit_debug ("ocaml: '%s' raised exception '%s'", func, exn_name);
+
+    if (strcmp (exn_name, "Unix.Unix_error") == 0) {
+      nbdkit_set_error (code_of_unix_error (Field (exn, 1)));
+      nbdkit_error ("%s: %s: %s", func,
+                    String_val (Field (exn, 2)),
+                    String_val (Field (exn, 3)));
+    }
+    else {
+      /* General exception. */
+      nbdkit_error ("%s: %s", func, caml_format_exception (exn));
+    }
   }
 
   CAMLreturnT (bool, is_exn);
