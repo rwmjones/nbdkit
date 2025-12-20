@@ -68,6 +68,6 @@ typedef void (*check_request_t) (const char *request);
 extern const char *web_server (const char *filename,
                                check_request_t check_request,
                                bool head_fails_with_403)
-  __attribute__ ((__nonnull__ (1)));
+  __attribute__((__nonnull__ (1)));
 
 #endif /* NBDKIT_WEB_SERVER_H */

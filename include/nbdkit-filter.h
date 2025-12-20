@@ -64,15 +64,21 @@ typedef struct nbdkit_next_ops nbdkit_next;
 
 /* Next ops. */
 typedef int nbdkit_next_config (nbdkit_backend *nxdata,
-                                const char *key, const char *value);
-typedef int nbdkit_next_config_complete (nbdkit_backend *nxdata);
-typedef int nbdkit_next_preconnect (nbdkit_backend *nxdata, int readonly);
+                                const char *key, const char *value)
+  NBDKIT_ATTRIBUTE_NONNULL ((1, 2, 3));
+typedef int nbdkit_next_config_complete (nbdkit_backend *nxdata)
+  NBDKIT_ATTRIBUTE_NONNULL ((1));
+typedef int nbdkit_next_preconnect (nbdkit_backend *nxdata, int readonly)
+  NBDKIT_ATTRIBUTE_NONNULL ((1));
 typedef int nbdkit_next_list_exports (nbdkit_backend *nxdata, int readonly,
-                                      struct nbdkit_exports *exports);
+                                      struct nbdkit_exports *exports)
+  NBDKIT_ATTRIBUTE_NONNULL ((1, 3));
 typedef const char *nbdkit_next_default_export (nbdkit_backend *nxdata,
-                                                int readonly);
+                                                int readonly)
+  NBDKIT_ATTRIBUTE_NONNULL ((1));
 typedef int nbdkit_next_open (nbdkit_context *context,
-                              int readonly, const char *exportname);
+                              int readonly, const char *exportname)
+  NBDKIT_ATTRIBUTE_NONNULL ((1, 3));
 
 struct nbdkit_next_ops {
   /* These callbacks are only needed when managing the backend manually
@@ -125,12 +131,14 @@ struct nbdkit_next_ops {
 NBDKIT_EXTERN_DECL (struct nbdkit_extents *, nbdkit_extents_full,
                     (nbdkit_next *next,
                      uint32_t count, uint64_t offset,
-                     uint32_t flags, int *err));
+                     uint32_t flags, int *err)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 5)));
 NBDKIT_EXTERN_DECL (int, nbdkit_extents_aligned,
                     (nbdkit_next *next,
                      uint32_t count, uint64_t offset,
                      uint32_t flags, uint32_t align,
-                     struct nbdkit_extents *extents, int *err));
+                     struct nbdkit_extents *extents, int *err)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 6, 7)));
 
 /* Export functions. */
 struct nbdkit_export {
@@ -142,19 +150,24 @@ NBDKIT_EXTERN_DECL (struct nbdkit_exports *, nbdkit_exports_new,
                     (void));
 NBDKIT_EXTERN_DECL (void, nbdkit_exports_free, (struct nbdkit_exports *));
 NBDKIT_EXTERN_DECL (size_t, nbdkit_exports_count,
-                    (const struct nbdkit_exports *));
+                    (const struct nbdkit_exports *)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 NBDKIT_EXTERN_DECL (const struct nbdkit_export, nbdkit_get_export,
-                    (const struct nbdkit_exports *, size_t));
+                    (const struct nbdkit_exports *, size_t)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 
 /* Manual management of backend access. */
 NBDKIT_EXTERN_DECL (nbdkit_backend *, nbdkit_context_get_backend,
-                    (nbdkit_context *context));
+                    (nbdkit_context *context)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 NBDKIT_EXTERN_DECL (nbdkit_next *, nbdkit_next_context_open,
                     (nbdkit_backend *backend, int readonly,
-                     const char *exportname, int shared));
+                     const char *exportname, int shared)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 3)));
 NBDKIT_EXTERN_DECL (void, nbdkit_next_context_close, (nbdkit_next *next));
 NBDKIT_EXTERN_DECL (nbdkit_next *, nbdkit_context_set_next,
-                    (nbdkit_context *context, nbdkit_next *next));
+                    (nbdkit_context *context, nbdkit_next *next)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1)));
 
 /* Filter struct. */
 struct nbdkit_filter {

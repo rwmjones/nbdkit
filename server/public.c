@@ -83,6 +83,15 @@
 
 #include "internal.h"
 
+/* Since nbdkit 1.46 we have declared various function parameters as
+ * nonnull.  But for older plugins we still have runtime checks for
+ * NULL.  GCC has a very unhelpful (I'd argue, incorrect) warning when
+ * you do this.  Get rid of it.
+ */
+#if defined (__GNUC__) && NBDKIT_GCC_VERSION >= 120000 /* gcc >= 12.0 */
+#pragma GCC diagnostic ignored "-Wnonnull-compare"
+#endif
+
 #ifndef WIN32
 
 NBDKIT_DLL_PUBLIC char *
