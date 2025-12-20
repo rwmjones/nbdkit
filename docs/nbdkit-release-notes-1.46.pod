@@ -43,13 +43,17 @@ server in debug output.
 L<nbdkit-random-plugin(1)> has a new C<fast=true> mode which trades
 increased performance for less randomness.
 
-L<nbdkit-pattern-plugin(1)> has a new C<stride> parameter for creating
-patterns that align to filesystem or device block boundaries.  Also
-this plugin now supports checking writes.
+L<nbdkit-pattern-plugin(1)> has new C<stride> and C<upper> parameters.
+Stride is used for creating patterns that align to filesystem or
+device block boundaries.  Upper is used to modify the upper bits of
+each pattern, so that a different pattern appears on each run.  This
+plugin also now supports checking writes.
 
 L<nbdkit-file-plugin(1)> prints more useful debugging (when the I<-v>
 option is used).  On Windows this plugin now displays complete error
-messages instead of just error codes.
+messages instead of just error codes.  The existing C<cache=none>
+parameter has been renamed C<reduce-memory-pressure=true> to reflect
+what it actually does (but the old parameter can still be used).
 
 =head2 Filters
 
@@ -101,11 +105,10 @@ Berrange).
 New command line option I<--tls-priority> allows you to temporarily
 override the system TLS priority string.
 
-=begin comment
-
 =head2 API
 
-=end comment
+New L<nbdkit_debug_hexdump(3)> function which can be used to print a
+buffer in canonical hexdump format, for debugging.
 
 =head2 Bug fixes
 
@@ -169,6 +172,9 @@ which should reduce memory usage in some situations (Eric Blake).
 
 New tests functions C<requires_tls>, C<requires_tls_certificates>,
 C<requires_tls_psk>.
+
+Use C<__attribute__((nonnull))> in more places, and add
+C<__attribute__((malloc))> annotation on certain functions.
 
 =head1 SEE ALSO
 
