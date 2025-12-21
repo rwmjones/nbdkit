@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <string.h>
 #include <errno.h>
 
 #include <libnbd.h>
@@ -78,6 +79,7 @@ main (int argc, char *argv[])
   struct nbd_handle *nbd;
   char buf[512];
   size_t i;
+  int sr;
 
 #ifdef __APPLE__
   skip_because ("loading the OCaml plugin fails on macOS");
@@ -98,6 +100,16 @@ main (int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
+#ifdef LIBNBD_HAVE_NBD_GET_STRUCTURED_REPLIES_NEGOTIATED
+  sr = nbd_get_structured_replies_negotiated (nbd);
+  if (sr == -1) {
+    fprintf (stderr, "%s\n", nbd_get_error ());
+    exit (EXIT_FAILURE);
+  }
+#else
+  sr = 0;
+#endif
+
   if (nbd_pread (nbd, buf, 512, 0, 0) == -1) {
     fprintf (stderr, "%s: FAIL: did not expect reading sector 0 to fail\n",
              argv[0]);
@@ -110,6 +122,7 @@ main (int argc, char *argv[])
     r = nbd_pread (nbd, buf, 512, tests[i].offset, 0);
     if (tests[i].expected_errno != 0) {
       int actual_errno;
+      const char *actual_error;
 
       if (r != -1) {
         fprintf (stderr,
@@ -119,11 +132,23 @@ main (int argc, char *argv[])
       }
 
       actual_errno = nbd_get_errno ();
-      printf ("actual_errno = %d (\"%s\")\n", actual_errno, nbd_get_error ());
+      actual_error = nbd_get_error ();
+      printf ("actual_error: %d (\"%s\")\n", actual_errno, actual_error);
       fflush (stdout);
       if (actual_errno != tests[i].expected_errno) {
         fprintf (stderr, "%s: FAIL: actual errno = %d expected errno = %d\n",
                  argv[0], actual_errno, tests[i].expected_errno);
+        exit (EXIT_FAILURE);
+      }
+
+      /* Unfortunately nbdkit does not yet send error messages in
+       * structured replies.  When we implement that, we can check the
+       * string here.
+       */
+      if (0 && sr && strcmp (actual_error, tests[i].expected_error) != 0) {
+        fprintf (stderr, "%s: FAIL: actual error = \"%s\" "
+                 "expected error = \"%s\"\n",
+                 argv[0], actual_error, tests[i].expected_error);
         exit (EXIT_FAILURE);
       }
     }
