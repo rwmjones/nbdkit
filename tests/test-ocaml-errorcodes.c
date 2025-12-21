@@ -102,7 +102,7 @@ main (int argc, char *argv[])
 
       if (r != -1) {
         fprintf (stderr,
-                 "%s: FAIL: reading sector %" PRIu64 "should have failed\n",
+                 "%s: FAIL: reading sector %" PRIu64 " should have failed\n",
                  argv[0], tests[i].offset / 512);
         exit (EXIT_FAILURE);
       }
@@ -119,7 +119,7 @@ main (int argc, char *argv[])
     else {                      /* tests[i].expected_errno == 0 */
       if (r != 0) {
         fprintf (stderr,
-                 "%s: FAIL: reading sector %" PRIu64 "should have succeeded\n",
+                 "%s: FAIL: reading sector %" PRIu64 " should have succeeded\n",
                  argv[0], tests[i].offset / 512);
         exit (EXIT_FAILURE);
       }
