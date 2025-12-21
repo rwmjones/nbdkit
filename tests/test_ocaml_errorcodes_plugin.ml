@@ -43,7 +43,7 @@ let name = "test-ocaml-errorcodes"
 
 let open_connection _ = ()
 
-let get_size () = Int64.mul 7_L sector_size
+let get_size () = Int64.mul 11_L sector_size
 
 let pread () buf offset _ =
   let sector = Int64.div offset sector_size |> Int64.to_int in
@@ -72,6 +72,21 @@ let pread () buf offset _ =
   | 6 ->
      (* no error again, to check previous values are not still used *)
      Bigarray.Array1.fill buf '\000'
+
+  (* Test Unix_error. *)
+  | 7 ->
+     raise (Unix_error (ENOMEM, "malloc", "test"))
+
+  (* Test Invalid_argument. *)
+  | 8 ->
+     invalid_arg "testing"
+
+  (* Test NBDKit.Error. *)
+  | 9 ->
+     raise (NBDKit.Error (Some ENOMEM, "memory error"))
+
+  | 10 ->
+     raise (NBDKit.Error (None, "input/output error"))
 
   | _ ->
      assert false

@@ -64,13 +64,17 @@ static struct {
                                  * structured replies are supported).
                                  */
 } tests[] = {
-  { 0,     0,          NULL        },
-  { 1*512, EPERM,      "EPERM"     },
-  { 2*512, EIO,        "EIO"       },
-  { 3*512, ENOMEM,     "ENOMEM"    },
-  { 4*512, ESHUTDOWN,  "ESHUTDOWN" },
-  { 5*512, EINVAL,     "EINVAL"    },
-  { 6*512, 0,          NULL        },
+  {  0,     0,          NULL                        },
+  {  1*512, EPERM,      "EPERM"                     },
+  {  2*512, EIO,        "EIO"                       },
+  {  3*512, ENOMEM,     "ENOMEM"                    },
+  {  4*512, ESHUTDOWN,  "ESHUTDOWN"                 },
+  {  5*512, EINVAL,     "EINVAL"                    },
+  {  6*512, 0,          NULL                        },
+  {  7*512, ENOMEM,     "malloc: test"              },
+  {  8*512, EIO,        "invalid argument: testing" },
+  {  9*512, ENOMEM,     "memory error"              },
+  { 10*512, EIO,        "input/output error"        },
 };
 
 int
