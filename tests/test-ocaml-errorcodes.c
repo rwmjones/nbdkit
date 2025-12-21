@@ -44,21 +44,32 @@
 
 #include "requires.h"
 
-/* This test checks the conversion from OCaml Unix.error to errno (in
- * the plugin) to NBD_E* (over the wire) and back to errno (in
- * libnbd).
+/* This test checks the conversion from OCaml exceptions,
+ * including:
+ *
+ * - the Unix.error is converted to errno (in the plugin) to
+ *   NBD_E* (over the wire) and back to errno (in libnbd).
+ *
+ * - the error string is as expected.
  *
  * Reading at various sector offsets in the associated plugin
- * (test_ocaml_errorcodes_plugin.ml) produces predictable error codes.
+ * (test_ocaml_errorcodes_plugin.ml) produces a predictable errno and
+ * error message.
  */
-static struct { uint64_t offset; int expected_errno; } tests[] = {
-  { 0,     0 },
-  { 1*512, EPERM },
-  { 2*512, EIO },
-  { 3*512, ENOMEM },
-  { 4*512, ESHUTDOWN },
-  { 5*512, EINVAL },
-  { 6*512, 0 },
+static struct {
+  uint64_t offset;              /* The offset we read from. */
+  int expected_errno;           /* The expected errno. */
+  const char *expected_error;   /* The expected error string (if
+                                 * structured replies are supported).
+                                 */
+} tests[] = {
+  { 0,     0,          NULL        },
+  { 1*512, EPERM,      "EPERM"     },
+  { 2*512, EIO,        "EIO"       },
+  { 3*512, ENOMEM,     "ENOMEM"    },
+  { 4*512, ESHUTDOWN,  "ESHUTDOWN" },
+  { 5*512, EINVAL,     "EINVAL"    },
+  { 6*512, 0,          NULL        },
 };
 
 int
