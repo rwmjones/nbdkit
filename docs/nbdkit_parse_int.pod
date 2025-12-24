@@ -52,8 +52,9 @@ might print an error:
 
 =head1 RETURN VALUE
 
-On success the functions return C<0> and set C<*r> to the parsed value
-(unless C<*r == NULL> in which case the result is discarded).
+On success the functions return C<0>.  If C<r != NULL>, they set C<*r>
+to the parsed value.  If C<r == NULL>, the parsing is done but the
+result is discarded.
 
 On error, L<nbdkit_error(3)> is called and the functions return C<-1>.
 On error C<*r> is always unchanged.
