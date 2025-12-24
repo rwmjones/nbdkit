@@ -36,6 +36,7 @@ use nbdkit::*;
 lazy_static! {
     static ref SIZE : Mutex<usize> = Mutex::new(100 * 1024 * 1024);
     static ref DISK : Mutex<Vec<u8>> = Mutex::new(vec![0;0]);
+    static ref HEXDUMP : Mutex<bool> = Mutex::new(false);
 }
 
 #[derive(Default)]
@@ -55,6 +56,12 @@ impl Server for RamDisk {
         match key {
             "size" => {
                 *SIZE.lock().unwrap() = parse_size(val).unwrap() as usize;
+                Ok(())
+            },
+            // Setting hexdump=true causes the buffer being
+            // written to be hexdumped (in write_at).
+            "hexdump" => {
+                *HEXDUMP.lock().unwrap() = parse_bool(val).unwrap();
                 Ok(())
             },
             _ => Err(Error::new(libc::EINVAL, "Unknown parameter"))
@@ -94,6 +101,9 @@ impl Server for RamDisk {
     }
 
     fn write_at(&self, buf: &[u8], offset: u64, _flags: Flags) -> Result<()> {
+        if *HEXDUMP.lock().unwrap() {
+            debug_hexdump(buf, None, offset);
+        }
         let mut disk = DISK.lock().unwrap();
         let ofs = offset as usize;
         let end = ofs + buf.len();
