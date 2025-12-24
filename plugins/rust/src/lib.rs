@@ -1085,6 +1085,8 @@ extern "C" {
                          ty: u32) -> c_int;
     #[doc(hidden)]
     pub fn nbdkit_debug(fmt: *const c_char, ...);
+    fn nbdkit_debug_hexdump(buf: *const c_void, len: usize,
+                            prefix: *const c_char, start: u64);
     fn nbdkit_error(fmt: *const c_char, ...);
     fn nbdkit_export_name() -> *const c_char;
     fn nbdkit_set_error(errno: c_int);
@@ -1122,6 +1124,22 @@ macro_rules! debug {
                 // is only a debug message
                 ()
         }
+    }
+}
+
+/// Display buffer in hexdump format
+pub fn debug_hexdump(buf: &[u8], prefix: Option<&str>, start: u64) {
+    let prefix = match prefix {
+        Some(p) => p.as_ptr(),
+        None => ptr::null(),
+    };
+    unsafe {
+        nbdkit_debug_hexdump(
+            buf.as_ptr() as *const c_void,
+            buf.len(),
+            prefix as *const c_char,
+            start,
+        );
     }
 }
 

@@ -44,15 +44,15 @@ if is_windows; then
     exit 77
 fi
 
-requires_run
-
 ramdisk=target/release/examples/libramdisk.so
-
 requires test -x $ramdisk
+
+requires_run
 requires_nbdinfo
 requires_nbdsh_uri
 
 nbdkit -fv $ramdisk size=10M --run 'nbdinfo "$uri"'
+
 nbdkit -fv $ramdisk size=10M \
        --run '
     nbdsh -u "$uri" \
@@ -60,4 +60,14 @@ nbdkit -fv $ramdisk size=10M \
           -c "h.pwrite(buf, 16384)" \
           -c "buf2 = h.pread(4096, 16384)" \
           -c "assert buf == buf2"
+'
+
+# If hexdump=true, calling pwrite will run debug_hexdump.  This just
+# tests that it doesn't crash, you have to verify the hexdump by
+# looking at the test output.
+nbdkit -fv $ramdisk size=10M hexdump=true \
+       --run '
+    nbdsh -u "$uri" \
+          -c "buf = b\"1234\"*20" \
+          -c "h.pwrite(buf, 0x502)"
 '

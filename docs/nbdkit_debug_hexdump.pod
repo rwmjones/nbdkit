@@ -40,6 +40,11 @@ In L<nbdkit-python-plugin(3)>:
  import nbdkit
  nbdkit.debug_hexdump(bytes, prefix, start)
 
+In L<nbdkit-rust-plugin(3)>:
+
+ use nbdkit::*;
+ debug_hexdump(buf, prefix, start);
+
 =head1 HISTORY
 
 C<nbdkit_debug_hexdump> was added in nbdkit 1.46.
