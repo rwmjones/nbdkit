@@ -54,11 +54,13 @@ L<nbdkit_nanosleep(3)>.
 
 =head1 RETURN VALUE
 
-On success the function returns C<0> and sets C<*sec> and C<*nsec> to
-the seconds and nanoseconds parsed.
+On success the function returns C<0>.  If C<sec != NULL>, set C<*sec>
+to the parsed seconds.  If C<nsec != NULL>, set C<*nsec> to the parsed
+nanoseconds.  If either C<sec == NULL> or C<nsec == NULL>, the parsing
+is done but the corresponding result is discarded.
 
 If there is an error it calls L<nbdkit_error(3)> and returns C<-1>.
-In this case, C<*sec> and C<*nsec> are not touched.
+On error C<*sec> and C<*nsec> are always unchanged.
 
 =head1 LANGUAGE BINDINGS
 

@@ -21,13 +21,17 @@ The C<str> parameter is the probability string.
 
 =head1 RETURN VALUE
 
-On success the function returns C<0> and sets C<*ret>.  The
-probability is always a finite number E<ge> 0.0, but B<note the result
-may be larger than 1.0> (for example if S<C<str == "200%">> then the
-function will set S<C<*ret = 2.0>>).  If you want to clamp the upper
-bound the caller must do that.
+On success the function returns C<0>.  If C<ret != NULL>, set C<*ret>
+to the parsed value.  If C<ret == NULL>, the parsing is done but the
+result is discarded.
 
-On error, L<nbdkit_error(3)> is called and C<-1> is returned.
+The probability is always a finite number E<ge> 0.0, but B<note the
+result may be larger than 1.0> (for example if S<C<str == "200%">>
+then the function will set S<C<*ret = 2.0>>).  If you want to clamp
+the upper bound the caller must do that.
+
+On error, L<nbdkit_error(3)> is called and C<-1> is returned.  On
+error C<*ret> is always unchanged.
 
 =head1 LANGUAGE BINDINGS
 
