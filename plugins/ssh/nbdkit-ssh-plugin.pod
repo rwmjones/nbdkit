@@ -264,6 +264,36 @@ character.
 
 =back
 
+=head2 Versus nbd+ssh:// URIs
+
+Libnbd E<ge> 1.22 supports a non-standard extension to NBD URIs
+allowing the NBD protocol to be forwarded over SSH (see
+L<nbd_connect_uri(3)>).  This is different from what this plugin does.
+
+For C<nbdkit ssh disk.img host=remote>:
+
+                                  local  ╵  remote
+                                  ─────  ╵  ──────
+ ┌─────────────┐      ┌─────────────┐    ╵         ┌─────────────┐
+ │ NBD         │ nbd  │ nbdkit      │    ╵ ssh     │ SFTP        │
+ │ client      ├─────▶│ ssh plugin  ├─────────────▶│ server      │
+ └─────────────┘      └─────────────┘    ╵         └─────────────┘
+                                         ╵              ┆ opens as a
+                                         ╵              ┆ local file
+                                         ╵           disk.img
+
+For C<nbd+ssh://remote/> URI:
+
+                  local  ╵  remote
+                  ─────  ╵  ──────
+ ┌─────────────┐         ╵    ┌─────────────┐      ┌─────────────┐
+ │ NBD         │  nbd in ssh  │ SSH         │ nbd  │ nbdkit      │
+ │ client      ╞═════════════▶│ server      ├─────▶│ file plugin │
+ └─────────────┘         ╵    └─────────────┘      └─────────────┘
+                         ╵                              ┆ opens as a
+                         ╵                              ┆ local file
+                         ╵                           disk.img
+
 =head1 DEBUG FLAGS
 
 =head2 -D ssh.log=[1..4]
@@ -349,6 +379,7 @@ L<nbdkit-extentlist-filter(1)>,
 L<nbdkit-nfs-plugin(1)>,
 L<nbdkit-retry-filter(1)>,
 L<nbdkit-plugin(3)>,
+L<nbd_connect_uri(3)>,
 L<ssh(1)>,
 L<ssh-agent(1)>,
 L<https://libssh.org>.
