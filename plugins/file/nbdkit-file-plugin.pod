@@ -339,10 +339,10 @@ C<nbdkit-file-plugin> first appeared in nbdkit 1.0.
 
 L<nbdkit(1)>,
 L<nbdkit-plugin(3)>,
-L<nbdkit-split-plugin(1)>,
-L<nbdkit-partitioning-plugin(1)>,
-L<nbdkit-tmpdisk-plugin(1)>,
 L<nbdkit-nfs-plugin(1)>,
+L<nbdkit-partitioning-plugin(1)>,
+L<nbdkit-split-plugin(1)>,
+L<nbdkit-tmpdisk-plugin(1)>,
 L<nbdkit-count-filter(1)>,
 L<nbdkit-exportname-filter(1)>,
 L<nbdkit-fua-filter(1)>,
