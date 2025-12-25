@@ -28,8 +28,9 @@ It serves the named C<FILENAME> over NBD.  Local block devices
 (eg. F</dev/sda>) may also be served.
 
 If you use the C<dir> parameter the plugin works in a different mode
-where it serves files from the given C<DIRECTORY>, chosen by the
-client using the NBD export name.
+where it serves files from the given C<DIRECTORY>.  The filename is
+chosen L<by the client sending an NBD export name|/Serving multiple
+files and block devices>.
 
 If you use the C<fd> or C<dirfd> parameter then you can pass the file
 descriptor of a single disk or a directory to the plugin, inherited
@@ -166,8 +167,27 @@ For example:
  $ nbdkit file dir=/var/tmp/exports
 
 will serve three exports called C<"disk1">, C<"disk2"> and C<"sda1">.
-The first two are regular files and the last is a block device.  You
-can add or remove files or symbolic links from the directory while
+The first two are regular files and the last is a block device.
+
+The NBD URIs of the three exports are:
+
+=over 4
+
+=item *
+
+C<nbd://localhost/disk1>
+
+=item *
+
+C<nbd://localhost/disk2>
+
+=item *
+
+C<nbd://localhost/sda1>
+
+=back
+
+You can add or remove files or symbolic links from the directory while
 nbdkit is running.
 
 To list exports, use L<nbdinfo(1)> I<--list> option, for example:
