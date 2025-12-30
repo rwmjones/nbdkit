@@ -63,6 +63,7 @@ In L<nbdkit-rust-plugin(3)>:
 
  use nbdkit::*;
  debug_hexdump(buf, prefix, start);
+ debug_hexdiff(buf1, buf2, prefix, start);
 
 =head1 HISTORY
 
