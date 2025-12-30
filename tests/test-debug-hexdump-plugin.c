@@ -42,13 +42,13 @@
 #include <nbdkit-plugin.h>
 
 static void *
-password_open (int readonly)
+hexdump_open (int readonly)
 {
   return NBDKIT_HANDLE_NOT_NEEDED;
 }
 
 static int64_t
-password_get_size (void *handle)
+hexdump_get_size (void *handle)
 {
   return INT64_MAX;
 }
@@ -57,8 +57,8 @@ password_get_size (void *handle)
 
 /* Never actually called, but return zeroes. */
 static int
-password_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
-                uint32_t flags)
+hexdump_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
+               uint32_t flags)
 {
   memset (buf, 0, count);
   return 0;
@@ -66,7 +66,7 @@ password_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
 
 /* We hexdump the buffer, with a prefix string, and discard the data. */
 static int
-password_pwrite (void *handle, const void *buf, uint32_t count, uint64_t offset,
+hexdump_pwrite (void *handle, const void *buf, uint32_t count, uint64_t offset,
                 uint32_t flags)
 {
   nbdkit_debug_hexdump (buf, count, "DUMP: ", offset);
@@ -74,12 +74,12 @@ password_pwrite (void *handle, const void *buf, uint32_t count, uint64_t offset,
 }
 
 static struct nbdkit_plugin plugin = {
-  .name              = "hexdump-debug",
+  .name              = "hexdump",
   .version           = PACKAGE_VERSION,
-  .open              = password_open,
-  .get_size          = password_get_size,
-  .pread             = password_pread,
-  .pwrite            = password_pwrite,
+  .open              = hexdump_open,
+  .get_size          = hexdump_get_size,
+  .pread             = hexdump_pread,
+  .pwrite            = hexdump_pwrite,
 };
 
 NBDKIT_REGISTER_PLUGIN (plugin)

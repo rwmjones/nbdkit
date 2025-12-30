@@ -45,8 +45,8 @@ requires $SED --version
 plugin=.libs/test-debug-hexdump-plugin.$SOEXT
 requires test -f $plugin
 
-out=debug-shutdown.out
-hexout=debug-shutdown.hexout
+out=debug-hexdump.out
+hexout=debug-hexdump.hexout
 files="$out $hexout"
 rm -f $files
 cleanup_fn rm -f $files
