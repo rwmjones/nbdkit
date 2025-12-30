@@ -49,6 +49,7 @@ import sys
 
 h.connect_command(["nbdkit", "-s", "-v",
                    "--filter=checkwrite",
+                   "-D", "checkwrite.showdiffs=1",
                    "memory", "1M"])
 try:
     h.pwrite(b"1", 0)

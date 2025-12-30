@@ -1825,12 +1825,14 @@ EXTRA_DIST += \
 TESTS += \
 	test-checkwrite.sh \
 	test-checkwrite-bounds.sh \
+	test-checkwrite-evil.sh \
 	test-checkwrite-fail.sh \
 	test-checkwrite-fastzero.sh \
 	$(NULL)
 EXTRA_DIST += \
 	test-checkwrite.sh \
 	test-checkwrite-bounds.sh \
+	test-checkwrite-evil.sh \
 	test-checkwrite-fail.sh \
 	test-checkwrite-fastzero.sh \
 	$(NULL)
