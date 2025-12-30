@@ -50,7 +50,7 @@ let pread () buf offset _ =
   match sector with
   | 0 ->
      (* no error, return a zeroed buffer of data *)
-     Bigarray.Array1.fill buf '\000'
+     NBDKit.set_buf_to_zero buf
 
   (* Test NBDKit.set_error and failwith to test the supported NBD_E* errors *)
   | 1 ->
@@ -71,7 +71,7 @@ let pread () buf offset _ =
 
   | 6 ->
      (* no error again, to check previous values are not still used *)
-     Bigarray.Array1.fill buf '\000'
+     NBDKit.set_buf_to_zero buf
 
   (* Test Unix_error. *)
   | 7 ->

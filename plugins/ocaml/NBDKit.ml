@@ -53,6 +53,17 @@ type buf =
 
 let buf_len = Bigarray.Array1.dim
 
+let buf_create len =
+  Bigarray.Array1.create Bigarray.char Bigarray.c_layout len
+
+let set_buf_to_zero buf =
+  Bigarray.Array1.fill buf '\000'
+
+let buf_zeroes len =
+  let buf = buf_create len in
+  set_buf_to_zero buf;
+  buf
+
 external _blit_from_string : string -> int -> buf -> int -> int -> unit
   = "ocaml_nbdkit_blit_from" [@@noalloc]
 external _blit_from_bytes : bytes -> int -> buf -> int -> int -> unit
@@ -77,6 +88,26 @@ let blit_buf_to_bytes buf buf_pos dst dst_pos len =
              || dst_pos < 0 || dst_pos > Bytes.length dst - len
   then invalid_arg "NBDKit.blit_buf_to_bytes";
   _blit_to_bytes buf buf_pos dst dst_pos len
+
+let buf_of_string s =
+  let len = String.length s in
+  let buf = buf_create len in
+  blit_string_to_buf s 0 buf 0 len;
+  buf
+
+let buf_of_bytes b =
+  let len = Bytes.length b in
+  let buf = buf_create len in
+  blit_bytes_to_buf b 0 buf 0 len;
+  buf
+
+let bytes_of_buf buf =
+  let len = buf_len buf in
+  let b = Bytes.create len in
+  blit_buf_to_bytes buf 0 b 0 len;
+  b
+
+let string_of_buf buf = bytes_of_buf buf |> Bytes.to_string
 
 type extent = {
   offset : int64;

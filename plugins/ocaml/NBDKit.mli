@@ -89,6 +89,24 @@ type buf =
 val buf_len : buf -> int
 (** Return the length of the [~pread] and [~pwrite] {!buf} parameter. *)
 
+val buf_create : int -> buf
+(** Create {!buf} of the given length.  The content is undefined. *)
+
+val buf_zeroes : int -> buf
+(** Create {!buf} of the given length containing all zero bytes. *)
+
+val set_buf_to_zero : buf -> unit
+(** Set all bytes in an existing buffer to zero. *)
+
+val buf_of_string : string -> buf
+val string_of_buf : buf -> string
+val buf_of_bytes : bytes -> buf
+val bytes_of_buf : buf -> bytes
+(** Convenience functions to convert to and from string/bytes and buf.
+
+    These are not very efficient.  Use {!module:Bigarray.Array1} functions
+    instead for efficiency. *)
+
 val blit_string_to_buf : string -> int -> buf -> int -> int -> unit
 (** [blit_string_to_buf src src_pos buf buf_pos len] copies
     [len] bytes from string [src+src_pos] to [buf+buf_pos] *)
