@@ -268,6 +268,31 @@ ocaml_nbdkit_debug_hexdump (value bufv, value optprefixv, value startv)
 }
 
 NBDKIT_DLL_PUBLIC value
+ocaml_nbdkit_debug_hexdiff (value buf1v, value buf2v,
+                            value optprefixv, value startv)
+{
+  CAMLparam4 (buf1v, buf2v, optprefixv, startv);
+  struct caml_ba_array *buf1 = Caml_ba_array_val (buf1v);
+  struct caml_ba_array *buf2 = Caml_ba_array_val (buf2v);
+  const void *data1 = buf1->data;
+  const void *data2 = buf2->data;
+  const size_t len1 = caml_ba_byte_size (buf1);
+  const size_t len2 = caml_ba_byte_size (buf2);
+  const char *prefix =
+    optprefixv == Val_int (0)
+    ? NULL /* None */
+    : String_val (Field (optprefixv, 0)) /* Some prefix */;
+  const uint64_t start = Int64_val (startv);
+
+  if (len1 != len2)
+    caml_invalid_argument ("nbdkit_debug_hexdiff: "
+                           "buffers must have the same length");
+
+  nbdkit_debug_hexdiff (data1, data2, len1, prefix, start);
+  CAMLreturn (Val_unit);
+}
+
+NBDKIT_DLL_PUBLIC value
 ocaml_nbdkit_version (value unitv)
 {
   CAMLparam1 (unitv);

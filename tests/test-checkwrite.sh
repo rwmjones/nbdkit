@@ -46,7 +46,8 @@ requires_libnbd_version 1.5.9
 
 do_test ()
 {
-    nbdkit -v --filter=checkwrite "$@" --run 'nbdcopy "$uri" "$uri"'
+    nbdkit -v --filter=checkwrite -D checkwrite.showdiffs=1 "$@" \
+           --run 'nbdcopy "$uri" "$uri"'
 }
 
 # Tests zero-sized disk.

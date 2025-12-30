@@ -72,6 +72,12 @@ let () =
 let () =
   assert (NBDKit.stdio_safe ())
 
+(* Test [NBDKit.debug_hexdiff]. *)
+let () =
+  let buf1 = NBDKit.buf_of_string "0123456789abcdef" in
+  let buf2 = NBDKit.buf_of_string "0123456789XXcdef" in
+  NBDKit.debug_hexdiff buf1 buf2 None 4L
+
 let load () =
   NBDKit.debug "test ocaml plugin loaded"
 

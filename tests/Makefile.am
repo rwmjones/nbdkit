@@ -328,6 +328,7 @@ TESTS += \
 	test-log-to-file-append.sh \
 	test-at-file.sh \
 	test-debug-hexdump.sh \
+	test-debug-hexdiff.sh \
 	$(NULL)
 if !IS_WINDOWS
 TESTS += \
@@ -359,6 +360,8 @@ EXTRA_DIST += \
 	test-export-handshake.sh \
 	test-export-handshake-tls.sh \
 	test-debug-flags.sh \
+	test-debug-hexdiff.sh \
+	test-debug-hexdiff-plugin.c \
 	test-debug-hexdump.sh \
 	test-debug-hexdump-plugin.c \
 	test-disconnect-tls.sh \
@@ -538,8 +541,10 @@ test_shutdown_plugin_la_LIBADD = $(IMPORT_LIBRARY_ON_WINDOWS)
 # So we have to do this and add a dependency.
 noinst_LTLIBRARIES += \
 	test-debug-hexdump-plugin.la \
+	test-debug-hexdiff-plugin.la \
 	$(NULL)
 test-debug-hexdump.sh: test-debug-hexdump-plugin.la
+test-debug-hexdiff.sh: test-debug-hexdiff-plugin.la
 
 test_debug_hexdump_plugin_la_SOURCES = \
 	test-debug-hexdump-plugin.c \
@@ -556,6 +561,22 @@ test_debug_hexdump_plugin_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
 test_debug_hexdump_plugin_la_LIBADD = $(IMPORT_LIBRARY_ON_WINDOWS)
+
+test_debug_hexdiff_plugin_la_SOURCES = \
+	test-debug-hexdiff-plugin.c \
+	$(top_srcdir)/include/nbdkit-plugin.h \
+	$(NULL)
+test_debug_hexdiff_plugin_la_CPPFLAGS = \
+	-I$(top_srcdir)/include \
+	-I$(top_builddir)/include \
+	$(NULL)
+test_debug_hexdiff_plugin_la_CFLAGS = $(WARNINGS_CFLAGS)
+# For use of the -rpath option, see:
+# https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
+test_debug_hexdiff_plugin_la_LDFLAGS = \
+	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
+	$(NULL)
+test_debug_hexdiff_plugin_la_LIBADD = $(IMPORT_LIBRARY_ON_WINDOWS)
 
 endif HAVE_PLUGINS
 
@@ -1804,12 +1825,14 @@ EXTRA_DIST += \
 TESTS += \
 	test-checkwrite.sh \
 	test-checkwrite-bounds.sh \
+	test-checkwrite-evil.sh \
 	test-checkwrite-fail.sh \
 	test-checkwrite-fastzero.sh \
 	$(NULL)
 EXTRA_DIST += \
 	test-checkwrite.sh \
 	test-checkwrite-bounds.sh \
+	test-checkwrite-evil.sh \
 	test-checkwrite-fail.sh \
 	test-checkwrite-fastzero.sh \
 	$(NULL)

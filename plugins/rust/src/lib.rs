@@ -1085,6 +1085,9 @@ extern "C" {
                          ty: u32) -> c_int;
     #[doc(hidden)]
     pub fn nbdkit_debug(fmt: *const c_char, ...);
+    fn nbdkit_debug_hexdiff(buf1: *const c_void, buf2: *const c_void,
+                            len: usize,
+                            prefix: *const c_char, start: u64);
     fn nbdkit_debug_hexdump(buf: *const c_void, len: usize,
                             prefix: *const c_char, start: u64);
     fn nbdkit_error(fmt: *const c_char, ...);
@@ -1125,6 +1128,29 @@ macro_rules! debug {
                 ()
         }
     }
+}
+
+/// Display differences between two buffers of equal length
+pub fn debug_hexdiff(buf1: &[u8], buf2: &[u8],
+                     prefix: Option<&str>, start: u64) -> Result<()> {
+    if buf1.len() != buf2.len() {
+        return Err(Error::new(libc::EINVAL,
+                              "buffers must have the same length"));
+    }
+    let prefix = match prefix {
+        Some(p) => p.as_ptr(),
+        None => ptr::null(),
+    };
+    unsafe {
+        nbdkit_debug_hexdiff(
+            buf1.as_ptr() as *const c_void,
+            buf2.as_ptr() as *const c_void,
+            buf1.len(),
+            prefix as *const c_char,
+            start,
+        );
+    };
+    Ok(())
 }
 
 /// Display buffer in hexdump format

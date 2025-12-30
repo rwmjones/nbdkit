@@ -51,7 +51,7 @@ let rec open_connection readonly = ()
 let get_size () = 1000000_L
 
 let pread () buf offset _ =
-  Bigarray.Array1.fill buf '\000'
+  NBDKit.set_buf_to_zero buf
 
 let pwrite () buf offset _ =
   NBDKit.debug_hexdump buf (Some "CAMLDUMP: ") offset

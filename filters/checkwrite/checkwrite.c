@@ -108,9 +108,26 @@ checkwrite_can_multi_conn (nbdkit_next *next,
   return 1;
 }
 
+NBDKIT_DLL_PUBLIC int checkwrite_debug_showdiffs = 0;
+
 static inline int
-data_does_not_match (int *err)
+data_does_not_match (int *err,
+                     const void *expected, const void *actual, size_t count,
+                     uint64_t offset)
 {
+  if (checkwrite_debug_showdiffs) {
+    /* Caller passes expected == NULL to mean we expected zeroes.
+     * However hexdiff requires an actual buffer, so ...
+     */
+    CLEANUP_FREE char *zerobuf = NULL;
+
+    if (expected == NULL)
+      zerobuf = calloc (count, 1);
+
+    if (expected || zerobuf)
+      nbdkit_debug_hexdiff (expected ? : zerobuf, actual, count, NULL, offset);
+  }
+
   *err = EIO;
   nbdkit_error ("data written does not match expected");
   return -1;
@@ -137,8 +154,8 @@ checkwrite_pwrite (nbdkit_next *next,
     return -1;
 
   /* If data written doesn't match data expected, inject EIO. */
-  if (memcmp (buf, expected, count) != 0)
-    return data_does_not_match (err);
+  if (memcmp (expected, buf, count) != 0)
+    return data_does_not_match (err, expected, buf, count, offset);
 
   return 0;
 }
@@ -207,7 +224,7 @@ checkwrite_trim_zero (nbdkit_next *next,
         if (next->pread (next, buf, buflen, offset, 0, err) == -1)
           return -1;
         if (! is_zero (buf, buflen))
-          return data_does_not_match (err);
+          return data_does_not_match (err, NULL, buf, buflen, offset);
 
         count -= buflen;
         offset += buflen;
@@ -243,7 +260,7 @@ checkwrite_trim_zero (nbdkit_next *next,
       if (next->pread (next, buf, n, offset, 0, err) == -1)
         return -1;
       if (! is_zero (buf, n))
-        return data_does_not_match (err);
+        return data_does_not_match (err, NULL, buf, n, offset);
       count -= n;
       offset += n;
     }

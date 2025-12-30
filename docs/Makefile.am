@@ -94,6 +94,7 @@ EXTRA_DIST = \
 # tarball.
 non_generated_mans = \
 	nbdkit_absolute_path.3 \
+	nbdkit_debug_hexdiff.3 \
 	nbdkit_disconnect.3 \
 	nbdkit_parse_int8_t.3 \
 	nbdkit_parse_int16_t.3 \
