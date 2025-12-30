@@ -69,6 +69,8 @@ In L<nbdkit-rust-plugin(3)>:
 
 C<nbdkit_debug_hexdump> was added in nbdkit 1.46.
 
+C<nbdkit_debug_hexdiff> was added in nbdkit 1.48.
+
 =head1 SEE ALSO
 
 L<nbdkit(1)>,
