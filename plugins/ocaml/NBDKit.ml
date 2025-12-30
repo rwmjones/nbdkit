@@ -226,6 +226,8 @@ external _debug : string -> unit = "ocaml_nbdkit_debug" [@@noalloc]
 let debug fs = ksprintf _debug fs
 external debug_hexdump : buf -> string option -> int64 -> unit =
   "ocaml_nbdkit_debug_hexdump"
+external debug_hexdiff : buf -> buf -> string option -> int64 -> unit =
+  "ocaml_nbdkit_debug_hexdiff"
 external disconnect : bool -> unit = "ocaml_nbdkit_disconnect" [@@noalloc]
 external export_name : unit -> string = "ocaml_nbdkit_export_name"
 external is_tls : unit -> bool = "ocaml_nbdkit_is_tls"

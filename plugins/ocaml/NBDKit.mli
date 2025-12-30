@@ -205,6 +205,11 @@ val debug_hexdump : buf -> string option -> int64 -> unit
 
     @see <https://libguestfs.org/nbdkit_debug_hexdump.3.html> nbdkit_debug_hexdump(3) *)
 
+val debug_hexdiff : buf -> buf -> string option -> int64 -> unit
+(** Display differences in two buffers (of equal length).
+
+    @see <https://libguestfs.org/nbdkit_debug_hexdiff.3.html> nbdkit_debug_hexdiff(3) *)
+
 (** {2 Parsing and configuration} *)
 
 (* Note OCaml has functions already for parsing other integers, so

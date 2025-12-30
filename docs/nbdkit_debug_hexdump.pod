@@ -50,6 +50,8 @@ buffer in the second row (prefixed with C<+>):
 In L<nbdkit-ocaml-plugin(3)>:
 
  NBDKit.debug_hexdump : NBDKit.buf -> string option -> int64 -> unit
+ NBDKit.debug_hexdiff : NBDKit.buf -> NBDKit.buf -> string option ->
+                        int64 -> unit
 
 In L<nbdkit-python-plugin(3)>:
 
