@@ -172,6 +172,44 @@ debug_in_server (const char *fs, ...)
   errno = err;
 }
 
+struct hexdump_line {
+  char str_offset[16+1]; /* The offset field */
+  char hex[16*3+1];      /* Sixteen pairs of hex digits (or spaces) */
+  char chars[16+1];      /* The printable chars (or spaces) */
+  uint64_t offset;
+};
+
+static inline void
+hexdump_reset_line (struct hexdump_line *line)
+{
+  snprintf (line->str_offset, sizeof line->str_offset, "%08" PRIx64,
+            ROUND_DOWN (line->offset, 16));
+  memset (line->hex, ' ', sizeof line->hex - 1);
+  line->hex[sizeof line->hex - 1] = '\0';
+  memset (line->chars, ' ', sizeof line->chars - 1);
+  line->chars[sizeof line->chars - 1] = '\0';
+
+}
+
+static inline void
+hexdump_set_byte (struct hexdump_line *line, size_t i, uint8_t b)
+{
+  sprintf (&line->hex[i*3], "%02x", b);
+  line->hex[i*3+2] = ' ';
+  line->chars[i] = ascii_isprint (b) ? b : '.';
+}
+
+/* Send the final string to nbdkit_debug. */
+static inline void
+hexdump_emit_debug (struct hexdump_line *line, const char *prefix)
+{
+  /* Start by splitting up the hex digits into two groups of 8. */
+  line->hex[8*3-1] = '\0';
+  nbdkit_debug ("%s%s: %s  %s |%s|",
+                prefix ? : "",
+                line->str_offset, line->hex, &line->hex[8*3], line->chars);
+}
+
 /* Usually this function would be part of server/public.c, but in this
  * case we want to use nbdkit_debug instead of debug_in_server.
  */
@@ -182,62 +220,34 @@ nbdkit_debug_hexdump (const void *vbuf, size_t len,
   if (!verbose)
     return;
 
+  struct hexdump_line line = { .offset = start };
   const uint8_t *buf = vbuf;
-  uint64_t offset = start, skip;
+  uint64_t skip;
   size_t i;
-  char str_offset[16+1]; /* The offset field */
-  char hex[16*3+1];      /* Sixteen pairs of hex digits (or spaces) */
-  char chars[16+1];      /* The printable chars (or spaces) */
-
-#define HEXDUMP_RESET_STRS()                                    \
-  snprintf (str_offset, sizeof str_offset, "%08" PRIx64,        \
-            ROUND_DOWN (offset, 16));                           \
-  memset (hex, ' ', sizeof hex - 1);                            \
-  hex[sizeof hex - 1] = '\0';                                   \
-  memset (chars, ' ', sizeof chars - 1);                        \
-  chars[sizeof chars - 1] = '\0';
-
-#define HEXDUMP_SET_BYTE(i, b)                          \
-  sprintf (&hex[(i)*3], "%02x", (b));                   \
-  hex[(i)*3+2] = ' ';                                   \
-  chars[i] = ascii_isprint ((b)) ? (b) : '.';
-
-/* Send the final string to nbdkit_debug.  Start by splitting up the
- * hex digits into two groups of 8.
- */
-#define HEXDUMP_EMIT_DEBUG()                                            \
-  hex[8*3-1] = '\0';                                                    \
-  nbdkit_debug ("%s%s: %s  %s |%s|",                                    \
-                prefix ? : "",                                          \
-                str_offset, hex, &hex[8*3], chars);
 
   /* Unaligned head. */
-  if (! IS_ALIGNED (offset, 16)) {
-    HEXDUMP_RESET_STRS ();
-    skip = offset % 16;
+  if (! IS_ALIGNED (line.offset, 16)) {
+    hexdump_reset_line (&line);
+    skip = line.offset % 16;
     for (i = skip; i < 16 && len > 0; ++i) {
-      HEXDUMP_SET_BYTE (i, *buf);
+      hexdump_set_byte (&line, i, *buf);
       buf++;
-      offset++;
+      line.offset++;
       len--;
     }
-    HEXDUMP_EMIT_DEBUG ();
+    hexdump_emit_debug (&line, prefix);
   }
 
   /* Aligned body and unaligned tail. */
   while (len > 0) {
-    assert (IS_ALIGNED (offset, 16));
-    HEXDUMP_RESET_STRS ();
+    assert (IS_ALIGNED (line.offset, 16));
+    hexdump_reset_line (&line);
     for (i = 0; i < 16 && len > 0; ++i) {
-      HEXDUMP_SET_BYTE (i, *buf);
+      hexdump_set_byte (&line, i, *buf);
       buf++;
-      offset++;
+      line.offset++;
       len--;
     }
-    HEXDUMP_EMIT_DEBUG ();
+    hexdump_emit_debug (&line, prefix);
   }
-
-#undef HEXDUMP_RESET_STRS
-#undef HEXDUMP_SET_BYTE
-#undef HEXDUMP_EMIT_DEBUG
 }
