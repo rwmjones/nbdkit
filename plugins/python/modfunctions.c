@@ -58,6 +58,30 @@ debug (PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+/* nbdkit.debug_hexdiff */
+static PyObject *
+do_debug_hexdiff (PyObject *self, PyObject *args)
+{
+  Py_buffer buf1 = { 0 };
+  Py_buffer buf2 = { 0 };
+  const char *prefix;
+  unsigned long long start;
+
+  if (!PyArg_ParseTuple (args, "y*y*zK:debug_hexdiff",
+                         &buf1, &buf2, &prefix, &start))
+    return NULL;
+  if (buf1.len != buf2.len) {
+    PyErr_SetString (PyExc_RuntimeError,
+                     "nbdkit.debug_hexdiff: buffers must have equal length");
+    return NULL;
+  }
+  nbdkit_debug_hexdiff (buf1.buf, buf2.buf, buf1.len,
+                        prefix, (uint64_t) start);
+  PyBuffer_Release (&buf2);
+  PyBuffer_Release (&buf1);
+  Py_RETURN_NONE;
+}
+
 /* nbdkit.debug_hexdump */
 static PyObject *
 do_debug_hexdump (PyObject *self, PyObject *args)
@@ -354,6 +378,8 @@ static PyMethodDef NbdkitMethods[] = {
     "Print a debug message" },
   { "debug_hexdump", do_debug_hexdump, METH_VARARGS,
     "Display buffer in hexdump format" },
+  { "debug_hexdiff", do_debug_hexdiff, METH_VARARGS,
+    "Display differences between two buffers of equal length" },
   { "disconnect", do_disconnect, METH_VARARGS,
     "Request disconnection from current client" },
   { "export_name", export_name, METH_NOARGS,

@@ -57,6 +57,7 @@ In L<nbdkit-python-plugin(3)>:
 
  import nbdkit
  nbdkit.debug_hexdump(bytes, prefix, start)
+ nbdkit.debug_hexdiff(bytes, bytes, prefix, start)
 
 In L<nbdkit-rust-plugin(3)>:
 
