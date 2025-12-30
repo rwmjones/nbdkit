@@ -201,12 +201,13 @@ hexdump_set_byte (struct hexdump_line *line, size_t i, uint8_t b)
 
 /* Send the final string to nbdkit_debug. */
 static inline void
-hexdump_emit_debug (struct hexdump_line *line, const char *prefix)
+hexdump_emit_debug (struct hexdump_line *line,
+                    const char *prefix, const char *plusminus)
 {
   /* Start by splitting up the hex digits into two groups of 8. */
   line->hex[8*3-1] = '\0';
-  nbdkit_debug ("%s%s: %s  %s |%s|",
-                prefix ? : "",
+  nbdkit_debug ("%s%s%s: %s  %s |%s|",
+                prefix ? : "", plusminus ? : "",
                 line->str_offset, line->hex, &line->hex[8*3], line->chars);
 }
 
@@ -235,7 +236,7 @@ nbdkit_debug_hexdump (const void *vbuf, size_t len,
       line.offset++;
       len--;
     }
-    hexdump_emit_debug (&line, prefix);
+    hexdump_emit_debug (&line, prefix, NULL);
   }
 
   /* Aligned body and unaligned tail. */
@@ -248,6 +249,70 @@ nbdkit_debug_hexdump (const void *vbuf, size_t len,
       line.offset++;
       len--;
     }
-    hexdump_emit_debug (&line, prefix);
+    hexdump_emit_debug (&line, prefix, NULL);
+  }
+}
+
+NBDKIT_DLL_PUBLIC void
+nbdkit_debug_hexdiff (const void *vbuf1, const void *vbuf2, size_t len,
+                      const char *prefix, uint64_t start)
+{
+  if (!verbose)
+    return;
+
+  struct hexdump_line line1 = { .offset = start };
+  struct hexdump_line line2 = { .offset = start };
+  const uint8_t *buf1 = vbuf1, *buf2 = vbuf2;
+  uint64_t skip;
+  bool differences;
+  size_t i;
+
+  /* Unaligned head. */
+  if (! IS_ALIGNED (line1.offset, 16)) {
+    hexdump_reset_line (&line1);
+    hexdump_reset_line (&line2);
+    skip = line1.offset % 16;
+    differences = false;
+
+    for (i = skip; i < 16 && len > 0; ++i) {
+      hexdump_set_byte (&line1, i, *buf1);
+      if (*buf1 != *buf2) {
+        differences = true;
+        hexdump_set_byte (&line2, i, *buf2);
+      }
+      buf1++;
+      buf2++;
+      line1.offset++;
+      line2.offset++;
+      len--;
+    }
+    hexdump_emit_debug (&line1, prefix, differences ? "-" : " ");
+    if (differences)
+      hexdump_emit_debug (&line2, prefix, "+");
+  }
+
+  /* Aligned body and unaligned tail. */
+  while (len > 0) {
+    assert (IS_ALIGNED (line1.offset, 16));
+    assert (IS_ALIGNED (line2.offset, 16));
+    hexdump_reset_line (&line1);
+    hexdump_reset_line (&line2);
+    differences = false;
+
+    for (i = 0; i < 16 && len > 0; ++i) {
+      hexdump_set_byte (&line1, i, *buf1);
+      if (*buf1 != *buf2) {
+        differences = true;
+        hexdump_set_byte (&line2, i, *buf2);
+      }
+      buf1++;
+      buf2++;
+      line1.offset++;
+      line2.offset++;
+      len--;
+    }
+    hexdump_emit_debug (&line1, prefix, differences ? "-" : " ");
+    if (differences)
+      hexdump_emit_debug (&line2, prefix, "+");
   }
 }

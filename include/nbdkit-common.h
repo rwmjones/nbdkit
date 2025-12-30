@@ -131,6 +131,10 @@ NBDKIT_EXTERN_DECL (void, nbdkit_vdebug,
 NBDKIT_EXTERN_DECL (char *, nbdkit_absolute_path,
                     (const char *path)
                     NBDKIT_ATTRIBUTE_NONNULL ((1)));
+NBDKIT_EXTERN_DECL (void, nbdkit_debug_hexdiff,
+                    (const void *buf1, const void *buf2, size_t len,
+                     const char *prefix, uint64_t start)
+                    NBDKIT_ATTRIBUTE_NONNULL ((1, 2)));
 NBDKIT_EXTERN_DECL (void, nbdkit_debug_hexdump,
                     (const void *buf, size_t len,
                      const char *prefix, uint64_t start)

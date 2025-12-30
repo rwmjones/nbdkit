@@ -1,6 +1,7 @@
 =head1 NAME
 
-nbdkit_debug_hexdump - display buffer in hexdump format
+nbdkit_debug_hexdump,
+nbdkit_debug_hexdiff - display buffer in hexdump format
 
 =head1 SYNOPSIS
 
@@ -9,11 +10,15 @@ nbdkit_debug_hexdump - display buffer in hexdump format
  void nbdkit_debug_hexdump (const void *buf, size_t len,
                             const char *prefix, uint64_t start);
 
+ void nbdkit_debug_hexdiff (const void *buf1, const void *buf2,
+                            size_t len,
+                            const char *prefix, uint64_t start);
+
 =head1 DESCRIPTION
 
-This function displays a buffer of binary data in canonical hexdump
-format, sending the output to the same place as L<nbdkit_debug(3)>.
-For example:
+B<nbdkit_debug_hexdump> displays a buffer of binary data in canonical
+hexdump format, sending the output to the same place as
+L<nbdkit_debug(3)>.  For example:
 
  char buf[33] = "12345678123456781234567812345678";
  nbdkit_debug_hexdump (buf, 32, "data: ", 0);
@@ -28,6 +33,17 @@ line of output.  (This may be C<NULL> or C<""> for no prefix).
 
 An optional C<start> may be given which changes the first offset
 displayed in the output.
+
+B<nbdkit_debug_hexdiff> displays the differences between two binary
+buffers (of the same length).
+
+For rows which are the same in both buffers, the output is the same as
+above.  For rows which are different it shows the first buffer in the
+first row (prefixed with C<->) and the differences in the second
+buffer in the second row (prefixed with C<+>):
+
+ -00000000: 31 32 33 34 35 36 37 38  31 32 33 34 35 36 37 38  |1234567812345678|
+ +00000000:                          39 38 37 36    34 33 32  |        9876 432|
 
 =head1 LANGUAGE BINDINGS
 
@@ -55,6 +71,7 @@ L<nbdkit(1)>,
 L<nbdkit_debug(3)>,
 L<nbdkit-plugin(3)>,
 L<nbdkit-filter(3)>,
+L<nbdkit-evil-filter(1)>,
 L<nbddump(1)>,
 L<hexdump(1)>.
 

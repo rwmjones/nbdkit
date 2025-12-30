@@ -1624,6 +1624,7 @@ Utility functions provided by nbdkit for plugins and filters to use:
 
 L<nbdkit_absolute_path(3)>,
 L<nbdkit_debug(3)>,
+L<nbdkit_debug_hexdiff(3)>,
 L<nbdkit_debug_hexdump(3)>,
 L<nbdkit_disconnect(3)>,
 L<nbdkit_error(3)>,

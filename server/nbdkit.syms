@@ -44,6 +44,7 @@
     nbdkit_context_get_backend;
     nbdkit_context_set_next;
     nbdkit_debug;
+    nbdkit_debug_hexdiff;
     nbdkit_debug_hexdump;
     nbdkit_disconnect;
     nbdkit_error;
