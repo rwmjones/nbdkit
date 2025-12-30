@@ -77,6 +77,7 @@ L<nbdkit(1)>,
 L<nbdkit_debug(3)>,
 L<nbdkit-plugin(3)>,
 L<nbdkit-filter(3)>,
+L<nbdkit-checkwrite-filter(1)>,
 L<nbdkit-evil-filter(1)>,
 L<nbddump(1)>,
 L<hexdump(1)>.
