@@ -36,7 +36,7 @@ set -x
 set -u
 
 plugin=$abs_top_srcdir/tests/test-ocaml-debug-hexdump-plugin.$SOEXT
-test -x "$plugin"
+requires test -x "$plugin"
 
 requires_run
 requires_nbdsh_uri
