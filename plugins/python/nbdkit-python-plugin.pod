@@ -119,10 +119,14 @@ methods in the C<nbdkit> module:
 Send a debug message to stderr or syslog if verbose messages are
 enabled.
 
+See: L<nbdkit_debug(3)>
+
 =head3 C<nbdkit.disconnect(force)>
 
 Disconnect from the client.  If C<force> is C<True> then nbdkit will
 disconnect the client immediately.
+
+See: L<nbdkit_disconnect(3)>
 
 =head3 C<nbdkit.export_name()>
 
@@ -130,35 +134,47 @@ Return the export name negotiated with the client as a Unicode string.
 Note this should not be trusted because the client can send whatever
 it wants.
 
+See: L<nbdkit_export_name(3)>
+
 =head3 C<nbdkit.is_tls()>
 
 Returns C<True> if the client completed TLS authentication, or
 C<False> if the connection is plaintext.
 
+See: L<nbdkit_is_tls(3)>
+
 =head3 C<nbdkit.nanosleep(secs, nsecs)>
 
 Sleep for seconds and nanoseconds.
+
+See: L<nbdkit_nanosleep(3)>
 
 =head3 C<nbdkit.parse_bool(str)>
 
 Parse a human-readable boolean (such as "yes" or "false"), returning
 C<True> or C<False>.  Wraps the L<nbdkit_parse_bool(3)> function.
 
+See: L<nbdkit_parse_bool(3)>
+
 =head3 C<nbdkit.parse_delay(what, str)>
 
 Parse a delay or sleep (such as "10ms") into a pair (sec, nsec).
 Wraps the L<nbdkit_parse_delay(3)> function.
 
+See: L<nbdkit_parse_delay(3)>
+
 =head3 C<nbdkit.parse_size(str)>
 
-Parse a string (such as "100M") into a size in bytes.  Wraps the
-L<nbdkit_parse_size(3)> C function.
+Parse a string (such as "100M") into a size in bytes.
+
+See: L<nbdkit_parse_size(3)>
 
 =head3 C<nbdkit.parse_probability(what, str)>
 
 Parse a string (such as "100%") into a probability, returning a
-floating point number.  Wraps the L<nbdkit_parse_probability(3)>
-function.
+floating point number.
+
+See: L<nbdkit_parse_probability(3)>
 
 =head3 C<nbdkit.peer_pid()>,
 C<nbdkit.peer_uid()>,
@@ -171,22 +187,27 @@ Unix domain socket, and then only on some operating systems.  The
 security context is usually the SELinux label, IPSEC label or
 NetLabel.
 
+See: L<nbdkit_peer_pid(3)>, L<nbdkit_peer_uid(3)>,
+L<nbdkit_peer_gid(3)> and L<nbdkit_peer_security_context(3)>
+
 =head3 C<nbdkit.peer_tls_dn()>
 
 Return the client TLS Distinguished Name.
-See L<nbdkit_peer_tls_dn(3)>.
+
+See: L<nbdkit_peer_tls_dn(3)>
 
 =head3 C<nbdkit.peer_tls_issuer_dn()>
 
 Return the client certificate issuer's TLS Distinguished Name.
-See L<nbdkit_peer_tls_issuer_dn(3)>.
+
+See: L<nbdkit_peer_tls_issuer_dn(3)>
 
 =head3 C<nbdkit.read_password(value)>
 
 Read a password from a config parameter.  This returns the password as
-a Python C<bytes> object.  See L<nbdkit_read_password(3)> for more
-information on the different ways that the C<value> parameter can be
-parsed.
+a Python C<bytes> object.
+
+See: L<nbdkit_read_password(3)>
 
 =head3 C<nbdkit.set_error(err)>
 
@@ -201,14 +222,20 @@ C<nbdkit.set_error>:
      nbdkit.set_error(errno.EPERM)
      raise RuntimeError()
 
+See: L<nbdkit_set_error(3)>
+
 =head3 C<nbdkit.shutdown()>
 
 Request asynchronous server shutdown.
+
+See: L<nbdkit_shutdown(3)>
 
 =head3 C<nbdkit.stdio_safe()>
 
 Returns C<True> if it is safe to interact with stdin and stdout
 during the configuration phase.
+
+See: L<nbdkit_stdio_safe(3)>
 
 =head2 Module constants
 
