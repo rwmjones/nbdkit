@@ -121,6 +121,13 @@ enabled.
 
 See: L<nbdkit_debug(3)>
 
+=head3 C<nbdkit.debug_hexdiff(buf1, buf2, prefix start)>,
+C<nbdkit.debug_hexdump(buf, prefix, start)>
+
+Display a buffer in hexdump format.
+
+See: L<nbdkit_debug_hexdiff(3)> and L<nbdkit_debug_hexdump(3)>
+
 =head3 C<nbdkit.disconnect(force)>
 
 Disconnect from the client.  If C<force> is C<True> then nbdkit will
