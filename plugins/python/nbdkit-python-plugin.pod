@@ -170,18 +170,18 @@ Wraps the L<nbdkit_parse_delay(3)> function.
 
 See: L<nbdkit_parse_delay(3)>
 
-=head3 C<nbdkit.parse_size(str)>
-
-Parse a string (such as "100M") into a size in bytes.
-
-See: L<nbdkit_parse_size(3)>
-
 =head3 C<nbdkit.parse_probability(what, str)>
 
 Parse a string (such as "100%") into a probability, returning a
 floating point number.
 
 See: L<nbdkit_parse_probability(3)>
+
+=head3 C<nbdkit.parse_size(str)>
+
+Parse a string (such as "100M") into a size in bytes.
+
+See: L<nbdkit_parse_size(3)>
 
 =head3 C<nbdkit.peer_pid()>,
 C<nbdkit.peer_uid()>,
