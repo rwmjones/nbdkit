@@ -213,7 +213,7 @@ nbdkit_add_extent (struct nbdkit_extents *exts,
 /* Compute aligned extents on behalf of a filter. */
 NBDKIT_DLL_PUBLIC int
 nbdkit_extents_aligned (struct context *next_c,
-                        uint32_t count, uint64_t offset,
+                        uint64_t count, uint64_t offset,
                         uint32_t flags, uint32_t align,
                         struct nbdkit_extents *exts, int *err)
 {
@@ -222,22 +222,25 @@ nbdkit_extents_aligned (struct context *next_c,
   struct nbdkit_extent *e, *e2;
   int64_t size;
 
+  assert (exts->extents.len == 0);
+  assert (exts->start == offset);
+
   size = next->get_size (next_c);
   if (size == -1) {
     *err = EIO;
     return -1;
   }
-  assert (IS_ALIGNED (offset, align));
-  assert (IS_ALIGNED (count, align) || offset + count == size);
+  exts->start = ROUND_DOWN (offset, align);
+  count = MIN (ROUND_UP (offset + count, align), size) - exts->start;
 
   /* Perform an initial query, then scan for the first unaligned extent. */
-  if (next->extents (next_c, count, offset, flags, exts, err) == -1)
+  if (next->extents (next_c, count, exts->start, flags, exts, err) == -1)
     return -1;
   for (i = 0; i < exts->extents.len; ++i) {
     e = &exts->extents.ptr[i];
     if (!IS_ALIGNED (e->length, align)) {
       /* If the unalignment is past align, just truncate and return early */
-      if (e->offset + e->length > offset + align) {
+      if (e->offset + e->length > exts->start + align) {
         e->length = ROUND_DOWN (e->length, align);
         exts->extents.len = i + !!e->length;
         exts->next = e->offset + e->length;
@@ -271,13 +274,13 @@ nbdkit_extents_aligned (struct context *next_c,
           CLEANUP_EXTENTS_FREE struct nbdkit_extents *extents2 = NULL;
 
           extents2 = nbdkit_extents_new (e->offset + e->length,
-                                         offset + align);
+                                         exts->start + align);
           if (extents2 == NULL) {
             *err = errno;
             return -1;
           }
           if (next->extents (next_c, align - e->length,
-                             offset + e->length,
+                             exts->start + e->length,
                              flags & ~NBDKIT_FLAG_REQ_ONE,
                              extents2, err) == -1)
             return -1;
@@ -298,7 +301,13 @@ nbdkit_extents_aligned (struct context *next_c,
       break;
     }
   }
-  /* Once we get here, all extents are aligned. */
+  /* Once we get here, all extents are aligned.  Trim back to the
+   * original offset if it was unaligned.
+   */
+  e = &exts->extents.ptr[0];
+  e->length -= offset - exts->start;
+  e->offset += offset - exts->start;
+  exts->start = offset;
   return 0;
 }
 
