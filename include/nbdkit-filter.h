@@ -135,7 +135,7 @@ NBDKIT_EXTERN_DECL (struct nbdkit_extents *, nbdkit_extents_full,
                     NBDKIT_ATTRIBUTE_NONNULL ((1, 5)));
 NBDKIT_EXTERN_DECL (int, nbdkit_extents_aligned,
                     (nbdkit_next *next,
-                     uint32_t count, uint64_t offset,
+                     uint64_t count, uint64_t offset,
                      uint32_t flags, uint32_t align,
                      struct nbdkit_extents *extents, int *err)
                     NBDKIT_ATTRIBUTE_NONNULL ((1, 6, 7)));

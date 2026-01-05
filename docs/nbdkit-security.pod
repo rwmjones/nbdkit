@@ -47,6 +47,12 @@ See the full announcement and links to mitigation, tests and fixes
 here:
 L<https://lists.libguestfs.org/archives/list/guestfs@lists.libguestfs.org/message/67E7AASHHADIY7VAD3FFW2I67LTWVWYF/>
 
+=head2 denial of service attack by client sending unaligned block status
+
+See the patch here:
+L<https://lists.libguestfs.org/archives/list/guestfs@lists.libguestfs.org/thread/EQTMAKGDP53WYOUBCEKWLCWAJHVUNSXX/>
+Full announcement and links to mitigation coming.
+
 =head1 SEE ALSO
 
 L<nbdkit(1)>.

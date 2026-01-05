@@ -40,6 +40,8 @@ set -u
 requires_run
 requires_plugin data
 requires_nbdinfo
+requires nbdsh --base-allocation --version
+requires_nbdsh_uri
 
 files="blocksize-policy-extents.out"
 rm -f $files
@@ -68,4 +70,59 @@ nbdkit data "@4G 1 @^512" --filter=blocksize-policy \
 diff -u - blocksize-policy-extents.out <<EOF
          0  4294967296    3  hole,zero
 4294967296         512    0  data
+EOF
+
+# Check that unaligned requests are rejected when required
+define script <<\EOF
+def print_extents(context, offset, extents, err):
+  assert context == nbd.CONTEXT_BASE_ALLOCATION;
+  print(extents)
+
+h.set_strict_mode(0)
+try:
+  h.block_status(511, 512, print_extents)
+except nbd.Error:
+  print("detected misaligned count")
+try:
+  h.block_status(512, 511, print_extents)
+except nbd.Error:
+  print("detected misaligned offset")
+h.block_status(513, 32256, print_extents)
+h.block_status(1, 32768, print_extents)
+EOF
+export script
+nbdkit data "@32k 1" --filter=blocksize-policy \
+       blocksize-minimum=512 blocksize-error-policy=error \
+       --run 'nbdsh --base-allocation -u "$uri" -c "$script"' \
+       > blocksize-policy-extents.out
+diff -u - blocksize-policy-extents.out <<EOF
+detected misaligned count
+detected misaligned offset
+[512, 3]
+[1, 0]
+EOF
+
+# Check that unaligned requests still work when permitted (a user could trigger
+# an assertion failure prior to 1.48, as a minor security flaw)
+define script <<\EOF
+def print_extents(context, offset, extents, err):
+  assert context == nbd.CONTEXT_BASE_ALLOCATION;
+  print(extents)
+
+h.set_strict_mode(0)
+h.block_status(511, 512, print_extents)
+h.block_status(512, 511, print_extents)
+h.block_status(2, 32767, print_extents)
+h.block_status(1, 32768, print_extents)
+EOF
+export script
+nbdkit data "@32k 1" --filter=blocksize-policy \
+       blocksize-minimum=512 blocksize-error-policy=allow \
+       --run 'nbdsh --base-allocation -u "$uri" -c "$script"' \
+       > blocksize-policy-extents.out
+diff -u - blocksize-policy-extents.out <<EOF
+[32256, 3]
+[32257, 3]
+[1, 3]
+[1, 0]
 EOF
