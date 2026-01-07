@@ -748,6 +748,12 @@ file_open (int readonly)
     if (ioctl (h->fd, BLKIOMIN, &minimum_io_size) == -1)
       nbdkit_debug ("cannot get BLKIOMIN: %s: %m", h->name);
 
+    /* This is the maximum that NBD supports.  For Linux devices,
+     * minimum_io_size is only a hint and smaller operations work.
+     */
+    if (minimum_io_size > 65536)
+      minimum_io_size = 65536;
+
     if (ioctl (h->fd, BLKIOOPT, &optimal_io_size) == -1)
       nbdkit_debug ("cannot get BLKIOOPT: %s: %m", h->name);
     else if (optimal_io_size == 0)
