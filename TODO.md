@@ -199,6 +199,15 @@ nbdkit-file-plugin:
   - For more, see comments in
     https://gitlab.com/nbdkit/nbdkit/-/merge_requests/88
 
+* Block size constraints mapping between Linux hints and the
+  file_block_size callback could be improved.  Our correspondent
+  writes:
+
+  > the kernel's minimum_io_size is a hint, while logical_block_size
+    is the hard limit. nbdkit should probably be setting "minimum" to
+    logical_block_size, and using the
+    max(minimum_io_size,optimal_io_size) for "preferred"
+
 nbdkit-vram-plugin:
 
 * Investigate why, on AMD Radeon, trim does not immediately free Video
