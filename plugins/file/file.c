@@ -414,7 +414,7 @@ file_config_complete (void)
 static void
 file_dump_plugin (void)
 {
-#if defined(BLKIOMIN) && defined(BLKIOOPT)
+#if defined(BLKSSZGET) && defined(BLKIOMIN) && defined(BLKIOOPT)
   printf ("file_block_size=yes\n");
 #endif
 #ifdef BLKROTATIONAL
@@ -741,32 +741,43 @@ file_open (int readonly)
 #endif
 
   h->minimum = h->preferred = h->maximum = 0;
-#if defined(BLKIOMIN) && defined(BLKIOOPT)
+#if defined(BLKSSZGET) && defined(BLKIOMIN) && defined(BLKIOOPT)
   if (h->is_block_device) {
-    unsigned int minimum_io_size = 0, optimal_io_size = 0;
+    int logical_block_size = 0;
+    unsigned minimum_io_size = 0, optimal_io_size = 0;
+
+    if (ioctl (h->fd, BLKSSZGET, &logical_block_size) == -1)
+      nbdkit_debug ("ioctl: %s: %s: %m", "BLKSSZGET", h->name);
 
     if (ioctl (h->fd, BLKIOMIN, &minimum_io_size) == -1)
-      nbdkit_debug ("cannot get BLKIOMIN: %s: %m", h->name);
-
-    /* This is the maximum that NBD supports.  For Linux devices,
-     * minimum_io_size is only a hint and smaller operations work.
-     */
-    if (minimum_io_size > 65536)
-      minimum_io_size = 65536;
+      nbdkit_debug ("ioctl: %s: %s: %m", "BLKIOMIN", h->name);
 
     if (ioctl (h->fd, BLKIOOPT, &optimal_io_size) == -1)
-      nbdkit_debug ("cannot get BLKIOOPT: %s: %m", h->name);
+      nbdkit_debug ("ioctl: %s: %s: %m", "BLKIOOPT", h->name);
     else if (optimal_io_size == 0)
       /* All devices in the Linux kernel except for MD report optimal
-       * as 0.  In that case guess a good value.
+       * as 0.  In that case use logical_block_size.
        */
-      optimal_io_size = MAX (minimum_io_size, 4096);
+      optimal_io_size = logical_block_size;
 
     /* Check the values are sane before using them. */
-    if (minimum_io_size >= 512 && is_power_of_2 (minimum_io_size) &&
-        optimal_io_size >= minimum_io_size && is_power_of_2 (optimal_io_size)) {
-      h->minimum = minimum_io_size;
-      h->preferred = optimal_io_size;
+    if (logical_block_size >= 512 && is_power_of_2 (logical_block_size) &&
+        minimum_io_size >= 512 && is_power_of_2 (minimum_io_size) &&
+        minimum_io_size >= logical_block_size &&
+        optimal_io_size >= 512 && is_power_of_2 (optimal_io_size) &&
+        optimal_io_size >= logical_block_size) {
+      /* The mapping from Linux kernel settings to NBD protocol block
+       * sizes is not obvious.  logical_block_size is the sector size,
+       * and anything smaller than this will cause a RMW cycle.  For
+       * the preferred size, we are advised to use the largest of
+       * minimum_io_size and optimal_io_size.  For this plugin maximum
+       * can be the largest that NBD can handle.
+       */
+
+      /* 64K is the largest minimum that the NBD protocol supports. */
+      h->minimum = MIN (65536, logical_block_size);
+
+      h->preferred = MAX (minimum_io_size, optimal_io_size);
       h->maximum = 0xffffffff;
     }
   }
