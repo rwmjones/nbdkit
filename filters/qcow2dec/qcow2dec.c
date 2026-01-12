@@ -924,7 +924,10 @@ qcow2dec_extents (nbdkit_next *next,
     uint64_t file_offset;
     struct nbdkit_extent e = { .offset = offset, .length = cluster_size };
 
-    if (read_l2_entry (next, offset, flags, &l2_present, &l2_entry, err) == -1)
+    /* Note: Don't pass flags here, since this is expecting pread
+     * flags (always 0).
+     */
+    if (read_l2_entry (next, offset, 0, &l2_present, &l2_entry, err) == -1)
       return -1;
 
     /* L2 table is unallocated. */
