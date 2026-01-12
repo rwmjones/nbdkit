@@ -439,7 +439,7 @@ This is also the first version that supported the
 C<VixDiskLib_QueryAllocatedBlocks> API.  This is used to provide
 sparseness (extent) information over NBD.
 
-=item VDDK 9.0.0.0 (released Jun 2025)
+=item VDDK 9.0.1.0 (released Sep 2025)
 
 This is the latest version of VDDK that we have tested at the time of
 writing, but the plugin should work with future versions.
