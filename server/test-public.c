@@ -71,6 +71,7 @@ bool listen_stdin;
 bool configured;
 bool verbose;
 int tls;
+const char *process_name;
 
 volatile int quit;
 #ifndef WIN32
