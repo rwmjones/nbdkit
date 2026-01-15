@@ -60,6 +60,7 @@
     nbdkit_get_export;
     nbdkit_get_extent;
     nbdkit_is_tls;
+    nbdkit_name;
     nbdkit_nanosleep;
     nbdkit_next_context_close;
     nbdkit_next_context_open;

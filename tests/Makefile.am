@@ -272,6 +272,7 @@ TESTS += \
 	test-version-filter.sh \
 	test-name.sh \
 	test-no-name.sh \
+	test-name-plugin.sh \
 	test-dump-plugin-example1.sh \
 	test-dump-plugin.sh \
 	test-dump-plugin-example2.sh \
@@ -385,6 +386,7 @@ EXTRA_DIST += \
 	test-log-to-file-append.sh \
 	test-long-name.sh \
 	test-name.sh \
+	test-name-plugin.sh \
 	test-nbd-client-tls.sh \
 	test-nbd-client.sh \
 	test-nbdkit-backend-debug.sh \
@@ -577,6 +579,29 @@ test_debug_hexdiff_plugin_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
 test_debug_hexdiff_plugin_la_LIBADD = $(IMPORT_LIBRARY_ON_WINDOWS)
+
+# check_LTLIBRARIES won't build a shared library (see automake manual).
+# So we have to do this and add a dependency.
+noinst_LTLIBRARIES += \
+	test-name-plugin.la \
+	$(NULL)
+test-name-plugin.sh: test-name-plugin.la
+
+test_name_plugin_la_SOURCES = \
+	test-name-plugin.c \
+	$(top_srcdir)/include/nbdkit-plugin.h \
+	$(NULL)
+test_name_plugin_la_CPPFLAGS = \
+	-I$(top_srcdir)/include \
+	-I$(top_builddir)/include \
+	$(NULL)
+test_name_plugin_la_CFLAGS = $(WARNINGS_CFLAGS)
+# For use of the -rpath option, see:
+# https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
+test_name_plugin_la_LDFLAGS = \
+	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
+	$(NULL)
+test_name_plugin_la_LIBADD = $(IMPORT_LIBRARY_ON_WINDOWS)
 
 endif HAVE_PLUGINS
 

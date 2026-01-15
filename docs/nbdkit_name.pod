@@ -1,0 +1,44 @@
+=head1 NAME
+
+nbdkit_name - get the name of the nbdkit instance
+
+=head1 SYNOPSIS
+
+ #include <nbdkit-plugin.h>
+
+ const char *nbdkit_name (void);
+
+=head1 DESCRIPTION
+
+C<nbdkit_name> returns the name of the nbdkit instance.  This is the
+string which was set through the nbdkit I<--name> parameter.  If the
+name was not set, this returns C<NULL>.
+
+=head1 RETURN VALUE
+
+The function returns a constant string, valid for the lifetime of the
+process, or C<NULL>.  Note that returning C<NULL> is not an error.
+
+=begin comment
+
+=head1 LANGUAGE BINDINGS
+
+=end comment
+
+=head1 HISTORY
+
+C<nbdkit_name> was added in nbdkit 1.48.
+
+=head1 SEE ALSO
+
+L<nbdkit(1)>,
+L<nbdkit-plugin(3)>,
+L<nbdkit-filter(3)>.
+
+=head1 AUTHORS
+
+Richard W.M. Jones
+
+=head1 COPYRIGHT
+
+Copyright Red Hat

@@ -356,7 +356,7 @@ Name this nbdkit instance.  This allows you to associate names with
 nbdkit processes, if you have several.  The name appears in error and
 debug messages, but is otherwise unused by nbdkit.  The name can be
 any string, but usually a short string containing only letters,
-numbers and common punctuation is best.
+numbers and common punctuation is best.  See also L<nbdkit_name(3)>.
 
 =item B<-n>
 

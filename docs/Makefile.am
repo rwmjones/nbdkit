@@ -44,6 +44,7 @@ EXTRA_DIST = \
 	nbdkit-filter.pod \
 	nbdkit_is_tls.pod \
 	nbdkit-loop.pod \
+	nbdkit_name.pod \
 	nbdkit_nanosleep.pod \
 	nbdkit_parse_bool.pod \
 	nbdkit_parse_delay.pod \
@@ -134,6 +135,7 @@ generated_mans = \
 	nbdkit-filter.3 \
 	nbdkit_is_tls.3 \
 	nbdkit-loop.1 \
+	nbdkit_name.3 \
 	nbdkit_nanosleep.3 \
 	nbdkit_parse_bool.3 \
 	nbdkit_parse_delay.3 \
@@ -238,6 +240,11 @@ nbdkit_is_tls.3: nbdkit_is_tls.pod $(top_builddir)/podwrapper.pl
 
 nbdkit-loop.1: nbdkit-loop.pod $(top_builddir)/podwrapper.pl
 	$(PODWRAPPER) --section=1 --man $@ \
+	    --html $(top_builddir)/html/$@.html \
+	    $<
+
+nbdkit_name.3: nbdkit_name.pod $(top_builddir)/podwrapper.pl
+	$(PODWRAPPER) --section=3 --man $@ \
 	    --html $(top_builddir)/html/$@.html \
 	    $<
 

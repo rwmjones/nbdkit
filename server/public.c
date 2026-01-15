@@ -1220,3 +1220,9 @@ nbdkit_disconnect (int force)
     conn->close (SHUT_WR);
   }
 }
+
+NBDKIT_DLL_PUBLIC const char *
+nbdkit_name (void)
+{
+  return process_name;
+}
