@@ -10,11 +10,12 @@ nbdkit-map-filter - remap disk blocks
 =head1 DESCRIPTION
 
 C<nbdkit-map-filter> is an L<nbdkit(1)> filter which can remap parts
-of the underlying plugin, such as moving a sector or partition.  To
-select part of a disk, use L<nbdkit-offset-filter(1)> instead.  To
-select a partition, use L<nbdkit-partition-filter(1)>.  This filter
-cannot change the size of the disk, use L<nbdkit-truncate-filter(1)>
-to do that.
+of the underlying plugin, such as moving a sector or partition.
+
+To select part of a disk, use L<nbdkit-offset-filter(1)> instead.  To
+select a partition, use L<nbdkit-partition-filter(1)>.  Although this
+filter can change the size of the disk, L<nbdkit-truncate-filter(1)>
+is easier to use.
 
 =head1 EXAMPLES
 
