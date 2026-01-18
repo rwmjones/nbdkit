@@ -33,6 +33,10 @@
 #ifndef NBDKIT_UTILS_H
 #define NBDKIT_UTILS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 
 extern void shell_quote (const char *str, FILE *fp);
@@ -52,6 +56,10 @@ extern ssize_t full_pwrite (int fd, const void *buf, size_t count,
 #include <stdint.h>
 #include <sys/stat.h>
 extern int64_t device_size (int fd, const struct stat *statbuf);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* NBDKIT_UTILS_H */
