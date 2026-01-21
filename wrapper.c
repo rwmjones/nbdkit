@@ -55,6 +55,9 @@
  * You can enable valgrind by setting NBDKIT_VALGRIND=1 (this
  * is mainly used by the internal tests).
  *
+ * You can enable valgrind massif for heap profiling by setting
+ * NBDKIT_VALGRIND_MASSIF=1
+ *
  * You can enable debugging by setting NBDKIT_GDB=1
  *------------------------------------------------------------
  */
@@ -195,7 +198,7 @@ main (int argc, char *argv[])
   char *s;
   int r;
 #ifndef WIN32
-  bool valgrind = false, gdb = false;
+  bool valgrind = false, valgrind_massif = false, gdb = false;
 #endif
 
 #ifndef WIN32
@@ -208,9 +211,20 @@ main (int argc, char *argv[])
   s = getenv ("NBDKIT_VALGRIND");
   if (s && strcmp (s, "1") == 0)
     valgrind = true;
+
   s = getenv ("NBDKIT_GDB");
   if (s && strcmp (s, "1") == 0)
     gdb = true;
+
+  s = getenv ("NBDKIT_VALGRIND_MASSIF");
+  if (s && strcmp (s, "1") == 0) {
+    if (valgrind || gdb) {
+      fprintf (stderr, "%s: cannot use NBDKIT_VALGRIND or NBDKIT_GDB with "
+               "NBDKIT_VALGRIND_MASSIF\n", argv[0]);
+      exit (EXIT_FAILURE);
+    }
+    valgrind_massif = true;
+  }
 
   if (valgrind) {
     passthru (VALGRIND);
@@ -235,6 +249,11 @@ main (int argc, char *argv[])
      * Originally this was a workaround for:
      * https://sourceware.org/bugzilla/show_bug.cgi?id=28256
      */
+    unsetenv ("GLIBC_TUNABLES");
+  }
+  else if (valgrind_massif) {
+    passthru (VALGRIND);
+    passthru ("--tool=massif");
     unsetenv ("GLIBC_TUNABLES");
   }
   else if (gdb) {
