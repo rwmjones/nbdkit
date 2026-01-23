@@ -1118,9 +1118,7 @@ macro_rules! debug {
         match ::std::ffi::CString::new(format!($($args)*)) {
             Ok(msg) =>
                 unsafe {
-                    $crate::nbdkit_debug(b"%s\0".as_ptr()
-                                             as *const ::libc::c_char,
-                                         msg.as_ptr());
+                    $crate::nbdkit_debug(c"%s".as_ptr(), msg.as_ptr());
                 },
             Err(_) =>
                 // probably the string contained \0, ignore as it
@@ -1564,7 +1562,7 @@ mod t {
                         *sun = mem::zeroed();
                         (*sun).sun_family = libc::AF_UNIX as libc::sa_family_t;
                         ptr::copy_nonoverlapping(
-                            b"rust-test.sock\0".as_ptr() as *const c_char,
+                            c"rust-test.sock".as_ptr(),
                             (*sun).sun_path.as_mut_ptr(), 14);
                         let len = offset_of!(libc::sockaddr_un, sun_path) as u8
                             + 14;
