@@ -335,8 +335,7 @@ mod config {
         let config = plugin.config.as_ref().unwrap();
         assert_eq!(
             -1,
-            config(b"foo\0".as_ptr() as *const c_char,
-                   b"bar\0".as_ptr() as *const c_char)
+            config(c"foo".as_ptr(), c"bar".as_ptr())
         );
         ERRNO.with(|e| assert_eq!(libc::EINVAL, *e.borrow()));
         ERRMSG.with(|e| assert_eq!("Invalid value for foo", *e.borrow()));
@@ -358,8 +357,7 @@ mod config {
         let config = plugin.config.as_ref().unwrap();
         assert_eq!(
             0,
-            config(b"foo\0".as_ptr() as *const c_char,
-                   b"bar\0".as_ptr() as *const c_char)
+            config(c"foo".as_ptr(), c"bar".as_ptr())
         );
     }
 }

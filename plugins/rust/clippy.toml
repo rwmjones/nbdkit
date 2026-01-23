@@ -1,4 +1,4 @@
 # Clippy configuration, see 'clippy.sh'.
 
-# Minimum supported version of Rust currently is 1.63.0.
-msrv = "1.63.0"
+# Minimum supported version of Rust currently is 1.77.0.
+msrv = "1.77.0"
