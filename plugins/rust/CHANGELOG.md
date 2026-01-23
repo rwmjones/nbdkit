@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- Added a binding for `nbdkit_debug_hexdiff`
+  (#[138](https://gitlab.com/nbdkit/nbdkit/-/merge_requests/138))
+
 ### Changed
 
 - `Server` methods that return fixed strings, like `Server::name`, now return
