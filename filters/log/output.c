@@ -60,21 +60,7 @@ static void
 to_file (struct handle *h, log_id_t id, const char *act, enum type type,
          const char *fmt, va_list args)
 {
-  struct timeval tv;
-  struct tm tm;
-  char timestamp[27] = "Time unknown";
-
-  /* Logging is best effort, so ignore failure to get timestamp */
-  if (!gettimeofday (&tv, NULL)) {
-    size_t s;
-
-    gmtime_r (&tv.tv_sec, &tm);
-    s = strftime (timestamp, sizeof timestamp - sizeof ".000000" + 1,
-                  "%F %T", &tm);
-    assert (s);
-    snprintf (timestamp + s, sizeof timestamp - s, ".%06ld",
-              0L + tv.tv_usec);
-  }
+  const char *timestamp = nbdkit_timestamp ();
 
 #ifdef HAVE_FLOCKFILE
   flockfile (logfile);
