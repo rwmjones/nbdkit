@@ -1661,6 +1661,7 @@ L<nbdkit_shutdown(3)>,
 L<nbdkit_stdio_safe(3)>,
 L<nbdkit_strdup_intern(3)>,
 L<nbdkit_strndup_intern(3)>,
+L<nbdkit_timestamp(3)>,
 L<nbdkit_vdebug(3)>,
 L<nbdkit_verror(3)>,
 L<nbdkit_vprintf_intern(3)>.
