@@ -205,6 +205,7 @@ NBDKIT_EXTERN_DECL (char *, nbdkit_peer_tls_issuer_dn,
 NBDKIT_EXTERN_DECL (void, nbdkit_shutdown, (void));
 NBDKIT_EXTERN_DECL (void, nbdkit_disconnect, (int force));
 NBDKIT_EXTERN_DECL (const char *, nbdkit_name, (void));
+NBDKIT_EXTERN_DECL (const char *, nbdkit_timestamp, (void));
 
 NBDKIT_EXTERN_DECL (const char *, nbdkit_strdup_intern,
                     (const char *str)

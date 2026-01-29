@@ -92,6 +92,12 @@ threadlocal_get_context (void)
   abort ();
 }
 
+int
+threadlocal_set_timestamp (char *timestamp)
+{
+  abort ();
+}
+
 conn_status
 connection_get_status (void)
 {
