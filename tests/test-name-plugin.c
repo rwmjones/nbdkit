@@ -55,13 +55,13 @@ name_load (void)
 }
 
 static void *
-flush_open (int readonly)
+name_open (int readonly)
 {
   return NBDKIT_HANDLE_NOT_NEEDED;
 }
 
 static int64_t
-flush_get_size (void *handle)
+name_get_size (void *handle)
 {
   return strlen (name);
 }
@@ -69,8 +69,8 @@ flush_get_size (void *handle)
 #define THREAD_MODEL NBDKIT_THREAD_MODEL_PARALLEL
 
 static int
-flush_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
-             uint32_t flags)
+name_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
+            uint32_t flags)
 {
   memcpy (buf, &name[offset], count);
   return 0;
@@ -80,9 +80,9 @@ static struct nbdkit_plugin plugin = {
   .name              = "name",
   .version           = PACKAGE_VERSION,
   .load              = name_load,
-  .open              = flush_open,
-  .get_size          = flush_get_size,
-  .pread             = flush_pread,
+  .open              = name_open,
+  .get_size          = name_get_size,
+  .pread             = name_pread,
 };
 
 NBDKIT_REGISTER_PLUGIN (plugin)
