@@ -25,6 +25,9 @@ and also support the glibc extension of a single C<%m> in a format
 string expanding to C<strerror(errno)>, even on platforms that don't
 support that natively.
 
+C<nbdkit_debug> does not timestamp messages.  To add timestamps, see
+L<nbdkit_timestamp(3)>.
+
 =head1 LANGUAGE BINDINGS
 
 In L<nbdkit-golang-plugin(3)>:
@@ -60,6 +63,7 @@ L<nbdkit(1)>,
 L<nbdkit_debug_hexdiff(3)>,
 L<nbdkit_debug_hexdump(3)>,
 L<nbdkit_error(3)>,
+L<nbdkit_timestamp(3)>,
 L<nbdkit-plugin(3)>,
 L<nbdkit-filter(3)>.
 

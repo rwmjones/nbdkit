@@ -57,6 +57,7 @@ struct threadlocal {
   size_t instance_num;          /* Can be 0. */
   int err;
   char *last_error;             /* Can be NULL. */
+  char *timestamp;              /* Can be NULL. */
   void *buffer;                 /* Can be NULL. */
   size_t buffer_size;
   struct connection *conn;      /* Can be NULL. */
@@ -72,6 +73,7 @@ free_threadlocal (void *threadlocalv)
 
   free (threadlocal->name);
   free (threadlocal->last_error);
+  free (threadlocal->timestamp);
   free (threadlocal->buffer);
   free (threadlocal);
 }
@@ -214,6 +216,24 @@ threadlocal_get_last_error (void)
   struct threadlocal *threadlocal = pthread_getspecific (threadlocal_key);
 
   return threadlocal ? threadlocal->last_error : NULL;
+}
+
+/* Set the timestamp.  Ownership is passed to TLS.  This is used by
+ * nbdkit_timestamp().  Calling this frees any existing timestamp in
+ * the thread.
+ */
+int
+threadlocal_set_timestamp (char *timestamp)
+{
+  struct threadlocal *threadlocal = pthread_getspecific (threadlocal_key);
+
+  if (threadlocal) {
+    free (threadlocal->timestamp);
+    threadlocal->timestamp = timestamp;
+    return 0;
+  }
+  else
+    return -1;
 }
 
 /* Return the single pread/pwrite buffer for this thread.  The buffer

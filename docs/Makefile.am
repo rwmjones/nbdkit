@@ -85,6 +85,7 @@ EXTRA_DIST = \
 	nbdkit_shutdown.pod \
 	nbdkit_stdio_safe.pod \
 	nbdkit_strdup_intern.pod \
+	nbdkit_timestamp.pod \
 	nbdkit-tls.pod \
 	nbdkit-tracing.pod \
 	synopsis.txt \
@@ -176,6 +177,7 @@ generated_mans = \
 	nbdkit_shutdown.3 \
 	nbdkit_stdio_safe.3 \
 	nbdkit_strdup_intern.3 \
+	nbdkit_timestamp.3 \
 	nbdkit-tls.1 \
 	nbdkit-tracing.3 \
 	$(NULL)
@@ -344,6 +346,11 @@ nbdkit_stdio_safe.3: nbdkit_stdio_safe.pod $(top_builddir)/podwrapper.pl
 	    $<
 
 nbdkit_strdup_intern.3: nbdkit_strdup_intern.pod $(top_builddir)/podwrapper.pl
+	$(PODWRAPPER) --section=3 --man $@ \
+	    --html $(top_builddir)/html/$@.html \
+	    $<
+
+nbdkit_timestamp.3: nbdkit_timestamp.pod $(top_builddir)/podwrapper.pl
 	$(PODWRAPPER) --section=3 --man $@ \
 	    --html $(top_builddir)/html/$@.html \
 	    $<

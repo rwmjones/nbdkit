@@ -47,8 +47,10 @@
 #include <limits.h>
 #include <errno.h>
 #include <signal.h>
-#include <sys/types.h>
 #include <math.h>
+
+#include <sys/types.h>
+#include <sys/time.h>
 
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
@@ -1225,4 +1227,55 @@ NBDKIT_DLL_PUBLIC const char *
 nbdkit_name (void)
 {
   return process_name;
+}
+
+NBDKIT_DLL_PUBLIC const char *
+nbdkit_timestamp (void)
+{
+  char *timestamp = NULL;
+  const size_t len = 64;
+
+  timestamp = malloc (len);
+  if (timestamp == NULL)
+    goto err;
+
+#ifndef WIN32
+  struct timeval tv;
+  struct tm tm;
+  size_t n;
+
+  if (gettimeofday (&tv, NULL) == -1)
+    goto err;
+  gmtime_r (&tv.tv_sec, &tm);
+
+  n = strftime (timestamp, len, "%F %T", &tm);
+  if (n == 0)
+    goto err;
+  snprintf (timestamp + n, len - n, ".%06" PRIu64, (uint64_t) tv.tv_usec);
+#else /* WIN32 */
+  /* Windows doesn't have thread-safe gmtime, or the strftime %F and
+   * %T formatters.  Let's try to do this in a Windows native way.
+   * Windows SYSTEMTIME only returns milliseconds.
+   */
+  SYSTEMTIME st;
+  GetSystemTime (&st);
+  snprintf (timestamp, len, "%04d-%02d-%02d %02d:%02d:%02d.%03d000",
+            st.wYear, st.wMonth, st.wDay,
+            st.wHour, st.wMinute, st.wSecond,
+            st.wMilliseconds);
+#endif /* WIN32 */
+
+  /* Store the timestamp in thread-local storage.  This passes
+   * ownership to threadlocal which will free it either on the next
+   * call or if the thread exits.  This can fail (although it would be
+   * extremely unusual), and in that case we have to return something.
+   */
+  if (threadlocal_set_timestamp (timestamp) == -1)
+    goto err;
+
+  return timestamp;
+
+ err:
+  free (timestamp);
+  return "!";
 }

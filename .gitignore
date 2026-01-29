@@ -48,6 +48,7 @@ docs/nbdkit_realpath.3
 docs/nbdkit_shutdown.3
 docs/nbdkit_stdio_safe.3
 docs/nbdkit_strdup_intern.3
+docs/nbdkit_timestamp.3
 docs/nbdkit-tracing.3
 filters/*/*.1
 plugins/*/*.1

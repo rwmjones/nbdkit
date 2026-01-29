@@ -1,0 +1,75 @@
+=head1 NAME
+
+nbdkit_timestamp - generate a timestamp for log messages
+
+=head1 SYNOPSIS
+
+ #include <nbdkit-plugin.h>
+
+ const char *nbdkit_timestamp (void);
+
+=head1 DESCRIPTION
+
+C<nbdkit_timestamp> generates a timestamp as a printable string which
+may be added to debug or error messages (see L<nbdkit_debug(3)>,
+L<nbdkit_error(3)>).
+
+It can be used like this:
+
+ nbdkit_debug ("%s: this is a debug message", nbdkit_timestamp ());
+
+which would produce a debug message like this:
+
+ debug: 2026-01-01 12:00:00.000333: this is a debug message
+
+The timestamps show the wallclock time in approximately ISO 8601
+format, but less ugly.  They are always shown in UTC, in 24 hour
+notation, to the nearest microsecond.  (On Windows, timestamps use the
+same format but are rounded to the nearest millisecond.)
+
+You can also separate the nbdkit_timestamp() call from the place where
+it is used, allowing you to accurately timestamp, for example, the
+point when a system call was invoked:
+
+ const char *ts = nbdkit_timestamp ();
+ int r = pwrite (fd, ...);
+ if (r == -1) {
+   /* The error message shows the time that pwrite started. */
+   nbdkit_error ("%s: pwrite: %m", ts);
+   return -1;
+ }
+
+=head1 RETURN VALUE
+
+The function returns a constant string allocated in thread-local
+storage.  The string is valid until the next call to
+C<nbdkit_timestamp> in the same thread.
+
+It never returns C<NULL>.  In the (very unlikely) case that there was
+an error generating the timestamp, the string C<"!"> is returned.
+
+=begin comment
+
+=head1 LANGUAGE BINDINGS
+
+=end comment
+
+=head1 HISTORY
+
+C<nbdkit_name> was added in nbdkit 1.48.
+
+=head1 SEE ALSO
+
+L<nbdkit(1)>,
+L<nbdkit_debug(3)>,
+L<nbdkit_error(3)>,
+L<nbdkit-plugin(3)>,
+L<nbdkit-filter(3)>.
+
+=head1 AUTHORS
+
+Richard W.M. Jones
+
+=head1 COPYRIGHT
+
+Copyright Red Hat

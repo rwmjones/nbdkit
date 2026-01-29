@@ -273,6 +273,7 @@ TESTS += \
 	test-name.sh \
 	test-no-name.sh \
 	test-name-plugin.sh \
+	test-timestamp.sh \
 	test-dump-plugin-example1.sh \
 	test-dump-plugin.sh \
 	test-dump-plugin-example2.sh \
@@ -413,6 +414,7 @@ EXTRA_DIST += \
 	test-timeout.sh \
 	test-timeout.py \
 	test-timeout-cancel.sh \
+	test-timestamp.sh \
 	test-tls-priority.sh \
 	test-tls-psk.sh \
 	test-tls.sh \
@@ -602,6 +604,29 @@ test_name_plugin_la_LDFLAGS = \
 	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
 	$(NULL)
 test_name_plugin_la_LIBADD = $(IMPORT_LIBRARY_ON_WINDOWS)
+
+# check_LTLIBRARIES won't build a shared library (see automake manual).
+# So we have to do this and add a dependency.
+noinst_LTLIBRARIES += \
+	test-timestamp-plugin.la \
+	$(NULL)
+test-timestamp.sh: test-timestamp-plugin.la
+
+test_timestamp_plugin_la_SOURCES = \
+	test-timestamp-plugin.c \
+	$(top_srcdir)/include/nbdkit-plugin.h \
+	$(NULL)
+test_timestamp_plugin_la_CPPFLAGS = \
+	-I$(top_srcdir)/include \
+	-I$(top_builddir)/include \
+	$(NULL)
+test_timestamp_plugin_la_CFLAGS = $(WARNINGS_CFLAGS)
+# For use of the -rpath option, see:
+# https://lists.gnu.org/archive/html/libtool/2007-07/msg00067.html
+test_timestamp_plugin_la_LDFLAGS = \
+	-module -avoid-version -shared $(NO_UNDEFINED_ON_WINDOWS) -rpath /nowhere \
+	$(NULL)
+test_timestamp_plugin_la_LIBADD = $(IMPORT_LIBRARY_ON_WINDOWS)
 
 endif HAVE_PLUGINS
 

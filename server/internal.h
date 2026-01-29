@@ -633,6 +633,7 @@ extern int threadlocal_get_errno (void);
 extern void threadlocal_set_last_error (char *msg);
 extern void threadlocal_clear_last_error (void);
 extern const char *threadlocal_get_last_error (void);
+extern int threadlocal_set_timestamp (char *timestamp);
 extern void *threadlocal_buffer (size_t size);
 extern void threadlocal_set_conn (struct connection *conn);
 extern struct connection *threadlocal_get_conn (void);

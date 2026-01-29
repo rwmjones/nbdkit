@@ -61,6 +61,11 @@ The default is to send error messages to stderr, unless nbdkit forks
 into the background in which case they are sent to syslog.  For more
 information read the description in L<nbdkit(1)>.
 
+=head2 Timestamps
+
+C<nbdkit_error> does not timestamp messages.  To add timestamps, see
+L<nbdkit_timestamp(3)>.
+
 =head1 LANGUAGE BINDINGS
 
 Most language bindings do not expose these functions explicitly.
@@ -78,6 +83,7 @@ C<nbdkit_set_error> was added in nbdkit 1.2.
 
 L<nbdkit(1)>,
 L<nbdkit_debug(3)>,
+L<nbdkit_timestamp(3)>,
 L<nbdkit-plugin(3)>,
 L<nbdkit-filter(3)>.
 
