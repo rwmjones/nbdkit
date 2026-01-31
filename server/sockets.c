@@ -326,6 +326,53 @@ bind_tcpip_socket (sockets *socks)
              (int) ntohs (portno));
     }
   }
+
+  /* If port == "0" then we let the kernel choose the port number.
+   * (In the normal dual-stack case, it will actually choose two port
+   * numbers, one for IPv4 and one for IPv6).  In this case we can
+   * overwrite the port variable with the chosen port number,
+   * preferring IPv6.
+   *
+   * In theory this loop could be combined with the one above but it
+   * makes the code very intricate.
+   */
+  if (strcmp (port, "0") == 0) {
+    static char port_str[16] = { 0 };
+    size_t i;
+    struct sockaddr_storage ss;
+    socklen_t sslen = sizeof ss;
+    const struct sockaddr_in *sin;
+    const struct sockaddr_in6 *sin6;
+
+    for (i = 0; i < socks->len; ++i) {
+      if (getsockname (socks->ptr[i], (struct sockaddr *) &ss, &sslen) == -1) {
+        debug ("getsockname: %m");
+        continue;
+      }
+      switch (ss.ss_family) {
+      case AF_INET:
+        sin = (const struct sockaddr_in *) &ss;
+        /* For IPv4, don't overwrite if the port_str is already set,
+         * so IPv6 takes priority.
+         */
+        if (port_str[0] == 0)
+          snprintf (port_str, sizeof port_str, "%d",
+                    (int) ntohs (sin->sin_port));
+        break;
+      case AF_INET6:
+        sin6 = (const struct sockaddr_in6 *) &ss;
+        /* Prefer IPv6, so always override the port_str here. */
+        snprintf (port_str, sizeof port_str, "%d",
+                  (int) ntohs (sin6->sin6_port));
+        break;
+      default:
+        abort ();
+      }
+    }
+
+    if (port_str[0] != 0)
+      port = port_str;
+  }
 }
 
 void

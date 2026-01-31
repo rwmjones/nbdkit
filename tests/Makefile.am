@@ -302,6 +302,7 @@ TESTS += \
 	test-tls-priority.sh \
 	test-tls-psk.sh \
 	test-not-linked-to-libssl.sh \
+	test-ip-port.sh \
 	test-ipv4-lo.sh \
 	test-ipv6-lo.sh \
 	test-foreground.sh \
@@ -379,6 +380,7 @@ EXTRA_DIST += \
 	test-foreground.sh \
 	test-help-example1.sh \
 	test-help-plugin.sh \
+	test-ip-port.sh \
 	test-ipv4-lo.sh \
 	test-ipv6-lo.sh \
 	test-keepalive.sh \

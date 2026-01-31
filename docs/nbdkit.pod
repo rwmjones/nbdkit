@@ -422,6 +422,18 @@ delete the file when it exits.
 Change the TCP/IP port number on which nbdkit serves requests.
 The default is C<10809>.  See also I<-i>.
 
+=item B<-p 0>
+
+=item B<--port=0>
+
+Setting port to C<0> causes nbdkit to bind to a random free port
+number.  On a dual-stack host it will usually bind to a I<different>
+localhost port number for IPv4 and IPv6.
+
+Currently I<--print-uri> will still print the port as C<":0"> (this is
+a bug), but the true port is available using the C<$port> variable in
+I<--run> scripts.
+
 =item B<--print-uri>
 
 Print the URI.  See L</NBD URIs and endpoints> above.
