@@ -19,11 +19,11 @@ name was not set, this returns C<NULL>.
 The function returns a constant string, valid for the lifetime of the
 process, or C<NULL>.  Note that returning C<NULL> is not an error.
 
-=begin comment
-
 =head1 LANGUAGE BINDINGS
 
-=end comment
+In L<nbdkit-ocaml-plugin(3)>:
+
+ NBDKit.name : unit -> string option
 
 =head1 HISTORY
 
