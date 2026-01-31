@@ -46,6 +46,10 @@
 #include <sys/socket.h>
 #endif
 
+#ifdef HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+
 #ifdef HAVE_SYS_UN_H
 #include <sys/un.h>
 #endif
@@ -271,8 +275,104 @@ bind_tcpip_socket (sockets *socks)
     exit (EXIT_FAILURE);
   }
 
-  debug ("bound to IP address %s:%s (%zu socket(s))",
-         ipaddr ? ipaddr : "<any>", ipport, socks->len);
+  /* Print the IP address of each socket in debug output. */
+  if (verbose) {
+    char addr_str[128];
+    size_t i;
+    struct sockaddr_storage ss;
+    socklen_t sslen = sizeof ss;
+    const struct sockaddr_in *sin;
+    const struct sockaddr_in6 *sin6;
+    const void *addr;
+    const char *familyname;
+#ifdef HAVE_IN_PORT_T
+    in_port_t portno;
+#else
+    int portno;
+#endif
+    bool square_brackets = false;
+
+    for (i = 0; i < socks->len; ++i) {
+      if (getsockname (socks->ptr[i], (struct sockaddr *) &ss, &sslen) == -1) {
+        debug ("getsockname: %m");
+        continue;
+      }
+      switch (ss.ss_family) {
+      case AF_INET:
+        familyname = "IPv4";
+        sin = (const struct sockaddr_in *) &ss;
+        addr = &sin->sin_addr;
+        portno = sin->sin_port;
+        break;
+      case AF_INET6:
+        familyname = "IPv6";
+        square_brackets = true;
+        sin6 = (const struct sockaddr_in6 *) &ss;
+        addr = &sin6->sin6_addr;
+        portno = sin6->sin6_port;
+        break;
+      default:
+        /* Probably can never happen? */
+        debug ("unknown address family: %d", ss.ss_family);
+        continue;
+      }
+      if (inet_ntop (ss.ss_family, addr, addr_str, sizeof addr_str) == NULL) {
+        debug ("inet_ntop: %m");
+        continue;
+      }
+      debug ("bound to %s address %s%s%s:%d",
+             familyname,
+             square_brackets ? "[" : "", addr_str, square_brackets ? "]" : "",
+             (int) ntohs (portno));
+    }
+  }
+
+  /* If port == "0" then we let the kernel choose the port number.
+   * (In the normal dual-stack case, it will actually choose two port
+   * numbers, one for IPv4 and one for IPv6).  In this case we can
+   * overwrite the port variable with the chosen port number,
+   * preferring IPv6.
+   *
+   * In theory this loop could be combined with the one above but it
+   * makes the code very intricate.
+   */
+  if (strcmp (port, "0") == 0) {
+    static char port_str[16] = { 0 };
+    size_t i;
+    struct sockaddr_storage ss;
+    socklen_t sslen = sizeof ss;
+    const struct sockaddr_in *sin;
+    const struct sockaddr_in6 *sin6;
+
+    for (i = 0; i < socks->len; ++i) {
+      if (getsockname (socks->ptr[i], (struct sockaddr *) &ss, &sslen) == -1) {
+        debug ("getsockname: %m");
+        continue;
+      }
+      switch (ss.ss_family) {
+      case AF_INET:
+        sin = (const struct sockaddr_in *) &ss;
+        /* For IPv4, don't overwrite if the port_str is already set,
+         * so IPv6 takes priority.
+         */
+        if (port_str[0] == 0)
+          snprintf (port_str, sizeof port_str, "%d",
+                    (int) ntohs (sin->sin_port));
+        break;
+      case AF_INET6:
+        sin6 = (const struct sockaddr_in6 *) &ss;
+        /* Prefer IPv6, so always override the port_str here. */
+        snprintf (port_str, sizeof port_str, "%d",
+                  (int) ntohs (sin6->sin6_port));
+        break;
+      default:
+        abort ();
+      }
+    }
+
+    if (port_str[0] != 0)
+      port = port_str;
+  }
 }
 
 void

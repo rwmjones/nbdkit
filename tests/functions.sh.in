@@ -609,8 +609,7 @@ foreach_filter ()
 # $port.
 #
 # This is inherently racy so we only use it where it's absolutely
-# necessary (eg. testing TLS because qemu cannot do TLS over a Unix
-# domain socket).
+# necessary.
 pick_unused_port ()
 {
     requires ss --version

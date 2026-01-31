@@ -77,15 +77,16 @@
   particular `SOL_TCP` + `TCP_KEEPCNT`, `SOL_TCP` + `TCP_KEEPIDLE`,
   and `SOL_TCP` + `TCP_KEEPINTVL`.
 
-* Fix `--port=0` / allow nbdkit to choose a TCP port: Several tests
-  rely on picking a random TCP port, which is racy.  The kernel can
-  pick a port for us, and nbdkit `--print-uri` function can be used to
-  display the random port to the user.  Because of a bug, nbdkit lets
-  you choose `--port=0`, causing the kernel to pick a port, but
-  `--print-uri` doesn't display the port, and a different port is
-  picked for IPv4 and IPv6 (so it only makes sense to use this with
-  `-4` or `-6` option).  Once this mess is fixed, the tests should be
-  updated to use this.
+* Using `--port=0` (to get the kernel to pick a random port) works:
+
+  - But the URI in `--print-uri` and `$uri` is wrong.  Fixing this is
+    difficult because we generate and print the URI early, long before
+    we bind to ports.  There is a case for binding to ports before
+    closing stdio, but that is quite a large change and needs some
+    careful thought.
+
+  - Consider exposing `$port4` and `$port6` to `--run` scripts.  This
+    would allow `tests/test-ip-filter.sh` to work.
 
 * `nbdkit_timestamp()` does not work when called on the main thread.
   This is because the main thread does not allocate thread-local

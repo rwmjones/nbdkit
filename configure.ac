@@ -509,6 +509,13 @@ AC_CHECK_MEMBERS([struct sockpeercred.uid], [], [],
 #endif
 ]])
 
+dnl Check for types.
+AC_CHECK_TYPES([in_port_t], [], [], [[
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+]])
+
 dnl Replacement functions that we provide for some platforms.
 AC_CONFIG_LIBOBJ_DIR([common/replacements])
 AC_REPLACE_FUNCS([\
