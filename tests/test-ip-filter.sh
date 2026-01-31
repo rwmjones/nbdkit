@@ -38,7 +38,7 @@ set -e
 set -x
 set -u
 
-requires ip -V
+requires_run
 requires_nbdinfo
 requires_ipv6_loopback
 
@@ -46,15 +46,35 @@ requires_ipv6_loopback
 # "nbd://[::1]:$port" URIs (commit 17df436cea5 added in 1.7.7).
 requires_libnbd_version 1.8
 
-rm -f ip-filter.pid
-cleanup_fn rm -f ip-filter.pid
+fail=0
 
-# Find an unused port to listen on.
-pick_unused_port
+# Allow IPv4 and IPv6.
+nbdkit -v --port=0 --filter=ip null \
+       -D ip.rules=1 \
+       allow=allipv4,allipv6 deny=all \
+       --run '
+    nbdinfo "nbd://127.0.0.1:$port"
+    nbdinfo "nbd://[::1]:$port"
+'
 
-start_nbdkit -P ip-filter.pid -p $port --filter=ip null \
-             -D ip.rules=1 \
-             allow=allipv4,allipv6 deny=all
+# Allow IPv4 only, deny IPv6.
+# XXX We cannot test this because $port is set preferentially to the
+# IPv6 port, and we cannot find the IPv4 port here.
+#nbdkit -v --port=0 --filter=ip null \
+#       -D ip.rules=1 \
+#       allow=allipv4 deny=all --run 'nbdinfo "nbd://127.0.0.1:$port"'
+#
+#nbdkit -v --port=0 --filter=ip null \
+#       -D ip.rules=1 \
+#       allow=allipv4 deny=all --run 'nbdinfo "nbd://[::1]:$port"' && fail=1
 
-nbdinfo "nbd://127.0.0.1:$port"
-nbdinfo "nbd://[::1]:$port"
+# Allow IPv6 only, deny IPv4.
+nbdkit -v --port=0 --filter=ip null \
+       -D ip.rules=1 \
+       allow=allipv6 deny=all --run 'nbdinfo "nbd://[::1]:$port"'
+
+nbdkit -v --port=0 --filter=ip null \
+       -D ip.rules=1 \
+       allow=allipv6 deny=all --run 'nbdinfo "nbd://127.0.0.1:$port"' && fail=1
+
+exit $fail

@@ -77,12 +77,16 @@
   particular `SOL_TCP` + `TCP_KEEPCNT`, `SOL_TCP` + `TCP_KEEPIDLE`,
   and `SOL_TCP` + `TCP_KEEPINTVL`.
 
-* Using `--port=0` (to get the kernel to pick a random port) works,
-  but the URI in `--print-uri` and `$uri` is wrong.  Fixing this is
-  difficult because we generate and print the URI early, long before
-  we bind to ports.  There is a case for binding to ports before
-  closing stdio, but that is quite a large change and needs some
-  careful thought.
+* Using `--port=0` (to get the kernel to pick a random port) works:
+
+  - But the URI in `--print-uri` and `$uri` is wrong.  Fixing this is
+    difficult because we generate and print the URI early, long before
+    we bind to ports.  There is a case for binding to ports before
+    closing stdio, but that is quite a large change and needs some
+    careful thought.
+
+  - Consider exposing `$port4` and `$port6` to `--run` scripts.  This
+    would allow `tests/test-ip-filter.sh` to work.
 
 * `nbdkit_timestamp()` does not work when called on the main thread.
   This is because the main thread does not allocate thread-local
