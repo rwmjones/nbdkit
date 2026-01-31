@@ -87,6 +87,14 @@
   `-4` or `-6` option).  Once this mess is fixed, the tests should be
   updated to use this.
 
+* `nbdkit_timestamp()` does not work when called on the main thread.
+  This is because the main thread does not allocate thread-local
+  storage (see [threadlocal.c](server/threadlocal.c)).  We could
+  either special-case this in `nbdkit_timestamp` or we could implement
+  thread-local storage for the main thread (but the latter may change
+  some assumptions in the code).  There may be other APIs that are
+  affected in this way too.
+
 ## Suggestions for plugins
 
 Note: qemu supports other formats such as iscsi and ceph/rbd, and
