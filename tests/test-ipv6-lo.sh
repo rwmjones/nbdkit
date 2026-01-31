@@ -38,37 +38,10 @@ set -e
 set -x
 set -u
 
-# Cannot use kill pidfile below to test if the process is running on
-# Windows.
-if is_windows; then
-    echo "$0: this test needs to be revised to work on Windows"
-    exit 77
-fi
-
-requires ip -V
-requires "$QEMU_IMG" --version
-requires "$QEMU_IMG" info --image-opts driver=file,filename=functions.sh
+requires_run
+requires_nbdinfo
 requires_ipv6_loopback
 
-rm -f ipv6lo.pid ipv6lo.out
-cleanup_fn rm -f ipv6lo.pid ipv6lo.out
-
-# Find an unused port to listen on.
-pick_unused_port
-
 # By default nbdkit will listen on all available interfaces, ie.
-# IPv4 and IPv6.
-start_nbdkit -P ipv6lo.pid -p $port example1
-pid="$(cat ipv6lo.pid)"
-
-# Check the process exists.
-kill -s 0 $pid
-
-# Check we can connect over the IPv6 loopback interface.
-ipv6_lo="$(ip -o -6 addr show scope host)"
-if test -n "$ipv6_lo"; then
-    "$QEMU_IMG" info --output=json \
-        --image-opts "file.driver=nbd,file.host=::1,file.port=$port" > ipv6lo.out
-    cat ipv6lo.out
-    grep -sq '"virtual-size": *104857600\b' ipv6lo.out
-fi
+# IPv4 and IPv6, so use -6 to force IPv6 only.
+nbdkit -v -6 --port=0 example1 --run 'nbdinfo nbd://[::1]:$port/'
