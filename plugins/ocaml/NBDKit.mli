@@ -210,6 +210,11 @@ val debug_hexdiff : buf -> buf -> string option -> int64 -> unit
 
     @see <https://libguestfs.org/nbdkit_debug_hexdiff.3.html> nbdkit_debug_hexdiff(3) *)
 
+val timestamp : unit -> string
+(** Generate a timestamp for log messages.
+
+    @see <https://libguestfs.org/nbdkit_timestamp.3.html> nbdkit_timestamp(3) *)
+
 (** {2 Parsing and configuration} *)
 
 (* Note OCaml has functions already for parsing other integers, so
@@ -339,3 +344,12 @@ val api_version : unit -> int
 
     @see <https://libguestfs.org/nbdkit-plugin.3.html>
     The description of [NBDKIT_API_VERSION] in nbdkit-plugin(3). *)
+
+(** {2 Server information} *)
+
+val name : unit -> string option
+(** Get the name of the nbdkit instance.  This is the string
+    which was set through the nbdkit [--name] parameter.
+    If the name was not set, this returns [None].
+
+    @see <https://libguestfs.org/nbdkit_name.3.html> nbdkit_name(3) *)

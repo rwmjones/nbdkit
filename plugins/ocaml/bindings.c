@@ -293,6 +293,16 @@ ocaml_nbdkit_debug_hexdiff (value buf1v, value buf2v,
 }
 
 NBDKIT_DLL_PUBLIC value
+ocaml_nbdkit_timestamp (value unitv)
+{
+  CAMLparam1 (unitv);
+  CAMLlocal1 (rv);
+  const char *timestamp = nbdkit_timestamp ();
+  rv = caml_copy_string (timestamp); /* timestamp is never NULL */
+  CAMLreturn (rv);
+}
+
+NBDKIT_DLL_PUBLIC value
 ocaml_nbdkit_version (value unitv)
 {
   CAMLparam1 (unitv);
@@ -307,6 +317,26 @@ NBDKIT_DLL_PUBLIC value
 ocaml_nbdkit_api_version (value unitv)
 {
   return Val_int (NBDKIT_API_VERSION);
+}
+
+NBDKIT_DLL_PUBLIC value
+ocaml_nbdkit_name (value unitv)
+{
+  CAMLparam1 (unitv);
+  CAMLlocal2 (nv, rv);
+  const char *name = nbdkit_name ();
+
+  /* Note that name == NULL is not an error.  So we construct a
+   * string option here.
+   */
+  if (name == NULL)
+    rv = Val_int (0);           /* None */
+  else {
+    nv = caml_copy_string (name);
+    rv = caml_alloc (1, 0);     /* Some name */
+    Field (rv, 0) = nv;
+  }
+  CAMLreturn (rv);
 }
 
 #ifdef HAVE_CAML_SOCKETADDR_H

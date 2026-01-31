@@ -78,6 +78,13 @@ let () =
   let buf2 = NBDKit.buf_of_string "0123456789XXcdef" in
   NBDKit.debug_hexdiff buf1 buf2 None 4L
 
+(* Test [NBDKit.name]. *)
+let () =
+  NBDKit.debug "name = %s"
+    (match NBDKit.name () with
+     | None -> "None"
+     | Some n -> n)
+
 let load () =
   NBDKit.debug "test ocaml plugin loaded"
 
@@ -122,7 +129,9 @@ type handle = {
 let id = ref 0
 let rec open_connection readonly =
   let export_name = NBDKit.export_name () and tls = NBDKit.is_tls () in
-  NBDKit.debug "test ocaml plugin handle opened readonly=%b export=%S tls=%b"
+  NBDKit.debug "%s: test ocaml plugin handle opened \
+                readonly=%b export=%S tls=%b"
+    (NBDKit.timestamp ())
     readonly export_name tls;
   check_peer ();
   incr id;
