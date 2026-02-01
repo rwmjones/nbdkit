@@ -1293,10 +1293,12 @@ EXTRA_DIST += \
 
 # sparse-random plugin test.
 TESTS += \
+	test-sparse-random-blocksize.sh \
 	test-sparse-random-copy.sh \
 	test-sparse-random-info.sh \
 	$(NULL)
 EXTRA_DIST += \
+	test-sparse-random-blocksize.sh \
 	test-sparse-random-copy.sh \
 	test-sparse-random-info.sh \
 	$(NULL)

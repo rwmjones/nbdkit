@@ -4,8 +4,8 @@ nbdkit-sparse-random-plugin - make sparse random disks
 
 =head1 SYNOPSIS
 
- nbdkit sparse-random [size=]SIZE [seed=SEED]
-                      [percent=N] [runlength=N]
+ nbdkit sparse-random [size=]SIZE [blocksize=N]
+                      [seed=SEED] [percent=N] [runlength=N]
                       [random-content=true]
 
 =head1 DESCRIPTION
@@ -51,6 +51,13 @@ See also L<nbdkit-checkwrite-filter(1)>.
 =head1 PARAMETERS
 
 =over 4
+
+=item B<blocksize=>N
+
+Set the block size.  This is the granularity that this plugin operates
+at.  Sparse extents will be aligned to the block size.
+
+It must be a power of 2 and E<ge> 1024.  The default is 4096.
 
 =item B<percent=>N
 

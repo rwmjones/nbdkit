@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <string.h>
 #include <errno.h>
 #include <time.h>
@@ -46,6 +47,7 @@
 #include "bitmap.h"
 #include "cleanup.h"
 #include "isaligned.h"
+#include "ispowerof2.h"
 #include "iszero.h"
 #include "minmax.h"
 #include "random.h"
@@ -60,7 +62,7 @@ static int random_content;      /* false: Repeat same byte  true: Random bytes*/
 /* We need to store 1 bit per block.  Using a 4K block size means we
  * need 32M to map each 1T of virtual disk.
  */
-#define BLOCKSIZE 4096
+static unsigned blocksize = 4096;
 
 static struct bitmap bm;        /* Bitmap of data blocks. */
 
@@ -72,8 +74,6 @@ sparse_random_load (void)
    * parameter.
    */
   seed = time (NULL);
-
-  bitmap_init (&bm, BLOCKSIZE, 1 /* bits per block */);
 }
 
 static void
@@ -96,6 +96,18 @@ sparse_random_config (const char *key, const char *value)
     if (r == -1)
       return -1;
     size = r;
+  }
+  else if (strcmp (key, "blocksize") == 0 ||
+           strcmp (key, "block-size") == 0) {
+    r = nbdkit_parse_size (value);
+    if (r == -1)
+      return -1;
+    if (r < 1024 || r > 0x10000000 || !is_power_of_2 (r)) {
+      nbdkit_error ("block size must be a power of 2, "
+                    "and between 1024 and 2^28");
+      return -1;
+    }
+    blocksize = r;
   }
   else if (strcmp (key, "percent") == 0) {
     if (sscanf (value, "%lf", &percent) != 1 ||
@@ -127,6 +139,7 @@ sparse_random_config (const char *key, const char *value)
 
 #define sparse_random_config_help \
   "size=<SIZE>  (required) Size of the backing disk\n" \
+  "blocksize=<SIZE>        Set block size (default: 4K)\n" \
   "seed=<SEED>             Random number generator seed\n" \
   "percent=<PERCENT>       Percentage of data\n" \
   "runlength=<BYTES>       Expected average run length of data\n" \
@@ -180,6 +193,8 @@ sparse_random_get_ready (void)
   uint64_t data_run_length = 0;
   uint64_t avg_data_run_length = 0;
 
+  bitmap_init (&bm, blocksize, 1 /* bits per block */);
+
   if (bitmap_resize (&bm, size) == -1)
     return -1;
 
@@ -194,7 +209,7 @@ sparse_random_get_ready (void)
   }
 
   /* Otherwise calculate the probability parameters as above. */
-  P_dh = 1. / ((double) runlength / BLOCKSIZE);
+  P_dh = 1. / ((double) runlength / blocksize);
   P_hd = (percent / 100.) * P_dh / (1. - (percent / 100.));
 
   nbdkit_debug ("percent requested = %g%%, "
@@ -240,8 +255,8 @@ sparse_random_get_ready (void)
     avg_data_run_length = 0;
   nbdkit_debug ("percent actual = %g%%, "
                 "average run length = %" PRIu64,
-                100. * BLOCKSIZE * nr_data_blocks / size,
-                avg_data_run_length * BLOCKSIZE);
+                100. * blocksize * nr_data_blocks / size,
+                avg_data_run_length * blocksize);
 
   return 0;
 }
@@ -268,7 +283,7 @@ sparse_random_block_size (void *handle,
                           uint32_t *maximum)
 {
   *minimum = 1;
-  *preferred = BLOCKSIZE;
+  *preferred = blocksize;
   *maximum = 0xffffffff;
   return 0;
 }
@@ -299,20 +314,20 @@ read_block (uint64_t blknum, uint64_t offset, void *buf)
   struct random_state state;
 
   if (bitmap_get_blk (&bm, blknum, 0) == 0) /* hole */
-    memset (buf, 0, BLOCKSIZE);
+    memset (buf, 0, blocksize);
   else if (!random_content) {   /* data when random-content=false */
     xsrandom (seed + offset, &state);
     s = xrandom (&state);
     s &= 255;
     if (s == 0) s = 1;
-    memset (buf, (int)s, BLOCKSIZE);
+    memset (buf, (int)s, blocksize);
   }
   else {                        /* data when random-content=true */
     /* This produces repeatable data for the same offset.  Note it
      * works because we are called on whole blocks only.
      */
     xsrandom (seed + offset, &state);
-    for (i = 0; i < BLOCKSIZE; ++i) {
+    for (i = 0; i < blocksize; ++i) {
       s = xrandom (&state);
       s &= 255;
       b[i] = s;
@@ -328,20 +343,20 @@ sparse_random_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
   CLEANUP_FREE uint8_t *block = NULL;
   uint64_t blknum, blkoffs;
 
-  if (!IS_ALIGNED (count | offset, BLOCKSIZE)) {
-    block = malloc (BLOCKSIZE);
+  if (!IS_ALIGNED (count | offset, blocksize)) {
+    block = malloc (blocksize);
     if (block == NULL) {
       nbdkit_error ("malloc: %m");
       return -1;
     }
   }
 
-  blknum = offset / BLOCKSIZE;  /* block number */
-  blkoffs = offset % BLOCKSIZE; /* offset within the block */
+  blknum = offset / blocksize;  /* block number */
+  blkoffs = offset % blocksize; /* offset within the block */
 
   /* Unaligned head */
   if (blkoffs) {
-    uint64_t n = MIN (BLOCKSIZE - blkoffs, count);
+    uint64_t n = MIN (blocksize - blkoffs, count);
 
     read_block (blknum, offset, block);
     memcpy (buf, &block[blkoffs], n);
@@ -353,12 +368,12 @@ sparse_random_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
   }
 
   /* Aligned body */
-  while (count >= BLOCKSIZE) {
+  while (count >= blocksize) {
     read_block (blknum, offset, buf);
 
-    buf += BLOCKSIZE;
-    count -= BLOCKSIZE;
-    offset += BLOCKSIZE;
+    buf += blocksize;
+    count -= blocksize;
+    offset += blocksize;
     blknum++;
   }
 
@@ -384,18 +399,18 @@ sparse_random_pwrite (void *handle, const void *buf,
   CLEANUP_FREE uint8_t *block;
   uint64_t blknum, blkoffs;
 
-  block = malloc (BLOCKSIZE);
+  block = malloc (blocksize);
   if (block == NULL) {
     nbdkit_error ("malloc: %m");
     return -1;
   }
 
-  blknum = offset / BLOCKSIZE;  /* block number */
-  blkoffs = offset % BLOCKSIZE; /* offset within the block */
+  blknum = offset / blocksize;  /* block number */
+  blkoffs = offset % blocksize; /* offset within the block */
 
   /* Unaligned head */
   if (blkoffs) {
-    uint64_t n = MIN (BLOCKSIZE - blkoffs, count);
+    uint64_t n = MIN (blocksize - blkoffs, count);
 
     read_block (blknum, offset, block);
     if (memcmp (buf, &block[blkoffs], n) != 0) {
@@ -412,23 +427,23 @@ sparse_random_pwrite (void *handle, const void *buf,
   }
 
   /* Aligned body */
-  while (count >= BLOCKSIZE) {
+  while (count >= blocksize) {
     /* As an optimization, skip calling read_block if we know this is
      * a hole.  Call is_zero instead which should be faster.
      */
     if (bitmap_get_blk (&bm, blknum, 0) == 0) {
-      if (! is_zero (buf, BLOCKSIZE))
+      if (! is_zero (buf, blocksize))
         goto unexpected_data;
     }
     else {
       read_block (blknum, offset, block);
-      if (memcmp (buf, block, BLOCKSIZE) != 0)
+      if (memcmp (buf, block, blocksize) != 0)
         goto unexpected_data;
     }
 
-    buf += BLOCKSIZE;
-    count -= BLOCKSIZE;
-    offset += BLOCKSIZE;
+    buf += blocksize;
+    count -= blocksize;
+    offset += blocksize;
     blknum++;
   }
 
@@ -463,12 +478,12 @@ sparse_random_trim_zero (void *handle, uint32_t count, uint64_t offset,
 {
   uint64_t blknum, blkoffs;
 
-  blknum = offset / BLOCKSIZE;  /* block number */
-  blkoffs = offset % BLOCKSIZE; /* offset within the block */
+  blknum = offset / blocksize;  /* block number */
+  blkoffs = offset % blocksize; /* offset within the block */
 
   /* Unaligned head */
   if (blkoffs) {
-    uint64_t n = MIN (BLOCKSIZE - blkoffs, count);
+    uint64_t n = MIN (blocksize - blkoffs, count);
 
     if (bitmap_get_blk (&bm, blknum, 0) != 0) {
     unexpected_trim:
@@ -483,12 +498,12 @@ sparse_random_trim_zero (void *handle, uint32_t count, uint64_t offset,
   }
 
   /* Aligned body */
-  while (count >= BLOCKSIZE) {
+  while (count >= blocksize) {
     if (bitmap_get_blk (&bm, blknum, 0) != 0)
       goto unexpected_trim;
 
-    count -= BLOCKSIZE;
-    offset += BLOCKSIZE;
+    count -= blocksize;
+    offset += blocksize;
     blknum++;
   }
 
@@ -508,12 +523,12 @@ sparse_random_extents (void *handle, uint32_t count, uint64_t offset,
   uint64_t blknum, blkoffs;
   uint32_t type;
 
-  blknum = offset / BLOCKSIZE;  /* block number */
-  blkoffs = offset % BLOCKSIZE; /* offset within the block */
+  blknum = offset / blocksize;  /* block number */
+  blkoffs = offset % blocksize; /* offset within the block */
 
   /* Unaligned head */
   if (blkoffs) {
-    uint64_t n = MIN (BLOCKSIZE - blkoffs, count);
+    uint64_t n = MIN (blocksize - blkoffs, count);
 
     if (bitmap_get_blk (&bm, blknum, 0) == 0)
       type = NBDKIT_EXTENT_HOLE | NBDKIT_EXTENT_ZERO;
@@ -528,16 +543,16 @@ sparse_random_extents (void *handle, uint32_t count, uint64_t offset,
   }
 
   /* Aligned body */
-  while (count >= BLOCKSIZE) {
+  while (count >= blocksize) {
     if (bitmap_get_blk (&bm, blknum, 0) == 0)
       type = NBDKIT_EXTENT_HOLE | NBDKIT_EXTENT_ZERO;
     else
       type = 0; /* data */
-    if (nbdkit_add_extent (extents, offset, BLOCKSIZE, type) == -1)
+    if (nbdkit_add_extent (extents, offset, blocksize, type) == -1)
       return -1;
 
-    count -= BLOCKSIZE;
-    offset += BLOCKSIZE;
+    count -= blocksize;
+    offset += blocksize;
     blknum++;
   }
 
