@@ -38,12 +38,36 @@ set -x
 set -u
 
 requires_run
+requires_nbdinfo
 
 # nbdcopy >= 1.5.9 required for this test.
 requires_nbdcopy
 requires_libnbd_version 1.5.9
 
+out=sparse-random-blocksize.out
+cleanup_fn rm -f $out
+rm -f $out
+
+#blocksize=65536
+blocksize_r="$(( 10 + (RANDOM % 19) ))"  ;# 10..28
+blocksize="$(( 1 << blocksize_r ))"
+
+export out
 nbdkit -v \
        sparse-random \
-       size=10G blocksize=64K \
-       --run 'nbdcopy "$uri" "$uri"'
+       size=10G blocksize=$blocksize \
+       --run '
+    nbdinfo --map "$uri" > $out &&
+    nbdcopy "$uri" "$uri"
+'
+
+# Check all the extents are aligned to $blocksize
+cat $out
+( while read offset size rest ; do
+      echo checking $offset $size ...
+      if test "$(( $offset % blocksize ))" != 0 ||
+         test "$(( $size % blocksize ))" != 0 ; then
+          echo error: extent is not aligned to $blocksize: offset $offset size $size
+          exit 1
+      fi
+done ) <$out
