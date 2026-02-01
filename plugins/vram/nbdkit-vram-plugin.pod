@@ -91,8 +91,8 @@ device" errors.
 To limit the maximum amount of video RAM that will be used, use the
 optional C<size> parameter.
 
-If you trim the block device (eg. L<fstrim(8)>), video RAM is given
-back to the system.
+If you trim the block device (see L<blkdiscard(8)> and L<fstrim(8)>),
+video RAM is given back to the system.
 
 Currently you cannot limit the video RAM used independently of the
 virtual size of the disk (because it's not a good idea).
@@ -159,6 +159,7 @@ L<nbdkit-plugin(3)>,
 L<nbdkit-memory-plugin(1)>,
 L<clinfo(1)>,
 L<radeontop(1)>,
+L<blkdiscard(8)>,
 L<fstrim(8)>.
 
 =head1 AUTHORS
