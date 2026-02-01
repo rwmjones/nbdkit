@@ -327,8 +327,8 @@ bind_tcpip_socket (sockets *socks)
     }
   }
 
-  /* If port == "0" then we let the kernel choose the port number.
-   * (In the normal dual-stack case, it will actually choose two port
+  /* If --port=0 then we let the kernel choose the port number.  (In
+   * the normal dual-stack case, it will actually choose two port
    * numbers, one for IPv4 and one for IPv6).  In this case we can
    * overwrite the port variable with the chosen port number,
    * preferring IPv6.
@@ -336,7 +336,7 @@ bind_tcpip_socket (sockets *socks)
    * In theory this loop could be combined with the one above but it
    * makes the code very intricate.
    */
-  if (strcmp (port, "0") == 0) {
+  if (strcmp (ipport, "0") == 0) {
     static char port_str[16] = { 0 };
     size_t i;
     struct sockaddr_storage ss;
