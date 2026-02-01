@@ -283,7 +283,15 @@ sparse_random_block_size (void *handle,
                           uint32_t *maximum)
 {
   *minimum = 1;
-  *preferred = blocksize;
+
+  /* Preferred blocksize must be 512..32M so clamp this value. */
+  if (blocksize < 512)
+    *preferred = 512;
+  else if (blocksize > 32*1024*1024)
+    *preferred = 32*1024*1024;
+  else
+    *preferred = blocksize;
+
   *maximum = 0xffffffff;
   return 0;
 }
