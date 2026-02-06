@@ -117,12 +117,14 @@ sparse_random_config (const char *key, const char *value)
     }
   }
   else if (strcmp (key, "runlength") == 0) {
-    if (nbdkit_parse_uint64_t ("runlength", value, &runlength) == -1)
+    r = nbdkit_parse_size (value);
+    if (r == -1)
       return -1;
-    if (runlength <= 0) {
+    if (r <= 0) {
       nbdkit_error ("runlength parameter must be > 0");
       return -1;
     }
+    runlength = r;
   }
   else if (strcmp (key, "random-content") == 0) {
     random_content = nbdkit_parse_bool (value);
