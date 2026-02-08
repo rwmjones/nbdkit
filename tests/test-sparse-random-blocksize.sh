@@ -49,7 +49,13 @@ cleanup_fn rm -f $out
 rm -f $out
 
 #blocksize=65536
-blocksize_r="$(( 10 + (RANDOM % 19) ))"  ;# 10..28
+
+# We could do this:
+#blocksize_r="$(( 10 + (RANDOM % 19) ))"  ;# 10..28
+# but if this picks a 32M block size, then this could consume up to
+# 4 * 16 * 32 == 2048 MB of RAM.  This is a problem on smaller systems
+# (and especially 32 bit), so choose a lesser maximum.
+blocksize_r="$(( 10 + (RANDOM % 17) ))"   ;# 10..26
 blocksize="$(( 1 << blocksize_r ))"
 
 export out
