@@ -298,9 +298,10 @@ vram_dump_plugin (void)
     printf ("vram_device_vendor=%s\n", all_devices.ptr[i].vendor);
     printf ("vram_device_available=%s\n",
             all_devices.ptr[i].available ? "yes" : "no");
-    printf ("vram_device_mem_size=%lu\n", all_devices.ptr[i].global_mem_size);
-    printf ("vram_device_max_memory_allocation=%lu\n",
-            all_devices.ptr[i].max_mem_alloc_size);
+    printf ("vram_device_mem_size=%" PRIu64 "\n",
+            (uint64_t) all_devices.ptr[i].global_mem_size);
+    printf ("vram_device_max_memory_allocation=%" PRIu64 "\n",
+            (uint64_t) all_devices.ptr[i].max_mem_alloc_size);
     printf ("vram_device_queue_on_device_max_size=%u\n",
             all_devices.ptr[i].queue_on_device_max_size);
     printf ("vram_device_queue_on_device_preferred_size=%u\n",
@@ -361,10 +362,11 @@ vram_config_complete (void)
   /* Pick the size. */
   if (size >= 0) {              /* size appeared on the command line */
     if (size > device.global_mem_size) {
-      nbdkit_error ("OpenCL device '%s' has size %lu which is smaller than "
+      nbdkit_error ("OpenCL device '%s' has size %" PRIu64" "
+                    "which is smaller than "
                     "the size given on the command line. To allocate the "
                     "maximum size, omit the size parameter.",
-                    device.name, device.global_mem_size);
+                    device.name, (uint64_t) device.global_mem_size);
       return -1;
     }
   }
