@@ -2054,7 +2054,7 @@ TESTS += \
 	test-extentlist.sh \
 	test-extentlist-from-qemu.sh \
 	$(NULL)
-EXTRA_DIST +=
+EXTRA_DIST += \
 	test-extentlist.sh \
 	test-extentlist-from-qemu.sh \
 	$(NULL)
