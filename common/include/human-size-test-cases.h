@@ -75,7 +75,6 @@ static struct tuple {
   { "-18446744073709551614", -1 }, /* -UINT64_MAX + 1 */
 
   /* Strings we may want to support in the future */
-  { "0x0", 0, "x0" }, /* Nicer would be 0 with tail "" */
   { "M", -1 }, /* Nicer would be 1024 * 1024 with tail "" */
   { "1MB", 1024 * 1024, "B" }, /* Nicer would be 1000 * 1000 with tail "" */
   { "1MiB", 1024 * 1024, "iB" }, /* Nicer would be 1024 * 1024 with tail "" */
@@ -86,7 +85,6 @@ static struct tuple {
   { " -0", 0, "" },
   { "0", 0, "" },
   { "+0", 0, "" },
-  { " 08", 8, "" },
   { "1", 1, "" },
   { "+1", 1, "" },
   { "1234567890", 1234567890, "" },
@@ -110,6 +108,16 @@ static struct tuple {
   { "8191p", 1024LL * 1024 * 1024 * 1024 * 1024 * 8191, "" },
   { "1e", 1024LL * 1024 * 1024 * 1024 * 1024 * 1024, "" },
   { "1E", 1024LL * 1024 * 1024 * 1024 * 1024 * 1024, "" },
+
+  /* Hex strings (nbdkit 1.48) */
+  { "0x0", 0, "" },
+  { "0x200", 512, "" },
+  { "0x200M", 536870912, "" },
+  { "0x1_E", 1024LL * 1024 * 1024 * 1024 * 1024 * 1024, "" },
+
+  /* Octal strings (nbdkit 1.48) */
+  { "0377", 255, "" },
+  { "08", 0, "8" }, /* in < 1.48, this parsed as 8 */
 };
 
 #endif /* NBDKIT_HUMAN_SIZE_TEST_CASES_H */

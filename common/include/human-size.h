@@ -56,14 +56,11 @@ human_size_parse_substr (const char *str, char **rest,
   uint64_t scale = 1;
 
   /* XXX Should we also parse things like '1.5M'? */
-  /* XXX Should we allow hex? If so, hex cannot use scaling suffixes,
-   * because some of them are valid hex digits.
-   */
   if (rest)
     *rest = NULL;
   *error = *pstr = NULL;
   errno = 0;
-  size = strtoimax (str, &end, 10);
+  size = strtoimax (str, &end, 0);
   if (str == end) {
     *error = "could not parse size string";
     *pstr = str;
