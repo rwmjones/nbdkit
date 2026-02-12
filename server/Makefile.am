@@ -53,6 +53,9 @@ nbdkit_SOURCES = \
 	log-syslog.c \
 	main.c \
 	options.h \
+	parsing.c \
+	password.c \
+	peer.c \
 	plugins.c \
 	protocol.c \
 	protocol-handshake.c \
@@ -168,9 +171,12 @@ check_PROGRAMS = test-public
 
 test_public_SOURCES = \
 	test-public.c \
-	public.c \
 	exports.c \
 	extents.c \
+	parsing.c \
+	password.c \
+	peer.c \
+	public.c \
 	$(NULL)
 test_public_CPPFLAGS = \
 	-I$(top_srcdir)/include \
