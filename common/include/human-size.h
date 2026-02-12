@@ -80,42 +80,54 @@ human_size_parse_substr (const char *str, char **rest,
     return -1;
   }
 
-  switch (*end) {
-    /* No suffix */
-  case '\0':
-    /* Safe, since we already filtered out empty string */
-    break;
+  /* Since we already filtered out empty string, it is safe to skip
+   * the scale factor here if *end == '\0'
+   */
+  if (*end != '\0') {
+    char *prev_end = end;
 
-    /* Powers of 1024 */
-  case 'e': case 'E':
-    scale *= 1024;
-    /* fallthru */
-  case 'p': case 'P':
-    scale *= 1024;
-    /* fallthru */
-  case 't': case 'T':
-    scale *= 1024;
-    /* fallthru */
-  case 'g': case 'G':
-    scale *= 1024;
-    /* fallthru */
-  case 'm': case 'M':
-    scale *= 1024;
-    /* fallthru */
-  case 'k': case 'K':
-    scale *= 1024;
-    /* fallthru */
-  case 'b': case 'B':
-    end++;
-    break;
-
-    /* "sectors", ie. units of 512 bytes, even if that's not the real
-     * sector size
+    /* Allow a single _ before the scaling factor so that hexadecimal
+     * can be parsed above, eg. "0x1_E"
      */
-  case 's': case 'S':
-    scale = 512;
-    end++;
-    break;
+    if (*end == '_')
+      end++;
+
+    switch (*end) {
+      /* Powers of 1024 */
+    case 'e': case 'E':
+      scale *= 1024;
+      /* fallthru */
+    case 'p': case 'P':
+      scale *= 1024;
+      /* fallthru */
+    case 't': case 'T':
+      scale *= 1024;
+      /* fallthru */
+    case 'g': case 'G':
+      scale *= 1024;
+      /* fallthru */
+    case 'm': case 'M':
+      scale *= 1024;
+      /* fallthru */
+    case 'k': case 'K':
+      scale *= 1024;
+      /* fallthru */
+    case 'b': case 'B':
+      end++;
+      break;
+
+      /* "sectors", ie. units of 512 bytes, even if that's not the real
+       * sector size
+       */
+    case 's': case 'S':
+      scale = 512;
+      end++;
+      break;
+
+      /* If we didn't manage to parse a scale, reset 'end'. */
+    default:
+      end = prev_end;
+    }
   }
 
   if (INT64_MAX / scale < size) {
