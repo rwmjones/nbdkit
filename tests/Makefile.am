@@ -2050,8 +2050,14 @@ endif HAVE_MKE2FS_WITH_D
 endif HAVE_QEMU_IMG
 
 # extentlist filter test.
-TESTS += test-extentlist.sh
-EXTRA_DIST += test-extentlist.sh
+TESTS += \
+	test-extentlist.sh \
+	test-extentlist-from-qemu.sh \
+	$(NULL)
+EXTRA_DIST +=
+	test-extentlist.sh \
+	test-extentlist-from-qemu.sh \
+	$(NULL)
 
 # fua filter test.
 TESTS += \

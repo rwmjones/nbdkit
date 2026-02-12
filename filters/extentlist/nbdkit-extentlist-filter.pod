@@ -56,6 +56,28 @@ to be holes with that type:
 The extent list need not cover the whole disk, and does not need to be
 in ascending order, but it must I<not> contain overlapping extents.
 
+=head2 Parsing qemu-img map
+
+The output of L<qemu-img(1)> map is a list of allocated blocks like
+this:
+
+ Offset          Length          Mapped to       File
+ 0               0x10000         0               disk.img
+ 0x100000        0x20000         0x100000        disk.img
+
+The third and fourth columns can be ignored, and the header line
+removed, to produce input which can be directly imported into this
+filter.
+
+For example, to make a disk which has the same "shape" (but different
+data) as an existing disk image:
+
+ disk=disk.img
+ size=$( qemu-img info $disk --output=json | jq '.["virtual-size"]' )
+ qemu-img map $disk |
+     tr -s " " | cut -d " " -f 1-2 | tail -n +2 > extents.txt
+ nbdkit -r ones $size --filter=extentlist extentlist=extents.txt
+
 =head1 PARAMETERS
 
 =over 4
