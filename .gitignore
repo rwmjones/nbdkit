@@ -195,7 +195,6 @@ plugins/*/*.3
 /tests/test-retry-request-mirror
 /tests/test-shell
 /tests/test-shell.img
-/tests/test-socket-activation
 /tests/test-split
 /tests/test-tar-gzip-curl
 /tests/test-tar-lzip-curl
