@@ -1356,9 +1356,15 @@ start_serving (void)
     }
     for (i = 0; i < socket_activation.len; ++i) {
       int fd = socket_activation.ptr[i].fd;
+      const char *name = socket_activation.ptr[i].name;
+
       /* This can't fail because of the reservation above. */
       sockets_append (&socks, fd);
-      debug ("socket activation: listening on fd %d", fd);
+
+      if (name == NULL)
+        debug ("socket activation: listening on fd %d", fd);
+      else
+        debug ("socket activation: listening on fd %d (%s)", fd, name);
     }
     change_user ();
     write_pidfile ();

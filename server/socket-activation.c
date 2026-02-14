@@ -62,6 +62,8 @@ get_socket_activation (void)
   unsigned int i;
   int fd;
   int f;
+  char *name;
+  size_t namelen;
 
   s = getenv ("LISTEN_PID");
   if (s == NULL)
@@ -89,9 +91,11 @@ get_socket_activation (void)
     exit (EXIT_FAILURE);
   }
 
-  /* Build a list of file descriptors.  Test each file descriptor and
-   * mark it as FD_CLOEXEC so they don't leak into child processes.
+  /* Build a list of file descriptors and names.  Test each file
+   * descriptor and mark it as FD_CLOEXEC so they don't leak into
+   * child processes.
    */
+  s = getenv ("LISTEN_FDNAMES");
   for (i = 0; i < nr_fds; ++i) {
     fd = FIRST_SOCKET_ACTIVATION_FD + i;
     f = fcntl (fd, F_GETFD);
@@ -106,7 +110,27 @@ get_socket_activation (void)
       exit (EXIT_FAILURE);
     }
 
-    struct socket_activation_socket sact = { .fd = fd };
+    /* LISTEN_FDNAMES is a colon-separated list of names (if defined).
+     * Get the next name.
+     */
+    name = NULL;
+    if (s && *s) {
+      namelen = strcspn (s, ":");
+      /* libnbd at least uses "unknown" to mean no name.  I'm not sure
+       * if that is part of the socket activation "standard".
+       */
+      if (namelen > 0 && strncmp (s, "unknown", namelen) != 0) {
+        name = strndup (s, namelen);
+        if (name == NULL) {
+          perror ("strndup");
+          exit (EXIT_FAILURE);
+        }
+      }
+      s += namelen;
+      if (*s == ':') s++;
+    }
+
+    struct socket_activation_socket sact = { .fd = fd, .name = name };
     if (socket_activation_list_append (&socket_activation, sact) == -1) {
       perror ("socket_activation_list_append: realloc");
       exit (EXIT_FAILURE);
@@ -115,6 +139,7 @@ get_socket_activation (void)
 
   /* So these are not passed to any child processes we might start. */
   unsetenv ("LISTEN_FDS");
+  unsetenv ("LISTEN_FDNAMES");
   unsetenv ("LISTEN_PID");
 }
 
@@ -131,5 +156,11 @@ get_socket_activation (void)
 void
 free_socket_activation (void)
 {
+  size_t i;
+
+  for (i = 0; i < socket_activation.len; ++i) {
+    free (socket_activation.ptr[i].name);
+    socket_activation.ptr[i].name = NULL;
+  }
   socket_activation_list_reset (&socket_activation);
 }

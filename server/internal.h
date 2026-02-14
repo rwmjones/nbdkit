@@ -236,6 +236,7 @@ extern void run_command (void);
 /* socket-activation.c */
 struct socket_activation_socket {
   int fd;
+  char *name;
 };
 DEFINE_VECTOR_TYPE (socket_activation_list, struct socket_activation_socket);
 extern void get_socket_activation (void);
