@@ -299,6 +299,7 @@ TESTS += \
 	test-captive-tls-psk.sh \
 	test-random-sock.sh \
 	test-socket-activation.sh \
+	test-socket-activation-names.sh \
 	test-tls.sh \
 	test-tls-priority.sh \
 	test-tls-psk.sh \
@@ -412,6 +413,7 @@ EXTRA_DIST += \
 	test-single-sh.sh \
 	test-single.sh \
 	test-socket-activation.sh \
+	test-socket-activation-names.sh \
 	test-start.sh \
 	test-stdio.sh \
 	test-swap.sh \
