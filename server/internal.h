@@ -234,8 +234,13 @@ extern void fork_into_background (void);
 extern void run_command (void);
 
 /* socket-activation.c */
-#define FIRST_SOCKET_ACTIVATION_FD 3 /* defined by systemd ABI */
-extern unsigned int get_socket_activation (void);
+struct socket_activation_socket {
+  int fd;
+};
+DEFINE_VECTOR_TYPE (socket_activation_list, struct socket_activation_socket);
+extern void get_socket_activation (void);
+extern void free_socket_activation (void);
+extern socket_activation_list socket_activation;
 
 /* timeout.c */
 struct connection;

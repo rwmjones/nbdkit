@@ -42,14 +42,18 @@
 
 #include "internal.h"
 
+socket_activation_list socket_activation;
+
 #ifndef WIN32
 
+#define FIRST_SOCKET_ACTIVATION_FD 3 /* defined by systemd ABI */
+
 /* Handle socket activation.  This is controlled through special
- * environment variables inherited by nbdkit.  Returns 0 if no socket
- * activation.  Otherwise returns the number of FDs.  See also
+ * environment variables inherited by nbdkit.  Sets up the list of
+ * file descriptors in global 'socket_activation'.  See also
  * virGetListenFDs in libvirt.org:src/util/virutil.c
  */
-unsigned int
+void
 get_socket_activation (void)
 {
   const char *s;
@@ -61,20 +65,20 @@ get_socket_activation (void)
 
   s = getenv ("LISTEN_PID");
   if (s == NULL)
-    return 0;
+    return;
   if (nbdkit_parse_unsigned ("LISTEN_PID", s, &pid) == -1)
-    return 0;
+    return;
   if (pid != getpid ()) {
     fprintf (stderr, "%s: %s was not for us (ignored)\n",
              program_name, "LISTEN_PID");
-    return 0;
+    return;
   }
 
   s = getenv ("LISTEN_FDS");
   if (s == NULL)
-    return 0;
+    return;
   if (nbdkit_parse_unsigned ("LISTEN_FDS", s, &nr_fds) == -1)
-    return 0;
+    return;
 
   /* Limit the number of fds that may be passed in to something
    * reasonable.
@@ -85,11 +89,9 @@ get_socket_activation (void)
     exit (EXIT_FAILURE);
   }
 
-  /* So these are not passed to any child processes we might start. */
-  unsetenv ("LISTEN_FDS");
-  unsetenv ("LISTEN_PID");
-
-  /* So the file descriptors don't leak into child processes. */
+  /* Build a list of file descriptors.  Test each file descriptor and
+   * mark it as FD_CLOEXEC so they don't leak into child processes.
+   */
   for (i = 0; i < nr_fds; ++i) {
     fd = FIRST_SOCKET_ACTIVATION_FD + i;
     f = fcntl (fd, F_GETFD);
@@ -103,17 +105,31 @@ get_socket_activation (void)
                program_name, fd, strerror (errno));
       exit (EXIT_FAILURE);
     }
+
+    struct socket_activation_socket sact = { .fd = fd };
+    if (socket_activation_list_append (&socket_activation, sact) == -1) {
+      perror ("socket_activation_list_append: realloc");
+      exit (EXIT_FAILURE);
+    }
   }
 
-  return nr_fds;
+  /* So these are not passed to any child processes we might start. */
+  unsetenv ("LISTEN_FDS");
+  unsetenv ("LISTEN_PID");
 }
 
 #else /* WIN32 */
 
-unsigned int
+void
 get_socket_activation (void)
 {
-  return 0;
+  /* not supported */
 }
 
 #endif /* WIN32 */
+
+void
+free_socket_activation (void)
+{
+  socket_activation_list_reset (&socket_activation);
+}
