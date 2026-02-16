@@ -67,20 +67,20 @@ get_socket_activation (void)
 
   s = getenv ("LISTEN_PID");
   if (s == NULL)
-    return;
+    goto out;
   if (nbdkit_parse_unsigned ("LISTEN_PID", s, &pid) == -1)
-    return;
+    goto out;
   if (pid != getpid ()) {
     fprintf (stderr, "%s: %s was not for us (ignored)\n",
              program_name, "LISTEN_PID");
-    return;
+    goto out;
   }
 
   s = getenv ("LISTEN_FDS");
   if (s == NULL)
-    return;
+    goto out;
   if (nbdkit_parse_unsigned ("LISTEN_FDS", s, &nr_fds) == -1)
-    return;
+    goto out;
 
   /* Limit the number of fds that may be passed in to something
    * reasonable.
@@ -137,6 +137,7 @@ get_socket_activation (void)
     }
   }
 
+ out:
   /* So these are not passed to any child processes we might start. */
   unsetenv ("LISTEN_FDS");
   unsetenv ("LISTEN_FDNAMES");
