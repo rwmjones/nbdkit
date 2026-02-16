@@ -298,6 +298,8 @@ TESTS += \
 	test-captive-tls-certificates.sh \
 	test-captive-tls-psk.sh \
 	test-random-sock.sh \
+	test-socket-activation.sh \
+	test-socket-activation-names.sh \
 	test-tls.sh \
 	test-tls-priority.sh \
 	test-tls-psk.sh \
@@ -410,6 +412,8 @@ EXTRA_DIST += \
 	test-single-from-file.sh \
 	test-single-sh.sh \
 	test-single.sh \
+	test-socket-activation.sh \
+	test-socket-activation-names.sh \
 	test-start.sh \
 	test-stdio.sh \
 	test-swap.sh \
@@ -425,20 +429,6 @@ EXTRA_DIST += \
 	test-version-plugin.sh \
 	test-vsock.sh \
 	$(NULL)
-
-if !IS_WINDOWS
-TESTS += test-socket-activation
-check_PROGRAMS += \
-	test-socket-activation \
-	$(NULL)
-
-test_socket_activation_SOURCES = test-socket-activation.c
-test_socket_activation_CPPFLAGS = \
-	-I$(top_srcdir)/common/include \
-	-I$(top_srcdir)/common/protocol \
-	$(NULL)
-test_socket_activation_CFLAGS = $(WARNINGS_CFLAGS)
-endif
 
 if !IS_WINDOWS
 TESTS += test-stdio.sh

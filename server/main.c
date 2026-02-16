@@ -158,7 +158,6 @@ int saved_stdout = -1;          /* dup'd stdout during -s/--run */
  */
 struct backend *top;
 
-static unsigned int socket_activation; /* $LISTEN_FDS and $LISTEN_PID set */
 static char *random_fifo_dir = NULL;   /* Directory containing -U - */
 static char *random_fifo = NULL;       /* Path to -U - socket */
 
@@ -321,8 +320,10 @@ main (int argc, char *argv[])
   tls = 0;
 #endif
 
-  /* Returns 0 if no socket activation, or the number of FDs. */
-  socket_activation = get_socket_activation ();
+  /* Check for socket activation.  If used this will populate the
+   * socket_activation vector, so it will have length > 0.
+   */
+  get_socket_activation ();
 
   for (;;) {
     c = getopt_long (argc, argv, short_options, long_options, NULL);
@@ -433,7 +434,7 @@ main (int argc, char *argv[])
       break;
 
     case RUN_OPTION:
-      if (socket_activation) {
+      if (socket_activation.len > 0) {
         fprintf (stderr, "%s: cannot use socket activation with --run flag\n",
                  program_name);
         exit (EXIT_FAILURE);
@@ -534,7 +535,7 @@ main (int argc, char *argv[])
       break;
 
     case 'i':
-      if (socket_activation) {
+      if (socket_activation.len > 0) {
         fprintf (stderr, "%s: cannot use socket activation with -i flag\n",
                  program_name);
         exit (EXIT_FAILURE);
@@ -557,7 +558,7 @@ main (int argc, char *argv[])
       break;
 
     case 'p':
-      if (socket_activation) {
+      if (socket_activation.len > 0) {
         fprintf (stderr, "%s: cannot use socket activation with -p flag\n",
                  program_name);
         exit (EXIT_FAILURE);
@@ -570,7 +571,7 @@ main (int argc, char *argv[])
       break;
 
     case 's':
-      if (socket_activation) {
+      if (socket_activation.len > 0) {
         fprintf (stderr, "%s: cannot use socket activation with -s flag\n",
                  program_name);
         exit (EXIT_FAILURE);
@@ -595,7 +596,7 @@ main (int argc, char *argv[])
       break;
 
     case 'U':
-      if (socket_activation) {
+      if (socket_activation.len > 0) {
         fprintf (stderr, "%s: cannot use socket activation with -U flag\n",
                  program_name);
         exit (EXIT_FAILURE);
@@ -743,7 +744,7 @@ main (int argc, char *argv[])
   }
 
   /* By the point we have enough information to calculate the service mode. */
-  if (socket_activation)
+  if (socket_activation.len > 0)
     service_mode = SERVICE_MODE_SOCKET_ACTIVATION;
   else if (listen_stdin)
     service_mode = SERVICE_MODE_LISTEN_STDIN;
@@ -903,6 +904,7 @@ main (int argc, char *argv[])
   if (dump_plugin) {
     top->dump_fields (top);
     top->free (top);
+    free_socket_activation ();
     free_interns ();
     cleanup_random_fifo ();
     exit (EXIT_SUCCESS);
@@ -951,6 +953,7 @@ main (int argc, char *argv[])
   crypto_free ();
   close_quit_pipe ();
 
+  free_socket_activation ();
   free_interns ();
 
   /* Note: Don't exit here, otherwise this won't work when compiled
@@ -1343,21 +1346,26 @@ start_serving (void)
 
   switch (service_mode) {
   case SERVICE_MODE_SOCKET_ACTIVATION:
-    /* Socket activation: the ‘socket_activation’ variable (> 0) is
-     * the number of file descriptors from FIRST_SOCKET_ACTIVATION_FD
-     * to FIRST_SOCKET_ACTIVATION_FD+socket_activation-1.
+    /* Socket activation.  The socket_activation variable is a list of
+     * file descriptors to use.
      */
-    if (sockets_reserve_exactly (&socks, socket_activation) == -1) {
+    assert (socket_activation.len > 0);
+    if (sockets_reserve_exactly (&socks, socket_activation.len) == -1) {
       perror ("realloc");
       exit (EXIT_FAILURE);
     }
-    for (i = 0; i < socket_activation; ++i) {
-      int s = FIRST_SOCKET_ACTIVATION_FD + i, r;
+    for (i = 0; i < socket_activation.len; ++i) {
+      int fd = socket_activation.ptr[i].fd;
+      const char *name = socket_activation.ptr[i].name;
+
       /* This can't fail because of the reservation above. */
-      r = sockets_append (&socks, s);
-      assert (r == 0);
+      sockets_append (&socks, fd);
+
+      if (name == NULL)
+        debug ("socket activation: listening on fd %d", fd);
+      else
+        debug ("socket activation: listening on fd %d (%s)", fd, name);
     }
-    debug ("using socket activation, nr_socks = %zu", socks.len);
     change_user ();
     write_pidfile ();
     top->after_fork (top);

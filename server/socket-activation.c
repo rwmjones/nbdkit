@@ -42,14 +42,18 @@
 
 #include "internal.h"
 
+socket_activation_list socket_activation;
+
 #ifndef WIN32
 
+#define FIRST_SOCKET_ACTIVATION_FD 3 /* defined by systemd ABI */
+
 /* Handle socket activation.  This is controlled through special
- * environment variables inherited by nbdkit.  Returns 0 if no socket
- * activation.  Otherwise returns the number of FDs.  See also
+ * environment variables inherited by nbdkit.  Sets up the list of
+ * file descriptors in global 'socket_activation'.  See also
  * virGetListenFDs in libvirt.org:src/util/virutil.c
  */
-unsigned int
+void
 get_socket_activation (void)
 {
   const char *s;
@@ -58,23 +62,25 @@ get_socket_activation (void)
   unsigned int i;
   int fd;
   int f;
+  char *name;
+  size_t namelen;
 
   s = getenv ("LISTEN_PID");
   if (s == NULL)
-    return 0;
+    goto out;
   if (nbdkit_parse_unsigned ("LISTEN_PID", s, &pid) == -1)
-    return 0;
+    goto out;
   if (pid != getpid ()) {
     fprintf (stderr, "%s: %s was not for us (ignored)\n",
              program_name, "LISTEN_PID");
-    return 0;
+    goto out;
   }
 
   s = getenv ("LISTEN_FDS");
   if (s == NULL)
-    return 0;
+    goto out;
   if (nbdkit_parse_unsigned ("LISTEN_FDS", s, &nr_fds) == -1)
-    return 0;
+    goto out;
 
   /* Limit the number of fds that may be passed in to something
    * reasonable.
@@ -85,11 +91,11 @@ get_socket_activation (void)
     exit (EXIT_FAILURE);
   }
 
-  /* So these are not passed to any child processes we might start. */
-  unsetenv ("LISTEN_FDS");
-  unsetenv ("LISTEN_PID");
-
-  /* So the file descriptors don't leak into child processes. */
+  /* Build a list of file descriptors and names.  Test each file
+   * descriptor and mark it as FD_CLOEXEC so they don't leak into
+   * child processes.
+   */
+  s = getenv ("LISTEN_FDNAMES");
   for (i = 0; i < nr_fds; ++i) {
     fd = FIRST_SOCKET_ACTIVATION_FD + i;
     f = fcntl (fd, F_GETFD);
@@ -103,17 +109,59 @@ get_socket_activation (void)
                program_name, fd, strerror (errno));
       exit (EXIT_FAILURE);
     }
+
+    /* LISTEN_FDNAMES is a colon-separated list of names (if defined).
+     * Get the next name.
+     */
+    name = NULL;
+    if (s && *s) {
+      namelen = strcspn (s, ":");
+      /* libnbd at least uses "unknown" to mean no name.  I'm not sure
+       * if that is part of the socket activation "standard".
+       */
+      if (namelen > 0 && strncmp (s, "unknown", namelen) != 0) {
+        name = strndup (s, namelen);
+        if (name == NULL) {
+          perror ("strndup");
+          exit (EXIT_FAILURE);
+        }
+      }
+      s += namelen;
+      if (*s == ':') s++;
+    }
+
+    struct socket_activation_socket sact = { .fd = fd, .name = name };
+    if (socket_activation_list_append (&socket_activation, sact) == -1) {
+      perror ("socket_activation_list_append: realloc");
+      exit (EXIT_FAILURE);
+    }
   }
 
-  return nr_fds;
+ out:
+  /* So these are not passed to any child processes we might start. */
+  unsetenv ("LISTEN_FDS");
+  unsetenv ("LISTEN_FDNAMES");
+  unsetenv ("LISTEN_PID");
 }
 
 #else /* WIN32 */
 
-unsigned int
+void
 get_socket_activation (void)
 {
-  return 0;
+  /* not supported */
 }
 
 #endif /* WIN32 */
+
+void
+free_socket_activation (void)
+{
+  size_t i;
+
+  for (i = 0; i < socket_activation.len; ++i) {
+    free (socket_activation.ptr[i].name);
+    socket_activation.ptr[i].name = NULL;
+  }
+  socket_activation_list_reset (&socket_activation);
+}
