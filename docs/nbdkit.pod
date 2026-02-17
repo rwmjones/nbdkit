@@ -918,10 +918,19 @@ L<http://gitlab.com/nbdkit/nbdkit> — Source code.
 
 =head2 Other NBD servers
 
-L<qemu-nbd(1)>,
-L<nbd-server(1)>,
-L<https://github.com/bignaux/lwNBD>,
-L<https://bitbucket.org/hirofuchi/xnbd>.
+=over 4
+
+=item L<qemu-nbd(1)>
+
+The L<QEMU project|https://www.qemu.org/> ships with an NBD server
+which can natively open many formats supported by QEMU, especially
+qcow2.
+
+=item L<nbd-server(1)>
+
+The L<original Linux NBD server|https://github.com/NetworkBlockDevice/nbd>.
+
+=back
 
 =head2 Documentation for the NBD protocol
 
