@@ -953,23 +953,81 @@ L<systemd.socket(5)>.
 
 =head1 AUTHORS
 
+=over 4
+
+=item *
+
+Hilko Bengen
+
+=item *
+
+Daniel P. Berrangé
+
+=item *
+
 Eric Blake
+
+=item *
+
+Brian Carnes
+
+=item *
+
+Shasheen Ediriweera
+
+=item *
 
 Laszlo Ersek
 
+=item *
+
+Carl-Daniel Hailfinger
+
+=item *
+
+Mykola Ivanets
+
+=item *
+
 Richard W.M. Jones
+
+=item *
+
+Martin Kletzander
+
+=item *
+
+Jan Felix Langenbach
+
+=item *
 
 Yann E. MORIN
 
+=item *
+
 Nikolaus Rath
+
+=item *
 
 François Revol
 
+=item *
+
 Nir Soffer
+
+=item *
 
 Alan Somers
 
+=item *
+
 Pino Toscano
+
+=item *
+
+Ming Xie
+
+=back
 
 =head1 COPYRIGHT
 
