@@ -17,7 +17,8 @@ The key features of nbdkit are:
 * Filters can be stacked in front of plugins to transform the output.
 * Server can run standalone or can be invoked from other programs.
 
-For documentation, see the [docs directory](docs/).
+[Main documentation online](https://libguestfs.org/nbdkit.1.html).
+For other documentation, see the [docs directory](docs/).
 
 For plugins and filters, see the [plugins](plugins/) and
 [filters](filters/) directories.  Example plugins can be found in
@@ -25,6 +26,8 @@ For plugins and filters, see the [plugins](plugins/) and
 
 There are many NBD clients, but the nbdkit project has a companion
 client library called https://gitlab.com/nbdkit/libnbd
+
+[Alternate NBD servers](https://libguestfs.org/nbdkit.1.html#Other-NBD-servers)
 
 Upstream repository: https://gitlab.com/nbdkit/nbdkit
 
