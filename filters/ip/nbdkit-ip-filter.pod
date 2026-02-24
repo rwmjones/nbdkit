@@ -21,9 +21,9 @@ not available.
 
 =head2 Filter by IP address
 
- nbdkit --filter=ip [...] allow=127.0.0.1,::1 deny=all
+ nbdkit --filter=ip [...] allow=loopback deny=all
 
-Allow clients to connect on the loopback IPv4 or loopback IPv6
+Allow clients to connect on the loopback (IPv4 or IPv6)
 address, deny all other clients.
 
  nbdkit --filter=ip [...] deny=8.0.0.0/8
@@ -112,6 +112,26 @@ These keywords match any connection over a Unix domain socket.
 =item B<anyvsock>
 
 These keywords match any connection over an C<AF_VSOCK> socket.
+
+=item B<loopback>
+
+Any loopback address, both IPv4 or IPv6.
+
+=item B<loopbackipv4>
+
+=item B<loopbackv4>
+
+=item B<loopback4>
+
+The IPv4 loopback address.
+
+=item B<loopbackipv6>
+
+=item B<loopbackv6>
+
+=item B<loopback6>
+
+The IPv6 loopback address.
 
 =item AB<.>BB<.>CB<.>D
 

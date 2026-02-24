@@ -74,7 +74,7 @@ NBDKIT_DLL_PUBLIC int ip_debug_rules;
 struct rule {
   struct rule *next;
   enum { BAD = 0,
-         ANY, ANYV4, ANYV6, IPV4, IPV6,
+         ANY, ANYV4, ANYV6, LOOPBACK, LOOPBACKV4, LOOPBACKV6, IPV4, IPV6,
          ANYUNIX, DN, ISSUER_DN, PID, UID, GID, SECURITY,
          ANYVSOCK, VSOCKCID, VSOCKPORT } type;
   union {
@@ -114,6 +114,15 @@ print_rule (const char *name, const struct rule *rule, const char *suffix)
     break;
   case ANYV6:
     nbdkit_debug ("%s=anyipv6%s", name, suffix);
+    break;
+  case LOOPBACK:
+    nbdkit_debug ("%s=loopback%s", name, suffix);
+    break;
+  case LOOPBACKV4:
+    nbdkit_debug ("%s=loopbackv4%s", name, suffix);
+    break;
+  case LOOPBACKV6:
+    nbdkit_debug ("%s=loopbackv6%s", name, suffix);
     break;
 #ifdef HAVE_INET_NTOP
   case IPV4:
@@ -286,6 +295,25 @@ parse_rule (const char *paramname,
   if (n == 7 && (ascii_strncasecmp (value, "allipv6", 7) == 0 ||
                  ascii_strncasecmp (value, "anyipv6", 7) == 0)) {
     new_rule->type = ANYV6;
+    return 0;
+  }
+
+  if ((n == 12 && ascii_strncasecmp (value, "loopbackipv4", 12) == 0) ||
+      (n == 10 && ascii_strncasecmp (value, "loopbackv4", 10) == 0) ||
+      (n == 9 && ascii_strncasecmp (value, "loopback4", 9) == 0)) {
+    new_rule->type = LOOPBACKV4;
+    return 0;
+  }
+
+  if ((n == 12 && ascii_strncasecmp (value, "loopbackipv6", 12) == 0) ||
+      (n == 10 && ascii_strncasecmp (value, "loopbackv6", 10) == 0) ||
+      (n == 9 && ascii_strncasecmp (value, "loopback6", 9) == 0)) {
+    new_rule->type = LOOPBACKV6;
+    return 0;
+  }
+
+  if (n == 8 && ascii_strncasecmp (value, "loopback", 8) == 0) {
+    new_rule->type = LOOPBACK;
     return 0;
   }
 
@@ -557,6 +585,26 @@ dn_matches (const char *name, const char *dn, const char *glob)
 #endif
 
 static bool
+is_loopbackv4 (int family, const struct sockaddr *addr)
+{
+  const struct sockaddr_in *sin;
+
+  if (family != AF_INET) return false;
+  sin = (struct sockaddr_in *) addr;
+  return sin->sin_addr.s_addr == INADDR_LOOPBACK;
+}
+
+static bool
+is_loopbackv6 (int family, const struct sockaddr *addr)
+{
+  const struct sockaddr_in6 *sin6;
+
+  if (family != AF_INET6) return false;
+  sin6 = (struct sockaddr_in6 *) addr;
+  return ipv6_equal (sin6->sin6_addr, in6addr_loopback, 128);
+}
+
+static bool
 matches_rule (const struct rule *rule,
               const struct sockaddr *addr)
 {
@@ -582,6 +630,15 @@ matches_rule (const struct rule *rule,
 
   case ANYV6:
     return family == AF_INET6;
+
+  case LOOPBACK:
+    return is_loopbackv4 (family, addr) || is_loopbackv6 (family, addr);
+
+  case LOOPBACKV4:
+    return is_loopbackv4 (family, addr);
+
+  case LOOPBACKV6:
+    return is_loopbackv6 (family, addr);
 
   case IPV4:
     if (family != AF_INET) return false;

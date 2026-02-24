@@ -57,6 +57,24 @@ nbdkit -v --port=0 --filter=ip null \
     nbdinfo "nbd://[::1]:$port"
 '
 
+# Alternative using 'loopback'.
+nbdkit -v --port=0 --filter=ip null \
+       -D ip.rules=1 \
+       allow=loopback deny=all \
+       --run '
+    nbdinfo "nbd://127.0.0.1:$port"
+    nbdinfo "nbd://[::1]:$port"
+'
+
+# Alternative using 'loopbackv4' and 'loopbackv6'.
+nbdkit -v --port=0 --filter=ip null \
+       -D ip.rules=1 \
+       allow=loopbackv4,loopbackv6 deny=all \
+       --run '
+    nbdinfo "nbd://127.0.0.1:$port"
+    nbdinfo "nbd://[::1]:$port"
+'
+
 # Allow IPv4 only, deny IPv6.
 # XXX We cannot test this because $port is set preferentially to the
 # IPv6 port, and we cannot find the IPv4 port here.
@@ -71,10 +89,22 @@ nbdkit -v --port=0 --filter=ip null \
 # Allow IPv6 only, deny IPv4.
 nbdkit -v --port=0 --filter=ip null \
        -D ip.rules=1 \
-       allow=allipv6 deny=all --run 'nbdinfo "nbd://[::1]:$port"'
+       allow=allipv6 deny=all \
+       --run 'nbdinfo "nbd://[::1]:$port"'
 
 nbdkit -v --port=0 --filter=ip null \
        -D ip.rules=1 \
-       allow=allipv6 deny=all --run 'nbdinfo "nbd://127.0.0.1:$port"' && fail=1
+       allow=loopbackv6 deny=all \
+       --run 'nbdinfo "nbd://[::1]:$port"'
+
+nbdkit -v --port=0 --filter=ip null \
+       -D ip.rules=1 \
+       allow=allipv6 deny=all \
+       --run 'nbdinfo "nbd://127.0.0.1:$port"' && fail=1
+
+nbdkit -v --port=0 --filter=ip null \
+       -D ip.rules=1 \
+       allow=loopbackv6 deny=loopbackv4 \
+       --run 'nbdinfo "nbd://127.0.0.1:$port"' && fail=1
 
 exit $fail
