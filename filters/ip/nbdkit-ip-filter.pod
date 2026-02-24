@@ -147,7 +147,7 @@ C<192.168.2.0>
 =item AB<.>BB<.>CB<.>DB</>NN
 
 This matches the range of IPv4 addresses C<A.B.C.D/NN>, for example
-C<192.168.2.0/24> or C<10.0.0.0/8>.
+C<192.168.2.0/24> or C<10.0.0.0/8>
 
 =item AB<:>BB<:>...
 
@@ -156,7 +156,7 @@ address representations can be used (see S<RFC 5952>).
 
 =item AB<:>BB<:>...B</>NN
 
-This matches a range of IPv6 addresses C<A:B:.../NN>.
+This matches a range of IPv6 addresses C<A:B:.../NN>
 
 =item B<dn:>WILDCARD
 
