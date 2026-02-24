@@ -142,7 +142,7 @@ The IPv6 loopback address.
 =item AB<.>BB<.>CB<.>D
 
 This matches the single IPv4 address C<A.B.C.D>, for example
-C<127.0.0.1>.
+C<192.168.2.0>
 
 =item AB<.>BB<.>CB<.>DB</>NN
 
