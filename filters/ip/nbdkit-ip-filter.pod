@@ -115,6 +115,8 @@ These keywords match any connection over an C<AF_VSOCK> socket.
 
 =item B<loopback>
 
+(nbdkit E<ge> 1.48)
+
 Any loopback address, both IPv4 or IPv6.
 
 =item B<loopbackipv4>
@@ -123,6 +125,8 @@ Any loopback address, both IPv4 or IPv6.
 
 =item B<loopback4>
 
+(nbdkit E<ge> 1.48)
+
 The IPv4 loopback address.
 
 =item B<loopbackipv6>
@@ -130,6 +134,8 @@ The IPv4 loopback address.
 =item B<loopbackv6>
 
 =item B<loopback6>
+
+(nbdkit E<ge> 1.48)
 
 The IPv6 loopback address.
 
