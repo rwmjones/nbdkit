@@ -65,7 +65,6 @@
 #include <nbdkit-filter.h>
 
 #include "ascii-string.h"
-#include "cleanup.h"
 #include "strndup.h"
 
 /* -D ip.rules=1 to enable debugging of rules and rule matching. */
