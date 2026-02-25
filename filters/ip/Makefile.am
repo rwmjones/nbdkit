@@ -37,6 +37,8 @@ filter_LTLIBRARIES = nbdkit-ip-filter.la
 
 nbdkit_ip_filter_la_SOURCES = \
 	ip.c \
+	rules.c \
+	rules.h \
 	$(top_srcdir)/include/nbdkit-filter.h \
 	$(NULL)
 
