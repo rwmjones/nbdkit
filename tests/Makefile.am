@@ -2602,6 +2602,21 @@ test_tar_xz_curl_LDADD = \
 
 endif HAVE_CURL
 
+#----------------------------------------------------------------------
+# Interoperability tests.
+
+# Note that the nbd-client interop test requires root, so it is listed
+# separately.
+
+TESTS += \
+	test-go-nbd.sh \
+	$(NULL)
+EXTRA_DIST += \
+	test-go-nbd.sh \
+	test-go-nbd.d/go.mod \
+	test-go-nbd.d/nbdkit_unix_test.go \
+	$(NULL)
+
 endif HAVE_PLUGINS
 
 #----------------------------------------------------------------------
