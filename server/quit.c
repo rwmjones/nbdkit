@@ -32,12 +32,12 @@
 
 #include <config.h>
 
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "internal.h"
 #include "utils.h"
