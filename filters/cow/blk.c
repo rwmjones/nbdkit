@@ -174,8 +174,6 @@ blk_create (void)
   }
 
   blk->fd = -1;
-  pthread_mutex_init (&blk->lock, NULL);
-  bitmap_init (&blk->bm, blksize, 2 /* bits per block */);
 
   filename = strdup (template);
   if (filename == NULL) {
@@ -209,6 +207,9 @@ blk_create (void)
 
   unlink (filename);
   free (filename);
+
+  pthread_mutex_init (&blk->lock, NULL);
+  bitmap_init (&blk->bm, blksize, 2 /* bits per block */);
 
   return blk;
 }
