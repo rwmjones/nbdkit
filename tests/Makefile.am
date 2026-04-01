@@ -1899,7 +1899,10 @@ TESTS += \
 	test-cow-unaligned.sh \
 	$(NULL)
 endif
-TESTS += test-cow-null.sh
+TESTS += \
+	test-cow-huge.sh \
+	test-cow-null.sh \
+	$(NULL)
 EXTRA_DIST += \
 	test-cow.sh \
 	test-cow-block-size.sh \
@@ -1907,6 +1910,7 @@ EXTRA_DIST += \
 	test-cow-extents1.sh \
 	test-cow-extents2.sh \
 	test-cow-extents-large.sh \
+	test-cow-huge.sh \
 	test-cow-null.sh \
 	test-cow-on-read.sh \
 	test-cow-on-read-caches.sh \

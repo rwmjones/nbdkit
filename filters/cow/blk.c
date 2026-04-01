@@ -67,6 +67,10 @@
  *
  * Since the overlay is a deleted temporary file, we can ignore FUA
  * and flush commands.
+ *
+ * For disk sizes larger than 8T, the temporary file is split into
+ * multiple files, at most 8T in size.  This ensures we can work on
+ * filesystems with file size limits like ext4 (max file size < 16T).
  */
 
 #include <config.h>
@@ -81,6 +85,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <errno.h>
+#include <assert.h>
 #include <sys/types.h>
 
 #ifdef HAVE_ALLOCA_H
@@ -108,6 +113,8 @@ enum bm_entry {
   BLOCK_ALLOCATED = 1,
   BLOCK_TRIMMED = 3,
 };
+
+#define MAX_FILE_SIZE (UINT64_C (8) * 1024 * 1024 * 1024 * 1024) /* 8T */
 
 static const char *
 state_to_string (enum bm_entry state)
@@ -256,18 +263,70 @@ int
 blk_set_size (struct blk_overlay *blk, uint64_t new_size)
 {
   ACQUIRE_LOCK_FOR_CURRENT_SCOPE (&blk->lock);
+  const uint64_t new_size_rounded_up = ROUND_UP (new_size, blksize);
+  uint64_t remainder;
+  size_t i, n;
+  int fd;
 
   blk->size = new_size;
 
   if (bitmap_resize (&blk->bm, blk->size) == -1)
     return -1;
 
-  if (ftruncate (blk->fds.ptr[0], ROUND_UP (blk->size, blksize)) == -1) {
+  /* How many temporary files do we need?  Each temp file is limited to 8T. */
+  n = DIV_ROUND_UP (new_size_rounded_up, MAX_FILE_SIZE);
+  if (n == 0)
+    n = 1;
+  nbdkit_debug ("cow: using %zu temporary file(s)", n);
+
+  /* Create new temporary files in case it has expanded. */
+  while (blk->fds.len < n) {
+    fd = create_temporary_file ();
+    if (fd == -1)
+      return -1;
+    if (fd_vector_append (&blk->fds, fd) == -1) {
+      nbdkit_error ("realloc: %m");
+      /* The other fds are stored in the handle and will be closed by
+       * blk_free, so we only need to close this one.
+       */
+      close (fd);
+      return -1;
+    }
+  }
+
+  /* Remove any extra temporary files in case it has shrunk. */
+  while (blk->fds.len > n) {
+    close (blk->fds.ptr[n]);
+    fd_vector_remove (&blk->fds, n);
+  }
+
+  /* The first 0..n-1 temp files have to be truncated to the full
+   * size, with the last temp file being truncated to the remainder.
+   */
+  remainder = new_size_rounded_up;
+  for (i = 0; i < n-1; ++i) {
+    if (ftruncate (blk->fds.ptr[i], MAX_FILE_SIZE) == -1) {
+      nbdkit_error ("cow: ftruncate: %m");
+      return -1;
+    }
+    assert (remainder >= MAX_FILE_SIZE);
+    remainder -= MAX_FILE_SIZE;
+  }
+  if (ftruncate (blk->fds.ptr[n-1], remainder) == -1) {
     nbdkit_error ("cow: ftruncate: %m");
     return -1;
   }
 
   return 0;
+}
+
+/* Get the temporary file corresponding to a block. */
+static int
+get_fd_for_blknum (struct blk_overlay *blk, uint64_t blknum)
+{
+  size_t i = blknum / MAX_FILE_SIZE / blksize;
+  assert (i < blk->fds.len);
+  return blk->fds.ptr[i];
 }
 
 /* This is a bit of a hack since usually this information is hidden in
@@ -296,7 +355,7 @@ blk_read_multiple (struct blk_overlay *blk,
   off_t offset = blknum * blksize;
   enum bm_entry state;
   uint64_t b, runblocks;
-  const int fd = blk->fds.ptr[0];
+  const int fd = get_fd_for_blknum (blk, blknum);
 
   /* Find out how many of the following blocks form a "run" with the
    * same state.  We can process that many blocks in one go.
@@ -315,6 +374,8 @@ blk_read_multiple (struct blk_overlay *blk,
       enum bm_entry s =
         bitmap_get_blk (&blk->bm, blknum + b, BLOCK_NOT_ALLOCATED);
       if (state != s)
+        break;
+      if (get_fd_for_blknum (blk, blknum + b) != fd)
         break;
     }
   }
@@ -405,7 +466,7 @@ blk_cache (struct blk_overlay *blk,
   off_t offset = blknum * blksize;
   enum bm_entry state = bitmap_get_blk (&blk->bm, blknum, BLOCK_NOT_ALLOCATED);
   unsigned n = blksize, tail = 0;
-  const int fd = blk->fds.ptr[0];
+  const int fd = get_fd_for_blknum (blk, blknum);
 
   if (offset + n > blk->size) {
     tail = offset + n - blk->size;
@@ -458,7 +519,7 @@ blk_write (struct blk_overlay *blk,
            uint64_t blknum, const uint8_t *block, int *err)
 {
   off_t offset = blknum * blksize;
-  const int fd = blk->fds.ptr[0];
+  const int fd = get_fd_for_blknum (blk, blknum);
 
   if (cow_debug_verbose)
     nbdkit_debug ("cow: blk_write block %" PRIu64 " (offset %" PRIu64 ")",
