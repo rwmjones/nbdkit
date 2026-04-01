@@ -98,6 +98,7 @@
 #include "pread.h"
 #include "pwrite.h"
 #include "utils.h"
+#include "vector.h"
 
 #include "cow.h"
 #include "blk.h"
@@ -145,9 +146,11 @@ blk_unload (void)
   free (template);
 }
 
+DEFINE_VECTOR_TYPE (fd_vector, int);
+
 struct blk_overlay {
-  /* The temporary overlay. */
-  int fd;
+  /* The temporary overlays.  Each covers 8T virtual size. */
+  fd_vector fds;
 
   /* This lock protects the bitmap from parallel access. */
   pthread_mutex_t lock;
@@ -165,6 +168,7 @@ struct blk_overlay *
 blk_create (void)
 {
   struct blk_overlay *blk;
+  int fd;
   char *filename;
 
   blk = calloc (1, sizeof *blk);
@@ -173,8 +177,9 @@ blk_create (void)
     return NULL;
   }
 
-  blk->fd = -1;
+  blk->fds = (fd_vector)empty_vector;
 
+  /* We always create the first file, even if the disk size is 0. */
   filename = strdup (template);
   if (filename == NULL) {
     nbdkit_error ("strdup: %m");
@@ -183,22 +188,22 @@ blk_create (void)
   }
 
 #ifdef HAVE_MKOSTEMP
-  blk->fd = mkostemp (filename, O_CLOEXEC);
+  fd = mkostemp (filename, O_CLOEXEC);
 #else
   /* Not atomic, but this is only invoked during .load, so the race
    * won't affect any plugin actions trying to fork
    */
-  blk->fd = mkstemp (filename);
-  if (blk->fd >= 0) {
-    blk->fd = set_cloexec (blk->fd);
-    if (blk->fd < 0) {
+  fd = mkstemp (filename);
+  if (fd >= 0) {
+    fd = set_cloexec (fd);
+    if (fd < 0) {
       int e = errno;
       unlink (template);
       errno = e;
     }
   }
 #endif
-  if (blk->fd == -1) {
+  if (fd == -1) {
     nbdkit_error ("mkostemp: %s: %m", template);
     free (blk);
     free (filename);
@@ -207,6 +212,13 @@ blk_create (void)
 
   unlink (filename);
   free (filename);
+
+  if (fd_vector_append (&blk->fds, fd) == -1) {
+    nbdkit_error ("realloc: %m");
+    close (fd);
+    free (blk);
+    return NULL;
+  }
 
   pthread_mutex_init (&blk->lock, NULL);
   bitmap_init (&blk->bm, blksize, 2 /* bits per block */);
@@ -218,8 +230,7 @@ void
 blk_free (struct blk_overlay *blk)
 {
   if (blk) {
-    if (blk->fd >= 0)
-      close (blk->fd);
+    fd_vector_iter (&blk->fds, (void*)close);
     bitmap_free (&blk->bm);
     pthread_mutex_destroy (&blk->lock);
     free (blk);
@@ -237,7 +248,7 @@ blk_set_size (struct blk_overlay *blk, uint64_t new_size)
   if (bitmap_resize (&blk->bm, blk->size) == -1)
     return -1;
 
-  if (ftruncate (blk->fd, ROUND_UP (blk->size, blksize)) == -1) {
+  if (ftruncate (blk->fds.ptr[0], ROUND_UP (blk->size, blksize)) == -1) {
     nbdkit_error ("cow: ftruncate: %m");
     return -1;
   }
@@ -271,6 +282,7 @@ blk_read_multiple (struct blk_overlay *blk,
   off_t offset = blknum * blksize;
   enum bm_entry state;
   uint64_t b, runblocks;
+  const int fd = blk->fds.ptr[0];
 
   /* Find out how many of the following blocks form a "run" with the
    * same state.  We can process that many blocks in one go.
@@ -329,7 +341,7 @@ blk_read_multiple (struct blk_overlay *blk,
                       "at offset %" PRIu64 " into the cache",
                       runblocks, offset);
 
-      if (full_pwrite (blk->fd, block, blksize * runblocks, offset) == -1) {
+      if (full_pwrite (fd, block, blksize * runblocks, offset) == -1) {
         *err = errno;
         nbdkit_error ("pwrite: %m");
         return -1;
@@ -339,7 +351,7 @@ blk_read_multiple (struct blk_overlay *blk,
     }
   }
   else if (state == BLOCK_ALLOCATED) { /* Read overlay. */
-    if (full_pread (blk->fd, block, blksize * runblocks, offset) == -1) {
+    if (full_pread (fd, block, blksize * runblocks, offset) == -1) {
       *err = errno;
       nbdkit_error ("pread: %m");
       return -1;
@@ -379,6 +391,7 @@ blk_cache (struct blk_overlay *blk,
   off_t offset = blknum * blksize;
   enum bm_entry state = bitmap_get_blk (&blk->bm, blknum, BLOCK_NOT_ALLOCATED);
   unsigned n = blksize, tail = 0;
+  const int fd = blk->fds.ptr[0];
 
   if (offset + n > blk->size) {
     tail = offset + n - blk->size;
@@ -391,7 +404,7 @@ blk_cache (struct blk_overlay *blk,
 
   if (state == BLOCK_ALLOCATED) {
 #if HAVE_POSIX_FADVISE
-    int r = posix_fadvise (blk->fd, offset, blksize, POSIX_FADV_WILLNEED);
+    int r = posix_fadvise (fd, offset, blksize, POSIX_FADV_WILLNEED);
     if (r) {
       errno = r;
       nbdkit_error ("posix_fadvise: %m");
@@ -416,7 +429,7 @@ blk_cache (struct blk_overlay *blk,
   memset (block + n, 0, tail);
 
   if (mode == BLK_CACHE_COW) {
-    if (full_pwrite (blk->fd, block, blksize, offset) == -1) {
+    if (full_pwrite (fd, block, blksize, offset) == -1) {
       *err = errno;
       nbdkit_error ("pwrite: %m");
       return -1;
@@ -431,12 +444,13 @@ blk_write (struct blk_overlay *blk,
            uint64_t blknum, const uint8_t *block, int *err)
 {
   off_t offset = blknum * blksize;
+  const int fd = blk->fds.ptr[0];
 
   if (cow_debug_verbose)
     nbdkit_debug ("cow: blk_write block %" PRIu64 " (offset %" PRIu64 ")",
                   blknum, (uint64_t) offset);
 
-  if (full_pwrite (blk->fd, block, blksize, offset) == -1) {
+  if (full_pwrite (fd, block, blksize, offset) == -1) {
     *err = errno;
     nbdkit_error ("pwrite: %m");
     return -1;
