@@ -67,6 +67,10 @@
  *
  * Since the overlay is a deleted temporary file, we can ignore FUA
  * and flush commands.
+ *
+ * For disk sizes larger than 8T, the temporary file is split into
+ * multiple files, at most 8T in size.  This ensures we can work on
+ * filesystems with file size limits like ext4 (max file size < 16T).
  */
 
 #include <config.h>
@@ -81,6 +85,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <errno.h>
+#include <assert.h>
 #include <sys/types.h>
 
 #ifdef HAVE_ALLOCA_H
@@ -98,6 +103,7 @@
 #include "pread.h"
 #include "pwrite.h"
 #include "utils.h"
+#include "vector.h"
 
 #include "cow.h"
 #include "blk.h"
@@ -107,6 +113,8 @@ enum bm_entry {
   BLOCK_ALLOCATED = 1,
   BLOCK_TRIMMED = 3,
 };
+
+#define MAX_FILE_SIZE (UINT64_C (8) * 1024 * 1024 * 1024 * 1024) /* 8T */
 
 static const char *
 state_to_string (enum bm_entry state)
@@ -145,9 +153,11 @@ blk_unload (void)
   free (template);
 }
 
+DEFINE_VECTOR_TYPE (fd_vector, int);
+
 struct blk_overlay {
-  /* The temporary overlay. */
-  int fd;
+  /* The temporary overlays.  Each covers 8T virtual size. */
+  fd_vector fds;
 
   /* This lock protects the bitmap from parallel access. */
   pthread_mutex_t lock;
@@ -161,11 +171,54 @@ struct blk_overlay {
   uint64_t size;
 };
 
+static int
+create_temporary_file (void)
+{
+  int fd;
+  char *filename;
+
+  filename = strdup (template);
+  if (filename == NULL) {
+    nbdkit_error ("strdup: %m");
+    return -1;
+  }
+
+#ifdef HAVE_MKOSTEMP
+  fd = mkostemp (filename, O_CLOEXEC);
+#else
+  /* Not atomic, but this is only invoked during .load, so the race
+   * won't affect any plugin actions trying to fork
+   */
+  fd = mkstemp (filename);
+  if (fd >= 0) {
+    fd = set_cloexec (fd);
+    if (fd < 0) {
+      int e = errno;
+      unlink (filename);
+      errno = e;
+    }
+  }
+#endif
+  if (fd == -1) {
+    nbdkit_error ("mkostemp: %s: %m", template);
+    free (filename);
+    return -1;
+  }
+
+  if (cow_debug_verbose)
+    nbdkit_debug ("cow: created temporary file for overlay: %s", filename);
+
+  unlink (filename);
+  free (filename);
+
+  return fd;
+}
+
 struct blk_overlay *
 blk_create (void)
 {
   struct blk_overlay *blk;
-  char *filename;
+  int fd;
 
   blk = calloc (1, sizeof *blk);
   if (blk == NULL) {
@@ -173,42 +226,23 @@ blk_create (void)
     return NULL;
   }
 
-  blk->fd = -1;
+  blk->fds = (fd_vector)empty_vector;
+
+  /* We always create the first file, even if the disk size is 0. */
+  fd = create_temporary_file ();
+  if (fd == -1) {
+    free (blk);
+    return NULL;
+  }
+  if (fd_vector_append (&blk->fds, fd) == -1) {
+    nbdkit_error ("realloc: %m");
+    close (fd);
+    free (blk);
+    return NULL;
+  }
+
   pthread_mutex_init (&blk->lock, NULL);
   bitmap_init (&blk->bm, blksize, 2 /* bits per block */);
-
-  filename = strdup (template);
-  if (filename == NULL) {
-    nbdkit_error ("strdup: %m");
-    free (blk);
-    return NULL;
-  }
-
-#ifdef HAVE_MKOSTEMP
-  blk->fd = mkostemp (filename, O_CLOEXEC);
-#else
-  /* Not atomic, but this is only invoked during .load, so the race
-   * won't affect any plugin actions trying to fork
-   */
-  blk->fd = mkstemp (filename);
-  if (blk->fd >= 0) {
-    blk->fd = set_cloexec (blk->fd);
-    if (blk->fd < 0) {
-      int e = errno;
-      unlink (template);
-      errno = e;
-    }
-  }
-#endif
-  if (blk->fd == -1) {
-    nbdkit_error ("mkostemp: %s: %m", template);
-    free (blk);
-    free (filename);
-    return NULL;
-  }
-
-  unlink (filename);
-  free (filename);
 
   return blk;
 }
@@ -217,8 +251,7 @@ void
 blk_free (struct blk_overlay *blk)
 {
   if (blk) {
-    if (blk->fd >= 0)
-      close (blk->fd);
+    fd_vector_iter (&blk->fds, (void*)close);
     bitmap_free (&blk->bm);
     pthread_mutex_destroy (&blk->lock);
     free (blk);
@@ -230,18 +263,70 @@ int
 blk_set_size (struct blk_overlay *blk, uint64_t new_size)
 {
   ACQUIRE_LOCK_FOR_CURRENT_SCOPE (&blk->lock);
+  const uint64_t new_size_rounded_up = ROUND_UP (new_size, blksize);
+  uint64_t remainder;
+  size_t i, n;
+  int fd;
 
   blk->size = new_size;
 
   if (bitmap_resize (&blk->bm, blk->size) == -1)
     return -1;
 
-  if (ftruncate (blk->fd, ROUND_UP (blk->size, blksize)) == -1) {
+  /* How many temporary files do we need?  Each temp file is limited to 8T. */
+  n = DIV_ROUND_UP (new_size_rounded_up, MAX_FILE_SIZE);
+  if (n == 0)
+    n = 1;
+  nbdkit_debug ("cow: using %zu temporary file(s)", n);
+
+  /* Create new temporary files in case it has expanded. */
+  while (blk->fds.len < n) {
+    fd = create_temporary_file ();
+    if (fd == -1)
+      return -1;
+    if (fd_vector_append (&blk->fds, fd) == -1) {
+      nbdkit_error ("realloc: %m");
+      /* The other fds are stored in the handle and will be closed by
+       * blk_free, so we only need to close this one.
+       */
+      close (fd);
+      return -1;
+    }
+  }
+
+  /* Remove any extra temporary files in case it has shrunk. */
+  while (blk->fds.len > n) {
+    close (blk->fds.ptr[n]);
+    fd_vector_remove (&blk->fds, n);
+  }
+
+  /* The first 0..n-1 temp files have to be truncated to the full
+   * size, with the last temp file being truncated to the remainder.
+   */
+  remainder = new_size_rounded_up;
+  for (i = 0; i < n-1; ++i) {
+    if (ftruncate (blk->fds.ptr[i], MAX_FILE_SIZE) == -1) {
+      nbdkit_error ("cow: ftruncate: %m");
+      return -1;
+    }
+    assert (remainder >= MAX_FILE_SIZE);
+    remainder -= MAX_FILE_SIZE;
+  }
+  if (ftruncate (blk->fds.ptr[n-1], remainder) == -1) {
     nbdkit_error ("cow: ftruncate: %m");
     return -1;
   }
 
   return 0;
+}
+
+/* Get the temporary file corresponding to a block. */
+static int
+get_fd_for_blknum (struct blk_overlay *blk, uint64_t blknum)
+{
+  size_t i = blknum / MAX_FILE_SIZE / blksize;
+  assert (i < blk->fds.len);
+  return blk->fds.ptr[i];
 }
 
 /* This is a bit of a hack since usually this information is hidden in
@@ -270,6 +355,7 @@ blk_read_multiple (struct blk_overlay *blk,
   off_t offset = blknum * blksize;
   enum bm_entry state;
   uint64_t b, runblocks;
+  const int fd = get_fd_for_blknum (blk, blknum);
 
   /* Find out how many of the following blocks form a "run" with the
    * same state.  We can process that many blocks in one go.
@@ -288,6 +374,8 @@ blk_read_multiple (struct blk_overlay *blk,
       enum bm_entry s =
         bitmap_get_blk (&blk->bm, blknum + b, BLOCK_NOT_ALLOCATED);
       if (state != s)
+        break;
+      if (get_fd_for_blknum (blk, blknum + b) != fd)
         break;
     }
   }
@@ -328,7 +416,7 @@ blk_read_multiple (struct blk_overlay *blk,
                       "at offset %" PRIu64 " into the cache",
                       runblocks, offset);
 
-      if (full_pwrite (blk->fd, block, blksize * runblocks, offset) == -1) {
+      if (full_pwrite (fd, block, blksize * runblocks, offset) == -1) {
         *err = errno;
         nbdkit_error ("pwrite: %m");
         return -1;
@@ -338,7 +426,7 @@ blk_read_multiple (struct blk_overlay *blk,
     }
   }
   else if (state == BLOCK_ALLOCATED) { /* Read overlay. */
-    if (full_pread (blk->fd, block, blksize * runblocks, offset) == -1) {
+    if (full_pread (fd, block, blksize * runblocks, offset) == -1) {
       *err = errno;
       nbdkit_error ("pread: %m");
       return -1;
@@ -378,6 +466,7 @@ blk_cache (struct blk_overlay *blk,
   off_t offset = blknum * blksize;
   enum bm_entry state = bitmap_get_blk (&blk->bm, blknum, BLOCK_NOT_ALLOCATED);
   unsigned n = blksize, tail = 0;
+  const int fd = get_fd_for_blknum (blk, blknum);
 
   if (offset + n > blk->size) {
     tail = offset + n - blk->size;
@@ -390,7 +479,7 @@ blk_cache (struct blk_overlay *blk,
 
   if (state == BLOCK_ALLOCATED) {
 #if HAVE_POSIX_FADVISE
-    int r = posix_fadvise (blk->fd, offset, blksize, POSIX_FADV_WILLNEED);
+    int r = posix_fadvise (fd, offset, blksize, POSIX_FADV_WILLNEED);
     if (r) {
       errno = r;
       nbdkit_error ("posix_fadvise: %m");
@@ -415,7 +504,7 @@ blk_cache (struct blk_overlay *blk,
   memset (block + n, 0, tail);
 
   if (mode == BLK_CACHE_COW) {
-    if (full_pwrite (blk->fd, block, blksize, offset) == -1) {
+    if (full_pwrite (fd, block, blksize, offset) == -1) {
       *err = errno;
       nbdkit_error ("pwrite: %m");
       return -1;
@@ -430,12 +519,13 @@ blk_write (struct blk_overlay *blk,
            uint64_t blknum, const uint8_t *block, int *err)
 {
   off_t offset = blknum * blksize;
+  const int fd = get_fd_for_blknum (blk, blknum);
 
   if (cow_debug_verbose)
     nbdkit_debug ("cow: blk_write block %" PRIu64 " (offset %" PRIu64 ")",
                   blknum, (uint64_t) offset);
 
-  if (full_pwrite (blk->fd, block, blksize, offset) == -1) {
+  if (full_pwrite (fd, block, blksize, offset) == -1) {
     *err = errno;
     nbdkit_error ("pwrite: %m");
     return -1;
