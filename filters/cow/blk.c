@@ -164,27 +164,16 @@ struct blk_overlay {
   uint64_t size;
 };
 
-struct blk_overlay *
-blk_create (void)
+static int
+create_temporary_file (void)
 {
-  struct blk_overlay *blk;
   int fd;
   char *filename;
 
-  blk = calloc (1, sizeof *blk);
-  if (blk == NULL) {
-    nbdkit_error ("calloc: %m");
-    return NULL;
-  }
-
-  blk->fds = (fd_vector)empty_vector;
-
-  /* We always create the first file, even if the disk size is 0. */
   filename = strdup (template);
   if (filename == NULL) {
     nbdkit_error ("strdup: %m");
-    free (blk);
-    return NULL;
+    return -1;
   }
 
 #ifdef HAVE_MKOSTEMP
@@ -198,21 +187,43 @@ blk_create (void)
     fd = set_cloexec (fd);
     if (fd < 0) {
       int e = errno;
-      unlink (template);
+      unlink (filename);
       errno = e;
     }
   }
 #endif
   if (fd == -1) {
     nbdkit_error ("mkostemp: %s: %m", template);
-    free (blk);
     free (filename);
-    return NULL;
+    return -1;
   }
 
   unlink (filename);
   free (filename);
 
+  return fd;
+}
+
+struct blk_overlay *
+blk_create (void)
+{
+  struct blk_overlay *blk;
+  int fd;
+
+  blk = calloc (1, sizeof *blk);
+  if (blk == NULL) {
+    nbdkit_error ("calloc: %m");
+    return NULL;
+  }
+
+  blk->fds = (fd_vector)empty_vector;
+
+  /* We always create the first file, even if the disk size is 0. */
+  fd = create_temporary_file ();
+  if (fd == -1) {
+    free (blk);
+    return NULL;
+  }
   if (fd_vector_append (&blk->fds, fd) == -1) {
     nbdkit_error ("realloc: %m");
     close (fd);
