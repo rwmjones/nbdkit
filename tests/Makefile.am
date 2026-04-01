@@ -2618,6 +2618,7 @@ TESTS += \
 EXTRA_DIST += \
 	test-go-nbd.sh \
 	test-go-nbd.d/go.mod \
+	test-go-nbd.d/go.sum \
 	test-go-nbd.d/nbdkit_unix_test.go \
 	$(NULL)
 
