@@ -195,7 +195,7 @@ blk_set_size (uint64_t new_size)
     return -1;
 
   if (ftruncate (fd, ROUND_UP (size, blksize)) == -1) {
-    nbdkit_error ("ftruncate: %m");
+    nbdkit_error ("cache: ftruncate: %m");
     return -1;
   }
 

@@ -225,7 +225,6 @@ blk_free (struct blk_overlay *blk)
   }
 }
 
-
 /* Allocate or resize the overlay file and bitmap. */
 int
 blk_set_size (struct blk_overlay *blk, uint64_t new_size)
@@ -238,7 +237,7 @@ blk_set_size (struct blk_overlay *blk, uint64_t new_size)
     return -1;
 
   if (ftruncate (blk->fd, ROUND_UP (blk->size, blksize)) == -1) {
-    nbdkit_error ("ftruncate: %m");
+    nbdkit_error ("cow: ftruncate: %m");
     return -1;
   }
 
