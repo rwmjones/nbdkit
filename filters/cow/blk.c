@@ -198,6 +198,9 @@ create_temporary_file (void)
     return -1;
   }
 
+  if (cow_debug_verbose)
+    nbdkit_debug ("cow: created temporary file for overlay: %s", filename);
+
   unlink (filename);
   free (filename);
 
