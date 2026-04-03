@@ -82,4 +82,7 @@ for iter in range(1, 200):
 EOF
 export script
 
-nbdkit -fv --filter=cow null $size --run ' nbdsh -u "$uri" -c "$script" '
+nbdkit -fv \
+       --filter=cow -D cow.verbose=1 \
+       null $size \
+       --run ' nbdsh -u "$uri" -c "$script" '

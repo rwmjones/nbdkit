@@ -414,8 +414,10 @@ blk_read_multiple (struct blk_overlay *blk,
     if (cow_on_read) {
       if (cow_debug_verbose)
         nbdkit_debug ("cow: cow-on-read saving %" PRIu64 " blocks "
-                      "at offset %" PRIu64 " into the cache",
-                      runblocks, offset);
+                      "at offset %" PRIu64 " into the cache "
+                      "(fd %d file offset %" PRIu64 ")",
+                      runblocks, offset,
+                      fd, offset & (MAX_FILE_SIZE - 1));
 
       if (full_pwrite (fd, block, blksize * runblocks,
                        offset & (MAX_FILE_SIZE - 1)) == -1) {
@@ -428,6 +430,13 @@ blk_read_multiple (struct blk_overlay *blk,
     }
   }
   else if (state == BLOCK_ALLOCATED) { /* Read overlay. */
+      if (cow_debug_verbose)
+        nbdkit_debug ("cow: reading overlay %" PRIu64 " blocks "
+                      "at offset %" PRIu64 " "
+                      "(fd %d file offset %" PRIu64 ")",
+                      runblocks, offset,
+                      fd, offset & (MAX_FILE_SIZE - 1));
+
     if (full_pread (fd, block, blksize * runblocks,
                     offset & (MAX_FILE_SIZE - 1)) == -1) {
       *err = errno;
@@ -477,8 +486,10 @@ blk_cache (struct blk_overlay *blk,
   }
 
   if (cow_debug_verbose)
-    nbdkit_debug ("cow: blk_cache block %" PRIu64 " (offset %" PRIu64 ") is %s",
-                  blknum, offset, state_to_string (state));
+    nbdkit_debug ("cow: blk_cache block %" PRIu64 " (offset %" PRIu64 ") is %s "
+                  "(fd %d file offset %" PRIu64 ")",
+                  blknum, offset, state_to_string (state),
+                  fd, offset & (MAX_FILE_SIZE - 1));
 
   if (state == BLOCK_ALLOCATED) {
 #if HAVE_POSIX_FADVISE
@@ -527,8 +538,10 @@ blk_write (struct blk_overlay *blk,
   const int fd = get_fd_for_blknum (blk, blknum);
 
   if (cow_debug_verbose)
-    nbdkit_debug ("cow: blk_write block %" PRIu64 " (offset %" PRIu64 ")",
-                  blknum, offset);
+    nbdkit_debug ("cow: blk_write block %" PRIu64 " at offset %" PRIu64 " "
+                  "(fd %d file offset %" PRIu64 ")",
+                  blknum, offset,
+                  fd, offset & (MAX_FILE_SIZE - 1));
 
   if (full_pwrite (fd, block, blksize,
                    offset & (MAX_FILE_SIZE - 1)) == -1) {
@@ -550,7 +563,7 @@ blk_trim (struct blk_overlay *blk,
   const uint64_t offset = blknum * blksize;
 
   if (cow_debug_verbose)
-    nbdkit_debug ("cow: blk_trim block %" PRIu64 " (offset %" PRIu64 ")",
+    nbdkit_debug ("cow: blk_trim block %" PRIu64 " at offset %" PRIu64,
                   blknum, offset);
 
   /* XXX As an optimization we could punch a whole in the overlay
