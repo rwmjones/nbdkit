@@ -324,7 +324,7 @@ blk_set_size (struct blk_overlay *blk, uint64_t new_size)
 static int
 get_fd_for_blknum (struct blk_overlay *blk, uint64_t blknum)
 {
-  size_t i = blknum / MAX_FILE_SIZE / blksize;
+  size_t i = blknum * blksize / MAX_FILE_SIZE;
   assert (i < blk->fds.len);
   return blk->fds.ptr[i];
 }
