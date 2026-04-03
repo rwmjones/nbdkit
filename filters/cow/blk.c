@@ -353,7 +353,7 @@ blk_read_multiple (struct blk_overlay *blk,
                    uint64_t blknum, uint64_t nrblocks,
                    uint8_t *block, bool cow_on_read, int *err)
 {
-  off_t offset = blknum * blksize;
+  const off_t offset = blknum * blksize;
   enum bm_entry state;
   uint64_t b, runblocks;
   const int fd = get_fd_for_blknum (blk, blknum);
@@ -466,7 +466,7 @@ blk_cache (struct blk_overlay *blk,
 {
   /* XXX Could make this lock more fine-grained with some thought. */
   ACQUIRE_LOCK_FOR_CURRENT_SCOPE (&blk->lock);
-  off_t offset = blknum * blksize;
+  const off_t offset = blknum * blksize;
   enum bm_entry state = bitmap_get_blk (&blk->bm, blknum, BLOCK_NOT_ALLOCATED);
   unsigned n = blksize, tail = 0;
   const int fd = get_fd_for_blknum (blk, blknum);
@@ -523,7 +523,7 @@ int
 blk_write (struct blk_overlay *blk,
            uint64_t blknum, const uint8_t *block, int *err)
 {
-  off_t offset = blknum * blksize;
+  const off_t offset = blknum * blksize;
   const int fd = get_fd_for_blknum (blk, blknum);
 
   if (cow_debug_verbose)
@@ -547,7 +547,7 @@ int
 blk_trim (struct blk_overlay *blk,
           uint64_t blknum, int *err)
 {
-  off_t offset = blknum * blksize;
+  const off_t offset = blknum * blksize;
 
   if (cow_debug_verbose)
     nbdkit_debug ("cow: blk_trim block %" PRIu64 " (offset %" PRIu64 ")",
