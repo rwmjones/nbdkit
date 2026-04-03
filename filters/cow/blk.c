@@ -418,7 +418,7 @@ blk_read_multiple (struct blk_overlay *blk,
 
       if (full_pwrite (fd, block, blksize * runblocks, offset) == -1) {
         *err = errno;
-        nbdkit_error ("pwrite: %m");
+        nbdkit_error ("cow: pwrite: %m");
         return -1;
       }
       for (b = 0; b < runblocks; ++b)
@@ -428,7 +428,7 @@ blk_read_multiple (struct blk_overlay *blk,
   else if (state == BLOCK_ALLOCATED) { /* Read overlay. */
     if (full_pread (fd, block, blksize * runblocks, offset) == -1) {
       *err = errno;
-      nbdkit_error ("pread: %m");
+      nbdkit_error ("cow: pread: %m");
       return -1;
     }
   }
@@ -482,7 +482,7 @@ blk_cache (struct blk_overlay *blk,
     int r = posix_fadvise (fd, offset, blksize, POSIX_FADV_WILLNEED);
     if (r) {
       errno = r;
-      nbdkit_error ("posix_fadvise: %m");
+      nbdkit_error ("cow: posix_fadvise: %m");
       return -1;
     }
 #endif
@@ -506,7 +506,7 @@ blk_cache (struct blk_overlay *blk,
   if (mode == BLK_CACHE_COW) {
     if (full_pwrite (fd, block, blksize, offset) == -1) {
       *err = errno;
-      nbdkit_error ("pwrite: %m");
+      nbdkit_error ("cow: pwrite: %m");
       return -1;
     }
     bitmap_set_blk (&blk->bm, blknum, BLOCK_ALLOCATED);
@@ -527,7 +527,7 @@ blk_write (struct blk_overlay *blk,
 
   if (full_pwrite (fd, block, blksize, offset) == -1) {
     *err = errno;
-    nbdkit_error ("pwrite: %m");
+    nbdkit_error ("cow: pwrite: %m");
     return -1;
   }
 

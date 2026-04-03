@@ -157,7 +157,7 @@ blk_init (void)
    * least as large as the filesystem block size.
    */
   if (fstatvfs (fd, &statvfs) == -1) {
-    nbdkit_error ("fstatvfs: %s: %m", tmpdir);
+    nbdkit_error ("cache: fstatvfs: %s: %m", tmpdir);
     return -1;
   }
   blksize = MAX (min_block_size, statvfs.f_bsize);
@@ -263,7 +263,7 @@ _blk_read_multiple (nbdkit_next *next,
 
       if (full_pwrite (fd, block, blksize * runblocks, offset) == -1) {
         *err = errno;
-        nbdkit_error ("pwrite: %m");
+        nbdkit_error ("cache: pwrite: %m");
         return -1;
       }
       for (b = 0; b < runblocks; ++b) {
@@ -275,7 +275,7 @@ _blk_read_multiple (nbdkit_next *next,
   else {                        /* Read cache. */
     if (full_pread (fd, block, blksize * runblocks, offset) == -1) {
       *err = errno;
-      nbdkit_error ("pread: %m");
+      nbdkit_error ("cache: pread: %m");
       return -1;
     }
     for (b = 0; b < runblocks; ++b)
@@ -349,7 +349,7 @@ blk_cache (nbdkit_next *next,
 
     if (full_pwrite (fd, block, blksize, offset) == -1) {
       *err = errno;
-      nbdkit_error ("pwrite: %m");
+      nbdkit_error ("cache: pwrite: %m");
       return -1;
     }
     bitmap_set_blk (&bm, blknum, BLOCK_CLEAN);
@@ -360,7 +360,7 @@ blk_cache (nbdkit_next *next,
     int r = posix_fadvise (fd, offset, blksize, POSIX_FADV_WILLNEED);
     if (r) {
       errno = r;
-      nbdkit_error ("posix_fadvise: %m");
+      nbdkit_error ("cache: posix_fadvise: %m");
       return -1;
     }
 #endif
@@ -390,7 +390,7 @@ blk_writethrough (nbdkit_next *next,
 
   if (full_pwrite (fd, block, blksize, offset) == -1) {
     *err = errno;
-    nbdkit_error ("pwrite: %m");
+    nbdkit_error ("cache: pwrite: %m");
     return -1;
   }
 
@@ -424,7 +424,7 @@ blk_write (nbdkit_next *next,
 
   if (full_pwrite (fd, block, blksize, offset) == -1) {
     *err = errno;
-    nbdkit_error ("pwrite: %m");
+    nbdkit_error ("cache: pwrite: %m");
     return -1;
   }
   bitmap_set_blk (&bm, blknum, BLOCK_DIRTY);
