@@ -210,7 +210,7 @@ _blk_read_multiple (nbdkit_next *next,
                     uint64_t blknum, uint64_t nrblocks,
                     uint8_t *block, int *err)
 {
-  off_t offset = blknum * blksize;
+  const off_t offset = blknum * blksize;
   bool not_cached =
     bitmap_get_blk (&bm, blknum, BLOCK_NOT_CACHED) == BLOCK_NOT_CACHED;
   uint64_t b, runblocks;
@@ -314,7 +314,7 @@ int
 blk_cache (nbdkit_next *next,
            uint64_t blknum, uint8_t *block, int *err)
 {
-  off_t offset = blknum * blksize;
+  const off_t offset = blknum * blksize;
   enum bm_entry state = bitmap_get_blk (&bm, blknum, BLOCK_NOT_CACHED);
 
   reclaim (fd, &bm);
@@ -374,7 +374,7 @@ blk_writethrough (nbdkit_next *next,
                   uint64_t blknum, const uint8_t *block, uint32_t flags,
                   int *err)
 {
-  off_t offset = blknum * blksize;
+  const off_t offset = blknum * blksize;
   unsigned n = blksize, tail = 0;
 
   if (offset + n > size) {
@@ -408,13 +408,11 @@ blk_write (nbdkit_next *next,
            uint64_t blknum, const uint8_t *block, uint32_t flags,
            int *err)
 {
-  off_t offset;
+  const off_t offset = blknum * blksize;
 
   if (cache_mode == CACHE_MODE_WRITETHROUGH ||
       (cache_mode == CACHE_MODE_WRITEBACK && (flags & NBDKIT_FLAG_FUA)))
     return blk_writethrough (next, blknum, block, flags, err);
-
-  offset = blknum * blksize;
 
   reclaim (fd, &bm);
 
