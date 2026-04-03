@@ -210,7 +210,7 @@ _blk_read_multiple (nbdkit_next *next,
                     uint64_t blknum, uint64_t nrblocks,
                     uint8_t *block, int *err)
 {
-  const off_t offset = blknum * blksize;
+  const uint64_t offset = blknum * blksize;
   bool not_cached =
     bitmap_get_blk (&bm, blknum, BLOCK_NOT_CACHED) == BLOCK_NOT_CACHED;
   uint64_t b, runblocks;
@@ -220,7 +220,7 @@ _blk_read_multiple (nbdkit_next *next,
   if (cache_debug_verbose)
     nbdkit_debug ("cache: blk_read_multiple block %" PRIu64
                   " (offset %" PRIu64 ") is %s",
-                  blknum, (uint64_t) offset,
+                  blknum, offset,
                   not_cached ? "not cached" : "cached");
 
   /* Find out how many of the following blocks form a "run" with the
@@ -259,7 +259,7 @@ _blk_read_multiple (nbdkit_next *next,
       if (cache_debug_verbose)
         nbdkit_debug ("cache: cache-on-read block %" PRIu64
                       " (offset %" PRIu64 ")",
-                      blknum, (uint64_t) offset);
+                      blknum, offset);
 
       if (full_pwrite (fd, block, blksize * runblocks, offset) == -1) {
         *err = errno;
@@ -314,7 +314,7 @@ int
 blk_cache (nbdkit_next *next,
            uint64_t blknum, uint8_t *block, int *err)
 {
-  const off_t offset = blknum * blksize;
+  const uint64_t offset = blknum * blksize;
   enum bm_entry state = bitmap_get_blk (&bm, blknum, BLOCK_NOT_CACHED);
 
   reclaim (fd, &bm);
@@ -322,7 +322,7 @@ blk_cache (nbdkit_next *next,
   if (cache_debug_verbose)
     nbdkit_debug ("cache: blk_cache block %" PRIu64
                   " (offset %" PRIu64 ") is %s",
-                  blknum, (uint64_t) offset,
+                  blknum, offset,
                   state_to_string (state));
 
   if (state == BLOCK_NOT_CACHED) {
@@ -345,7 +345,7 @@ blk_cache (nbdkit_next *next,
 
     if (cache_debug_verbose)
       nbdkit_debug ("cache: cache block %" PRIu64 " (offset %" PRIu64 ")",
-                    blknum, (uint64_t) offset);
+                    blknum, offset);
 
     if (full_pwrite (fd, block, blksize, offset) == -1) {
       *err = errno;
@@ -374,7 +374,7 @@ blk_writethrough (nbdkit_next *next,
                   uint64_t blknum, const uint8_t *block, uint32_t flags,
                   int *err)
 {
-  const off_t offset = blknum * blksize;
+  const uint64_t offset = blknum * blksize;
   unsigned n = blksize, tail = 0;
 
   if (offset + n > size) {
@@ -386,7 +386,7 @@ blk_writethrough (nbdkit_next *next,
 
   if (cache_debug_verbose)
     nbdkit_debug ("cache: writethrough block %" PRIu64 " (offset %" PRIu64 ")",
-                  blknum, (uint64_t) offset);
+                  blknum, offset);
 
   if (full_pwrite (fd, block, blksize, offset) == -1) {
     *err = errno;
@@ -408,7 +408,7 @@ blk_write (nbdkit_next *next,
            uint64_t blknum, const uint8_t *block, uint32_t flags,
            int *err)
 {
-  const off_t offset = blknum * blksize;
+  const uint64_t offset = blknum * blksize;
 
   if (cache_mode == CACHE_MODE_WRITETHROUGH ||
       (cache_mode == CACHE_MODE_WRITEBACK && (flags & NBDKIT_FLAG_FUA)))
@@ -418,7 +418,7 @@ blk_write (nbdkit_next *next,
 
   if (cache_debug_verbose)
     nbdkit_debug ("cache: writeback block %" PRIu64 " (offset %" PRIu64 ")",
-                  blknum, (uint64_t) offset);
+                  blknum, offset);
 
   if (full_pwrite (fd, block, blksize, offset) == -1) {
     *err = errno;

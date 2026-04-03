@@ -353,7 +353,7 @@ blk_read_multiple (struct blk_overlay *blk,
                    uint64_t blknum, uint64_t nrblocks,
                    uint8_t *block, bool cow_on_read, int *err)
 {
-  const off_t offset = blknum * blksize;
+  const uint64_t offset = blknum * blksize;
   enum bm_entry state;
   uint64_t b, runblocks;
   const int fd = get_fd_for_blknum (blk, blknum);
@@ -385,7 +385,7 @@ blk_read_multiple (struct blk_overlay *blk,
     nbdkit_debug ("cow: blk_read_multiple block %" PRIu64
                   " (offset %" PRIu64 ") run of length %" PRIu64
                   " is %s",
-                  blknum, (uint64_t) offset, runblocks,
+                  blknum, offset, runblocks,
                   state_to_string (state));
 
   if (state == BLOCK_NOT_ALLOCATED) { /* Read underlying plugin. */
@@ -466,7 +466,7 @@ blk_cache (struct blk_overlay *blk,
 {
   /* XXX Could make this lock more fine-grained with some thought. */
   ACQUIRE_LOCK_FOR_CURRENT_SCOPE (&blk->lock);
-  const off_t offset = blknum * blksize;
+  const uint64_t offset = blknum * blksize;
   enum bm_entry state = bitmap_get_blk (&blk->bm, blknum, BLOCK_NOT_ALLOCATED);
   unsigned n = blksize, tail = 0;
   const int fd = get_fd_for_blknum (blk, blknum);
@@ -478,7 +478,7 @@ blk_cache (struct blk_overlay *blk,
 
   if (cow_debug_verbose)
     nbdkit_debug ("cow: blk_cache block %" PRIu64 " (offset %" PRIu64 ") is %s",
-                  blknum, (uint64_t) offset, state_to_string (state));
+                  blknum, offset, state_to_string (state));
 
   if (state == BLOCK_ALLOCATED) {
 #if HAVE_POSIX_FADVISE
@@ -523,12 +523,12 @@ int
 blk_write (struct blk_overlay *blk,
            uint64_t blknum, const uint8_t *block, int *err)
 {
-  const off_t offset = blknum * blksize;
+  const uint64_t offset = blknum * blksize;
   const int fd = get_fd_for_blknum (blk, blknum);
 
   if (cow_debug_verbose)
     nbdkit_debug ("cow: blk_write block %" PRIu64 " (offset %" PRIu64 ")",
-                  blknum, (uint64_t) offset);
+                  blknum, offset);
 
   if (full_pwrite (fd, block, blksize,
                    offset & (MAX_FILE_SIZE - 1)) == -1) {
@@ -547,11 +547,11 @@ int
 blk_trim (struct blk_overlay *blk,
           uint64_t blknum, int *err)
 {
-  const off_t offset = blknum * blksize;
+  const uint64_t offset = blknum * blksize;
 
   if (cow_debug_verbose)
     nbdkit_debug ("cow: blk_trim block %" PRIu64 " (offset %" PRIu64 ")",
-                  blknum, (uint64_t) offset);
+                  blknum, offset);
 
   /* XXX As an optimization we could punch a whole in the overlay
    * here.  However it's not trivial since blksize is unrelated to the
