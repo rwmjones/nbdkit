@@ -114,7 +114,8 @@ enum bm_entry {
   BLOCK_TRIMMED = 3,
 };
 
-#define MAX_FILE_SIZE (UINT64_C (8) * 1024 * 1024 * 1024 * 1024) /* 8T */
+/* Maximum overlay file size, 8T.  This must be a power of 2. */
+#define MAX_FILE_SIZE (UINT64_C (8) * 1024 * 1024 * 1024 * 1024)
 
 static const char *
 state_to_string (enum bm_entry state)
@@ -416,7 +417,8 @@ blk_read_multiple (struct blk_overlay *blk,
                       "at offset %" PRIu64 " into the cache",
                       runblocks, offset);
 
-      if (full_pwrite (fd, block, blksize * runblocks, offset) == -1) {
+      if (full_pwrite (fd, block, blksize * runblocks,
+                       offset & (MAX_FILE_SIZE - 1)) == -1) {
         *err = errno;
         nbdkit_error ("cow: pwrite: %m");
         return -1;
@@ -426,7 +428,8 @@ blk_read_multiple (struct blk_overlay *blk,
     }
   }
   else if (state == BLOCK_ALLOCATED) { /* Read overlay. */
-    if (full_pread (fd, block, blksize * runblocks, offset) == -1) {
+    if (full_pread (fd, block, blksize * runblocks,
+                    offset & (MAX_FILE_SIZE - 1)) == -1) {
       *err = errno;
       nbdkit_error ("cow: pread: %m");
       return -1;
@@ -479,7 +482,8 @@ blk_cache (struct blk_overlay *blk,
 
   if (state == BLOCK_ALLOCATED) {
 #if HAVE_POSIX_FADVISE
-    int r = posix_fadvise (fd, offset, blksize, POSIX_FADV_WILLNEED);
+    int r = posix_fadvise (fd, offset & (MAX_FILE_SIZE - 1),
+                           blksize, POSIX_FADV_WILLNEED);
     if (r) {
       errno = r;
       nbdkit_error ("cow: posix_fadvise: %m");
@@ -504,7 +508,8 @@ blk_cache (struct blk_overlay *blk,
   memset (block + n, 0, tail);
 
   if (mode == BLK_CACHE_COW) {
-    if (full_pwrite (fd, block, blksize, offset) == -1) {
+    if (full_pwrite (fd, block, blksize,
+                     offset & (MAX_FILE_SIZE - 1)) == -1) {
       *err = errno;
       nbdkit_error ("cow: pwrite: %m");
       return -1;
@@ -525,7 +530,8 @@ blk_write (struct blk_overlay *blk,
     nbdkit_debug ("cow: blk_write block %" PRIu64 " (offset %" PRIu64 ")",
                   blknum, (uint64_t) offset);
 
-  if (full_pwrite (fd, block, blksize, offset) == -1) {
+  if (full_pwrite (fd, block, blksize,
+                   offset & (MAX_FILE_SIZE - 1)) == -1) {
     *err = errno;
     nbdkit_error ("cow: pwrite: %m");
     return -1;

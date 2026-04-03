@@ -53,9 +53,9 @@ random.seed(None)
 M = 1024*1024
 T = 1024*1024*1024*1024
 
-# Test a few megabytes either side of the 8T boundary.
+# Test a few megabytes either side of the 16T boundary.
 overlay = bytearray(10 * M)
-overlay_offset = int(8 * T - len(overlay)/2)
+overlay_offset = int(16 * T - len(overlay)/2)
 assert h.get_size() > overlay_offset + len(overlay)
 
 for iter in range(1, 200):
