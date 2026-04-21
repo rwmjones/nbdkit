@@ -599,23 +599,7 @@ test_nbdkit_read_password (void)
   }
 #endif /* !WIN32 */
 
-  /* XXX Testing reading from stdin would require setting up a pty. But
-   * we can test that it is forbidden with -s.
-   */
-  listen_stdin = true;
-  if (nbdkit_read_password ("-", &pw) != -1) {
-    fprintf (stderr, "Failed to diagnose failed password from stdin with -s\n");
-    pass = false;
-  }
-  else if (pw != NULL) {
-    fprintf (stderr, "Failed to set password to NULL on failure\n");
-    pass = false;
-  }
-  else if (!error_flagged) {
-    fprintf (stderr, "Wrong error message handling\n");
-    pass = false;
-  }
-  error_flagged = false;
+  /* XXX Testing reading from - would require setting up a pty. */
 
   return pass;
 }

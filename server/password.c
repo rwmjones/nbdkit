@@ -127,23 +127,89 @@ nbdkit_read_password (const char *value, char **password)
 
 #ifndef WIN32
 
-typedef struct termios echo_mode;
-
 static void
-echo_off (echo_mode *old_mode)
+echo_off (int fd, struct termios *old_mode)
 {
   struct termios temp;
 
-  tcgetattr (STDIN_FILENO, old_mode);
+  tcgetattr (fd, old_mode);
   temp = *old_mode;
   temp.c_lflag &= ~ECHO;
-  tcsetattr (STDIN_FILENO, TCSAFLUSH, &temp);
+  tcsetattr (fd, TCSAFLUSH, &temp);
 }
 
 static void
-echo_restore (const echo_mode *old_mode)
+echo_restore (int fd, const struct termios *old_mode)
 {
-  tcsetattr (STDIN_FILENO, TCSAFLUSH, old_mode);
+  tcsetattr (fd, TCSAFLUSH, old_mode);
+}
+
+static int
+read_password_interactive (char **password)
+{
+  FILE *fp;
+  int err;
+  struct termios orig;
+  ssize_t r;
+  size_t n;
+
+  fp = fopen ("/dev/tty",
+              "w+"
+#ifdef __GLIBC__
+              "e"
+#endif
+              );
+  if (!fp) {
+    nbdkit_error ("/dev/tty: %m");
+    return -1;
+  }
+
+  if (!isatty (fileno (fp))) {
+    nbdkit_error ("/dev/tty is not a tty, "
+                  "cannot read password interactively");
+    return -1;
+  }
+
+  fprintf (fp, "password: ");
+
+  /* Set no echo. */
+  echo_off (fileno (fp), &orig);
+
+  /* To distinguish between error and EOF we have to check errno.
+   * getline can return -1 and errno = 0 which means we got end of
+   * file, which is simply a zero length password.
+   */
+  errno = 0;
+  r = getline (password, &n, fp);
+  err = errno;
+
+  /* Restore echo. */
+  echo_restore (fileno (fp), &orig);
+
+  /* Complete the fprintf above. */
+  fprintf (fp, "\n");
+  fclose (fp);
+
+  if (r == -1) {
+    if (err == 0) {             /* EOF, not an error. */
+      free (*password);         /* State of linebuf is undefined. */
+      *password = strdup ("");
+      if (*password == NULL) {
+        nbdkit_error ("strdup: %m");
+        return -1;
+      }
+    }
+    else {
+      errno = err;
+      nbdkit_error ("could not read password from stdin: %m");
+      return -1;
+    }
+  }
+
+  if (*password && r > 0 && (*password)[r-1] == '\n')
+    (*password)[r-1] = '\0';
+
+  return 0;
 }
 
 #else /* WIN32 */
@@ -151,39 +217,35 @@ echo_restore (const echo_mode *old_mode)
 /* Windows implementation of tty echo off based on this:
  * https://stackoverflow.com/a/1455007
  */
-typedef DWORD echo_mode;
-
 static void
-echo_off (echo_mode *old_mode)
+echo_off (HANDLE h, DWORD *old_mode)
 {
-  HANDLE h_stdin;
   DWORD mode;
 
-  h_stdin = GetStdHandle (STD_INPUT_HANDLE);
-  GetConsoleMode (h_stdin, old_mode);
+  GetConsoleMode (h, old_mode);
   mode = *old_mode;
   mode &= ~ENABLE_ECHO_INPUT;
-  SetConsoleMode (h_stdin, mode);
+  SetConsoleMode (h, mode);
 }
 
 static void
-echo_restore (const echo_mode *old_mode)
+echo_restore (HANDLE h, const DWORD *old_mode)
 {
-  HANDLE h_stdin;
-
-  h_stdin = GetStdHandle (STD_INPUT_HANDLE);
-  SetConsoleMode (h_stdin, *old_mode);
+  SetConsoleMode (h, *old_mode);
 }
 
-#endif /* WIN32 */
-
+/* XXX This is not well tested.  We should specialize this function
+ * for Windows.  At the moment it is just the Linux function tweaked
+ * slightly.
+ */
 static int
 read_password_interactive (char **password)
 {
   int err;
-  echo_mode orig;
+  DWORD orig;
   ssize_t r;
   size_t n;
+  HANDLE h_stdin = GetStdHandle (STD_INPUT_HANDLE);
 
   if (!nbdkit_stdio_safe ()) {
     nbdkit_error ("stdin is not available for reading password");
@@ -198,7 +260,7 @@ read_password_interactive (char **password)
   printf ("password: ");
 
   /* Set no echo. */
-  echo_off (&orig);
+  echo_off (h_stdin, &orig);
 
   /* To distinguish between error and EOF we have to check errno.
    * getline can return -1 and errno = 0 which means we got end of
@@ -209,7 +271,7 @@ read_password_interactive (char **password)
   err = errno;
 
   /* Restore echo. */
-  echo_restore (&orig);
+  echo_restore (h_stdin, &orig);
 
   /* Complete the printf above. */
   printf ("\n");
@@ -235,6 +297,8 @@ read_password_interactive (char **password)
 
   return 0;
 }
+
+#endif /* WIN32 */
 
 static int
 read_password_from_fd (const char *what, int fd, char **password)

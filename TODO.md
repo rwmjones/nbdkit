@@ -67,9 +67,6 @@
   good enough?  Also allowing multiple instances of nbdkit to be
   loaded in the same process is probably impossible.
 
-* `password=-` to mean read a password interactively from `/dev/tty`
-  (not stdin).
-
 * Add separate man pages for a few missing `NBDKIT_EXTERN_DECL`
   functions, including those for extents, contexts, and exports.
 
@@ -95,6 +92,10 @@
   thread-local storage for the main thread (but the latter may change
   some assumptions in the code).  There may be other APIs that are
   affected in this way too.
+
+* `nbdkit_read_password()` with `password=-` on Windows should be
+  improved.  Is there a native function for reading passwords on
+  Windows?
 
 ## Suggestions for plugins
 
