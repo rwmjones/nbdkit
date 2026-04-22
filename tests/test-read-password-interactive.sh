@@ -48,25 +48,13 @@ requires_not test "$(uname)" = "Darwin"
 
 requires expect -v
 
-# Since we are matching on error messages.
-export LANG=C
-
 f=test-read-password-interactive.file
-out=test-read-password-interactive.out
-rm -f $f $out
-cleanup_fn rm -f $f $out
-
-# Reading a password from stdin (non-interactive) should fail.
-if $plugin -U - -fv file=$f password=- </dev/null >&$out ; then
-    echo "$0: expected password=- to fail"
-    exit 1
-fi
-cat $out
-grep "stdin is not a tty" $out
+rm -f $f
+cleanup_fn rm -f $f
 
 export plugin f
 
-# Password read interactively from stdin tty.
+# Password read interactively from tty.
 expect -f - <<'EOF'
   spawn bash $env(plugin) -U - -fv password=- file=$env(f)
   expect "ssword:"
@@ -75,7 +63,7 @@ expect -f - <<'EOF'
 EOF
 grep '^abc$' $f
 
-# Empty password read interactively from stdin tty.
+# Empty password read interactively from tty.
 rm -f $f
 expect -f - <<'EOF'
   spawn bash $env(plugin) -U - -fv password=- file=$env(f)
