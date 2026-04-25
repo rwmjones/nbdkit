@@ -65,6 +65,8 @@ EXTRA_DIST = \
 	pread.h \
 	pwrite.c \
 	pwrite.h \
+	readpassphrase.c \
+	readpassphrase.h \
 	realpath.c \
 	realpath.h \
 	strndup.c \

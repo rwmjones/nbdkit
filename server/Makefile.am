@@ -106,6 +106,7 @@ nbdkit_LDADD = \
 	$(LIBSELINUX_LIBS) \
 	$(DL_LIBS) \
 	$(RT_LIBS) \
+	$(BSD_LIBS) \
 	$(top_builddir)/common/protocol/libprotocol.la \
 	$(top_builddir)/common/utils/libutils.la \
 	$(top_builddir)/common/replacements/libcompat.la \
@@ -193,6 +194,7 @@ test_public_CFLAGS = \
 	$(NULL)
 test_public_LDFLAGS = \
 	$(PTHREAD_LIBS) \
+	$(BSD_LIBS) \
 	$(NULL)
 test_public_LDADD = \
 	$(top_builddir)/common/utils/libutils.la \

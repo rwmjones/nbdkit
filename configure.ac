@@ -439,7 +439,9 @@ AC_CHECK_HEADERS([\
         netdb.h \
         netinet/in.h \
         netinet/tcp.h \
+        paths.h \
         pwd.h \
+        readpassphrase.h \
         termios.h \
         stdatomic.h \
         syslog.h \
@@ -463,6 +465,7 @@ AC_CHECK_HEADERS([linux/vm_sockets.h], [], [], [#include <sys/socket.h>])
 dnl Check for functions in libc, all optional.
 AC_CHECK_FUNCS([\
         accept4 \
+        explicit_bzero \
         fdatasync \
         flockfile \
         funlockfile \
@@ -478,6 +481,9 @@ AC_CHECK_FUNCS([\
         ppoll \
         posix_fadvise \
         posix_memalign \
+        sigaction \
+        tcgetattr \
+        tcsetattr \
         valloc])
 
 dnl Check for timer_create
@@ -489,6 +495,16 @@ AC_SEARCH_LIBS([timer_create], [rt], [
         AC_SUBST([RT_LIBS])
     ], [])
 AC_CHECK_FUNCS([timer_create])
+LIBS="$old_LIBS"
+
+dnl readpassphrase may require -lbsd
+old_LIBS="$LIBS"
+AC_SEARCH_LIBS([readpassphrase], [bsd], [
+        AS_IF([test "x$ac_cv_search_readpassphrase" != "xnone required"],
+            [BSD_LIBS="$ac_cv_search_readpassphrase"], [BSD_LIBS=])
+        AC_SUBST([BSD_LIBS])
+    ], [])
+AC_CHECK_FUNCS([readpassphrase])
 LIBS="$old_LIBS"
 
 dnl Check for structs and members.
@@ -530,6 +546,7 @@ AC_REPLACE_FUNCS([\
         posix_memalign \
         pread \
         pwrite \
+        readpassphrase \
         realpath \
         strndup \
         sysconf \
