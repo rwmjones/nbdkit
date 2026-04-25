@@ -93,10 +93,6 @@
   some assumptions in the code).  There may be other APIs that are
   affected in this way too.
 
-* `nbdkit_read_password()` with `password=-` on Windows should be
-  improved.  Is there a native function for reading passwords on
-  Windows?
-
 ## Suggestions for plugins
 
 Note: qemu supports other formats such as iscsi and ceph/rbd, and
