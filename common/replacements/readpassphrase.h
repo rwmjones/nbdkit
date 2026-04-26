@@ -37,7 +37,7 @@
 
 #if defined(HAVE_READPASSPHRASE_H) && defined(HAVE_READPASSPHRASE)
 
-#include <readpassphrase.h>
+#include_next <readpassphrase.h>
 
 #else /* Use the replacement. */
 
