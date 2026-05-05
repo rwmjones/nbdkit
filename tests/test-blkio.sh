@@ -44,7 +44,11 @@ requires_run
 requires_plugin blkio
 requires_nbdsh_uri
 requires test -f disk
+
+# Check io_uring is possible as a regular user.
 requires_linux_kernel_version 6.0
+requires sysctl --version
+requires test "$(sysctl -n kernel.io_uring_disabled)" = 0
 
 define script <<'EOF'
 import os
