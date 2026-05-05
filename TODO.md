@@ -181,6 +181,15 @@ nbdkit-blkio-plugin:
   threads to handle the events, and nbdkit threads issue requests to
   these threads.  (See how it is done in the VDDK plugin.)
 
+* [The current test](tests/test-blkio.sh) requires `io_uring`, but
+  this is disabled in RHEL and not always available in Linux distros.
+  Ideally blkio would support a simple "file" driver (using POSIX
+  I/O), but it does not right now.  A simple project would be to
+  contribute such a driver to libblkio, and then add a test to nbdkit.
+
+* It would be good to add a way to detect what drivers are supported.
+  This also requires changes to libblkio.
+
 nbdkit-file-plugin:
 
 * There are multiple issues with handling block devices, zeroing and
