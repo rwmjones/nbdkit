@@ -26,8 +26,9 @@ is to have nbdkit exit after the last client connection
 =head1 CAPTIVE NBDKIT
 
 You can run nbdkit as a "captive process", using the I<--run> option.
-This means that nbdkit runs as long as (for example) L<qemu(1)> or
-L<guestfish(1)> is running.  When those exit, nbdkit is killed.
+This means that nbdkit runs as long as (for example) L<qemu(1)>,
+L<nbdinfo(1)> or L<guestfish(1)> is running.  When those exit, nbdkit
+is killed.
 
 Some examples should make this clear.
 
@@ -48,6 +49,11 @@ When guestfish exits, nbdkit is killed.
 Running nbdkit captive under nbdsh for unit testing:
 
  nbdkit memory 1 --run 'nbdsh -u "$uri" -c "print(h.pread(1, 0))"'
+
+Running nbdkit captive and inspecting the plugin's capabilities with
+nbdinfo:
+
+ nbdkit file disk.img --run 'nbdinfo "$uri"'
 
 Running an fio benchmark:
 
@@ -120,9 +126,12 @@ I<--run>.
 
 =head2 Copying data in and out of plugins with captive nbdkit
 
-Captive nbdkit + L<qemu-img(1)> can be used to copy data into and out
-of nbdkit plugins.  For example L<nbdkit-example1-plugin(1)> contains
-an embedded disk image.  To copy it out:
+Captive nbdkit + L<nbdcopy(1)> or L<qemu-img(1)> can be used to copy
+data into and out of nbdkit plugins.  For example
+L<nbdkit-example1-plugin(1)> contains an embedded disk image.  To copy
+it out:
+
+ nbdkit example1 --run 'nbdcopy "$uri" disk.img'
 
  nbdkit example1 --run 'qemu-img convert "$uri" disk.img'
 
@@ -135,7 +144,7 @@ overwritten must be the same size), use L<nbdkit-tar-filter(1)> like
 this:
 
  nbdkit file data.tar --filter=tar tar-entry=disk.img \
-   --run 'qemu-img convert -n disk.img "$uri"'
+   --run 'nbdcopy disk.img "$uri"'
 
 =head1 EXIT WITH PARENT
 
@@ -191,6 +200,8 @@ instances in log files.
 L<nbdkit(1)>,
 L<nbdkit-exitlast-filter(1)>,
 L<nbdkit-exitwhen-filter(1)>,
+L<nbdcopy(1)>,
+L<qemu-img(1)>,
 L<prctl(2)> (on Linux),
 L<procctl(2)> (on FreeBSD).
 

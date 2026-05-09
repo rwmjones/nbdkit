@@ -137,6 +137,8 @@ have to unload the VMCI transport on the host:
 Once nbdkit and the guest are running, from inside the guest you can
 connect to nbdkit on the host using libnbd:
 
+ nbdinfo nbd+vsock:///
+
  nbdsh -c 'h.connect_vsock(2, 10809)' -c 'print(h.get_size())'
 
 =head1 ENVIRONMENT VARIABLES

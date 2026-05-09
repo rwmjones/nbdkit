@@ -180,6 +180,9 @@ For example:
  Command to query the NBD endpoint:
    nbdinfo "nbd+unix://?socket=/tmp/socket"
 
+For common URI formats and extensions supported by libnbd see
+L<nbd_connect_uri(3)>.
+
 =head1 GLOBAL OPTIONS
 
 =over 4
