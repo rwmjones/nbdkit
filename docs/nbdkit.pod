@@ -209,20 +209,20 @@ address of all interfaces (C<0.0.0.0> or C<::>, respectively).
 When both I<-4> and I<-6> options are present on the command line, the
 last one takes effect.
 
-=item B<-D> PLUGIN.FLAG=N
+=item B<-D> PLUGINB<.>FLAGB<=>N
 
-=item B<-D> FILTER.FLAG=N
+=item B<-D> FILTERB<.>FLAGB<=>N
 
-=item B<--debug> PLUGIN.FLAG=N
+=item B<--debug> PLUGINB<.>FLAGB<=>N
 
-=item B<--debug> FILTER.FLAG=N
+=item B<--debug> FILTERB<.>FLAGB<=>N
 
 Set the plugin or filter Debug Flag called C<FLAG> to the integer
 value C<N>.  See L<nbdkit-plugin(3)/Debug Flags>.
 
-=item B<-D> nbdkit.FLAG=N
+=item B<-D> B<nbdkit.>FLAGB<=>N
 
-=item B<--debug> nbdkit.FLAG=N
+=item B<--debug> B<nbdkit.>FLAGB<=>N
 
 (nbdkit E<ge> 1.18)
 
@@ -353,7 +353,7 @@ This option can be used to mask off particular global features which
 are advertised during new-style handshake (defaulting to all supported
 bits set).  See L<nbdkit-protocol(1)>.
 
-=item B<--name>=NAME
+=item B<--name=>NAME
 
 Name this nbdkit instance.  This allows you to associate names with
 nbdkit processes, if you have several.  The name appears in error and
