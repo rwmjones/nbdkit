@@ -131,6 +131,11 @@ read_password_interactive (char **password)
 {
   char pw[256];
 
+  if (!nbdkit_stdio_safe ()) {
+    nbdkit_error ("password=- cannot be used with -s or after config phase");
+    return -1;
+  }
+
   if (readpassphrase ("password: ", pw, sizeof pw, RPP_REQUIRE_TTY) == NULL) {
     nbdkit_error ("readpassphrase: %m");
     return -1;
