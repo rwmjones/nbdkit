@@ -323,6 +323,7 @@ filters do not work properly in this case.
    time-limit              Yes
    tls-fallback            Yes
    truncate                Yes, but unlikely to be useful
+   xor                     Yes
    xz                      No
 
 =head1 SEE ALSO
