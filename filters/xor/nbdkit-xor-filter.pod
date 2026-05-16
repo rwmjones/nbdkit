@@ -71,6 +71,7 @@ C<nbdkit-xor-filter> first appeared in nbdkit 1.48.
 L<nbdkit(1)>,
 L<nbdkit-file-plugin(1)>,
 L<nbdkit-luks-filter(1)>,
+L<nbdkit-map-filter(1)>,
 L<nbdkit-pattern-plugin(1)>,
 L<nbdkit-swab-filter(1)>,
 L<nbdkit-filter(3)>,
