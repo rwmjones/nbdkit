@@ -1,0 +1,85 @@
+=head1 NAME
+
+nbdkit-xor-filter - obfuscate contents of a plugin with XOR
+
+=head1 SYNOPSIS
+
+ nbdkit --filter=xor [PLUGIN ARGS ...] xor=VALUE xorlen=LENBYTES
+
+=head1 DESCRIPTION
+
+C<nbdkit-xor-filter> is a filter for L<nbdkit(1)> which XORs
+(exclusive or) a value across all of the data in the underlying
+plugin.  This can be used to obfuscate the contents of a plugin or as
+a trivial, insecure, but fast type of encryption.  For proper
+encryption, see L<nbdkit-luks-filter(1)>.
+
+ nbdkit file disk.img --filter=xor xor=0xDEADBEEF xorlen=4
+
+This filter does not currently support sparse plugins.  Trim
+operations will fill the backing plugin with XORed zeroes (which makes
+it trivial to read out the "key", another reason why this is not
+secure).
+
+=head1 PARAMETERS
+
+=over 4
+
+=item B<xor=>VALUE
+
+The value to be XORed with the underlying data.  This is truncated or
+extended to C<xorlen> bytes.  Usually you want to specify this in hex
+using the C<0x> prefix.
+
+The value is big endian.  For example S<C<xor=0x123456 xorlen=3>> will
+XOR bytes as follows:
+
+ data:     A0 A1 A2 A3 A4 A5 A6
+ XOR with: 12 34 56 12 34 56 12
+           ────────────────────
+ result:   B2 95 F4 B1 90 F3 B4
+
+This parameter is required.
+
+=item B<xorlen=>LENBYTES
+
+The length of the XOR value, in bytes.  Any length from 1 to 8 is
+supported.
+
+This parameter is required.
+
+=back
+
+=head1 FILES
+
+=over 4
+
+=item F<$filterdir/nbdkit-xor-filter.so>
+
+The filter.
+
+Use C<nbdkit --dump-config> to find the location of C<$filterdir>.
+
+=back
+
+=head1 VERSION
+
+C<nbdkit-xor-filter> first appeared in nbdkit 1.48.
+
+=head1 SEE ALSO
+
+L<nbdkit(1)>,
+L<nbdkit-file-plugin(1)>,
+L<nbdkit-luks-filter(1)>,
+L<nbdkit-pattern-plugin(1)>,
+L<nbdkit-swab-filter(1)>,
+L<nbdkit-filter(3)>,
+L<nbdkit_parse_uint64_t(3)>.
+
+=head1 AUTHORS
+
+Richard W.M. Jones
+
+=head1 COPYRIGHT
+
+Copyright Red Hat

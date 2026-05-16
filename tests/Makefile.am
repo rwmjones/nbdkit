@@ -2429,6 +2429,16 @@ EXTRA_DIST += \
 	test-truncate-extents.sh \
 	$(NULL)
 
+# xor filter test.
+TESTS += \
+	test-xor-filesystem.sh \
+	test-xor-zero.sh \
+	$(NULL)
+EXTRA_DIST += \
+	test-xor-filesystem.sh \
+	test-xor-zero.sh \
+	$(NULL)
+
 # xz filter test.
 LIBGUESTFS_TESTS += test-xz
 

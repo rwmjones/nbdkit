@@ -191,6 +191,7 @@ filters="\
         time-limit \
         tls-fallback \
         truncate \
+        xor \
         xz \
         "
 AC_SUBST([plugins])
@@ -1907,6 +1908,7 @@ AC_CONFIG_FILES([Makefile
                  filters/time-limit/Makefile
                  filters/tls-fallback/Makefile
                  filters/truncate/Makefile
+                 filters/xor/Makefile
                  filters/xz/Makefile
                  fuzzing/Makefile
                  server/local/nbdkit.pc
