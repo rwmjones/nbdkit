@@ -125,6 +125,7 @@ exit_with_parent_loop (void *vp)
                   "exit because parent process died");
     nbdkit_shutdown ();
   }
+  close (fd);
 
   return NULL;
 }
