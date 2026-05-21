@@ -50,6 +50,7 @@ import "C"
 import (
 	"fmt"
 	"reflect"
+	"sync"
 	"syscall"
 	"unsafe"
 )
@@ -232,6 +233,7 @@ func (c *Connection) Zero(count uint32, offset uint64, flags uint32) error {
 var pluginImpl PluginInterface
 var nextConnectionId uintptr
 var connectionMap map[uintptr]ConnectionInterface
+var connectionMutex sync.RWMutex
 
 // Callbacks from the server.  These translate C to Go and back.
 
@@ -317,15 +319,19 @@ func implOpen(c_readonly C.int) unsafe.Pointer {
 		set_error(err)
 		return nil
 	}
+	connectionMutex.Lock()
 	id := nextConnectionId
 	nextConnectionId++
 	connectionMap[id] = h
+	connectionMutex.Unlock()
 	return unsafe.Pointer(id)
 }
 
 func getConn(handle unsafe.Pointer) ConnectionInterface {
 	id := uintptr(handle)
+	connectionMutex.Lock()
 	h, ok := connectionMap[id]
+	connectionMutex.Unlock()
 	if !ok {
 		panic(fmt.Sprintf("connection %d was not open", id))
 	}
@@ -337,7 +343,9 @@ func implClose(handle unsafe.Pointer) {
 	h := getConn(handle)
 	h.Close()
 	id := uintptr(handle)
+	connectionMutex.Lock()
 	delete(connectionMap, id)
+	connectionMutex.Unlock()
 }
 
 //export implGetSize
