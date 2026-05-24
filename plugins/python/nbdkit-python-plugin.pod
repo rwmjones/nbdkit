@@ -150,6 +150,12 @@ C<False> if the connection is plaintext.
 
 See: L<nbdkit_is_tls(3)>
 
+=head3 C<nbdkit.name()>
+
+Return the name of the nbdkit instance, or None if it was not set.
+
+See: L<nbdkit_name(3)>
+
 =head3 C<nbdkit.nanosleep(secs, nsecs)>
 
 Sleep for seconds and nanoseconds.
@@ -243,6 +249,12 @@ Returns C<True> if it is safe to interact with stdin and stdout
 during the configuration phase.
 
 See: L<nbdkit_stdio_safe(3)>
+
+=head3 C<nbdkit.timestamp()>
+
+Generate a timestamp for log messages.
+
+See: L<nbdkit_timestamp(3)>
 
 =head2 Module constants
 

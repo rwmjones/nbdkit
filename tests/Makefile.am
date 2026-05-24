@@ -1543,9 +1543,11 @@ TESTS += \
 	test-python-export-name.sh \
 	test-python-export-list.sh \
 	test-python-is-tls.sh \
+	test-python-name.sh \
 	test-python-password.sh \
 	test-python-peer.sh \
 	test-python-thread-model.sh \
+	test-python-timestamp.sh \
 	test-shebang-python.sh \
 	test-shebang-crlf.sh \
 	$(NULL)
@@ -1556,9 +1558,11 @@ EXTRA_DIST += \
 	python-export-name.py \
 	python-export-list.py \
 	python-is-tls.py \
+	python-name.py \
 	python-password.py \
 	python-peer.py \
 	python-thread-model.py \
+	python-timestamp.py \
 	shebang.py \
 	test-python-debug-hexdump.sh \
 	test-python-error.sh \
@@ -1569,7 +1573,9 @@ EXTRA_DIST += \
 	test-python-password.sh \
 	test-python-peer.sh \
 	test-python-plugin.py \
+	test-python-name.sh \
 	test-python-thread-model.sh \
+	test-python-timestamp.sh \
 	test-python.sh \
 	test-shebang-python.sh \
 	test-shebang-crlf.sh \

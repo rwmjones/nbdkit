@@ -54,6 +54,11 @@ In L<nbdkit-ocaml-plugin(3)>:
 
  NBDKit.timestamp : unit -> string
 
+In L<nbdkit-python-plugin(3)>:
+
+ import nbdkit
+ ts = nbdkit.timestamp()
+
 =head1 HISTORY
 
 C<nbdkit_timestamp> was added in nbdkit 1.48.

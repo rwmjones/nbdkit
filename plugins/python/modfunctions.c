@@ -373,6 +373,35 @@ do_read_password (PyObject *self, PyObject *args)
   return r;
 }
 
+/* nbdkit.name */
+static PyObject *
+do_name (PyObject *self, PyObject *args)
+{
+  const char *name = nbdkit_name ();
+
+  if (name) {
+    /* The --name parameter is most likely to be 7bit ASCII, but if
+     * it's in any 8bit encoding it's probably UTF-8, hence:
+     */
+    return PyUnicode_FromString (name);
+  }
+  else {
+    /* name == NULL is not an error, return None. */
+    Py_INCREF (Py_None);
+    return Py_None;
+  }
+}
+
+/* nbdkit.timestamp */
+static PyObject *
+do_timestamp (PyObject *self, PyObject *args)
+{
+  const char *ts = nbdkit_timestamp ();
+
+  /* The function never returns NULL. */
+  return PyUnicode_FromString (ts);
+}
+
 static PyMethodDef NbdkitMethods[] = {
   { "debug", debug, METH_VARARGS,
     "Print a debug message" },
@@ -386,6 +415,8 @@ static PyMethodDef NbdkitMethods[] = {
     "Return the optional export name negotiated with the client" },
   { "is_tls", do_is_tls, METH_NOARGS,
     "Return True if the client completed TLS authentication" },
+  { "name", do_name, METH_NOARGS,
+    "Return the name of the nbdkit instance" },
   { "nanosleep", do_nanosleep, METH_VARARGS,
     "Sleep for seconds and nanoseconds" },
   { "parse_bool", parse_bool, METH_VARARGS,
@@ -416,6 +447,8 @@ static PyMethodDef NbdkitMethods[] = {
     "Request asynchronous shutdown" },
   { "stdio_safe", do_stdio_safe, METH_NOARGS,
     "Return True if it is safe to interact with stdin and stdout" },
+  { "timestamp", do_timestamp, METH_NOARGS,
+    "Generate a timestamp for log messages" },
   { NULL }
 };
 
