@@ -59,6 +59,11 @@ In L<nbdkit-python-plugin(3)>:
  import nbdkit
  ts = nbdkit.timestamp()
 
+In L<nbdkit-rust-plugin(3)>:
+
+ use nbdkit::*;
+ pub fn timestamp() -> String
+
 =head1 HISTORY
 
 C<nbdkit_timestamp> was added in nbdkit 1.48.

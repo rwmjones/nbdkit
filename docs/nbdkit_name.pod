@@ -30,6 +30,11 @@ In L<nbdkit-python-plugin(3)>:
  import nbdkit
  name = nbdkit.name()
 
+In L<nbdkit-rust-plugin(3)>:
+
+ use nbdkit::*;
+ pub fn name() -> Option<String>
+
 =head1 HISTORY
 
 C<nbdkit_name> was added in nbdkit 1.48.
