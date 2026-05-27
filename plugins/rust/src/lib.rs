@@ -1105,6 +1105,8 @@ extern "C" {
     fn nbdkit_parse_probability(what: *const c_char,
                                 s: *const c_char,
                                 retp: *mut c_double) -> c_int;
+    fn nbdkit_name() -> *const c_char;
+    fn nbdkit_timestamp() -> *const c_char;
 }
 
 /// Print a debug message.
@@ -1298,6 +1300,35 @@ pub fn parse_probability(what: &str, s: &str) -> Result<f64> {
                        "failed to parse probability using nbdkit_parse_probability"));
     }
     Ok(d)
+}
+
+/// Return the name of the nbdkit instance.
+pub fn name() -> Option<String> {
+    // nbdkit_name() returning NULL is not an error.
+    let p = unsafe { nbdkit_name() };
+    if p.is_null() {
+        None
+    }
+    else {
+        // XXX We're ignoring unlikely UTF-8 conversion errors here.
+        let s = unsafe { CStr::from_ptr(p) }.to_str().unwrap();
+        Some(String::from(s))
+    }
+}
+
+/// Generate a timestamp for log messages.
+///
+/// Note that this function must be called from one of nbdkit's own threads.
+/// That is, it can only be called in the same thread as one of the `Server`
+/// callbacks.
+pub fn timestamp() -> String {
+    // nbdkit_timestamp() cannot return NULL.
+    // We're ignoring UTF-8 conversion errors, but they cannot happen.
+    let s = unsafe {
+        let p = nbdkit_timestamp();
+        CStr::from_ptr(p)
+    }.to_str().unwrap();
+    String::from(s)
 }
 
 #[doc(hidden)]
