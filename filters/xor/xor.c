@@ -45,8 +45,8 @@
 #include "minmax.h"
 #include "rounding.h"
 
-/* The 'xor' parameter from the command line.  'paramset' is true if
- * valueparam was set by the user.
+/* The 'xor' parameter from the command line.  'paramset' is set to
+ * true when the parameter is seen on the command line.
  */
 static uint64_t valueparam;
 static bool paramset = false;
@@ -64,6 +64,10 @@ xor_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
             const char *key, const char *value)
 {
   if (strcmp (key, "xor") == 0) {
+    if (paramset) {
+      nbdkit_error ("'xor' parameter must be set only once");
+      return -1;
+    }
     if (nbdkit_parse_uint64_t (key, value, &valueparam) == -1)
       return -1;
     paramset = true;
@@ -75,7 +79,7 @@ xor_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
     if (nbdkit_parse_int (key, value, &n) == -1)
       return -1;
     if (n <= 0 || n > 8) {
-      nbdkit_error ("xorlen parameter must be [1..8] (in bytes)");
+      nbdkit_error ("'xorlen' parameter must be [1..8] (in bytes)");
       return -1;
     }
     xorlen = n;
@@ -93,11 +97,11 @@ xor_config_complete (nbdkit_next_config_complete *next,
   ssize_t i;
 
   if (!paramset) {
-    nbdkit_error ("xor parameter is required");
+    nbdkit_error ("'xor' parameter is required");
     return -1;
   }
   if (xorlen == 0) {
-    nbdkit_error ("xorlen parameter is required");
+    nbdkit_error ("'xorlen' parameter is required");
     return -1;
   }
 
@@ -125,6 +129,8 @@ xor_config_complete (nbdkit_next_config_complete *next,
 /* Break out the simple, aligned cases first to give GCC a good chance
  * of vectorizing.
  */
+
+/* xorlen == 1 */
 static void
 do_xor1 (uint8_t *buf, uint32_t count, uint8_t c)
 {
@@ -134,6 +140,7 @@ do_xor1 (uint8_t *buf, uint32_t count, uint8_t c)
     buf[i] ^= c;
 }
 
+/* xorlen == 2 and aligned to 2 bytes */
 static void
 do_aligned_xor2 (uint16_t *buf, uint32_t count, uint16_t c)
 {
@@ -143,6 +150,7 @@ do_aligned_xor2 (uint16_t *buf, uint32_t count, uint16_t c)
     buf[i] ^= c;
 }
 
+/* xorlen == 4 and aligned to 4 bytes */
 static void
 do_aligned_xor4 (uint32_t *buf, uint32_t count, uint32_t c)
 {
@@ -152,6 +160,7 @@ do_aligned_xor4 (uint32_t *buf, uint32_t count, uint32_t c)
     buf[i] ^= c;
 }
 
+/* xorlen == 8 and aligned to 8 bytes */
 static void
 do_aligned_xor8 (uint64_t *buf, uint32_t count, uint64_t c)
 {
