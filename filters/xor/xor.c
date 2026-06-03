@@ -76,6 +76,10 @@ xor_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
   else if (strcmp (key, "xorlen") == 0) {
     int n;
 
+    if (xorlen) {
+      nbdkit_error ("'xorlen' parameter must be set only once");
+      return -1;
+    }
     if (nbdkit_parse_int (key, value, &n) == -1)
       return -1;
     if (n <= 0 || n > 8) {
