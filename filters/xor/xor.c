@@ -45,11 +45,14 @@
 #include "minmax.h"
 #include "rounding.h"
 
-/* The 'xor' parameter from the command line.  'paramset' is set to
- * true when the parameter is seen on the command line.
- */
+enum mode {
+  mode_not_set = 0,
+  mode_value,                   /* xor=VALUE */
+};
+static enum mode mode = mode_not_set;
+
+/* In value mode, the 'xor=VALUE' parameter from the command line. */
 static uint64_t valueparam;
-static bool paramset = false;
 
 /* Value as bytes, big endian, rotated so that xor[0..xorlen-1] are
  * what we will XOR with the data.
@@ -64,13 +67,13 @@ xor_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
             const char *key, const char *value)
 {
   if (strcmp (key, "xor") == 0) {
-    if (paramset) {
+    if (mode != mode_not_set) {
       nbdkit_error ("'xor' parameter must be set only once");
       return -1;
     }
+    mode = mode_value;
     if (nbdkit_parse_uint64_t (key, value, &valueparam) == -1)
       return -1;
-    paramset = true;
     return 0;
   }
   else if (strcmp (key, "xorlen") == 0) {
@@ -97,10 +100,7 @@ static int
 xor_config_complete (nbdkit_next_config_complete *next,
                      nbdkit_backend *nxdata)
 {
-  uint64_t value = valueparam;
-  ssize_t i;
-
-  if (!paramset) {
+  if (mode == mode_not_set) {
     nbdkit_error ("'xor' parameter is required");
     return -1;
   }
@@ -109,18 +109,6 @@ xor_config_complete (nbdkit_next_config_complete *next,
     return -1;
   }
 
-  /* Get the actual bytes we will XOR with the data. */
-  for (i = xorlen-1; i >= 0; --i) {
-    xor[i] = value & 0xff;
-    value >>= 8;
-  }
-  nbdkit_debug ("xor[] = { "
-                "0x%" PRIx8 ", 0x%" PRIx8 ", 0x%" PRIx8 ", 0x%" PRIx8 ", "
-                "0x%" PRIx8 ", 0x%" PRIx8 ", 0x%" PRIx8 ", 0x%" PRIx8
-                " }",
-                xor[0], xor[1], xor[2], xor[3],
-                xor[4], xor[5], xor[6], xor[7]);
-
   return next (nxdata);
 }
 
@@ -128,7 +116,34 @@ xor_config_complete (nbdkit_next_config_complete *next,
   "xor=VALUE                  Value to be XORed with data, eg. 0x1234.\n" \
   "xorlen=LENBYTES            Length of value in bytes (range [1..8])."
 
-/* This is where we do in-place XOR. */
+static int
+xor_get_ready (int final_thread_mode)
+{
+  switch (mode) {
+  case mode_not_set:
+    abort ();
+  case mode_value: {
+    uint64_t value = valueparam;
+    ssize_t i;
+
+    /* Get the actual bytes we will XOR with the data. */
+    for (i = xorlen-1; i >= 0; --i) {
+      xor[i] = value & 0xff;
+      value >>= 8;
+    }
+    nbdkit_debug ("xor[] = { "
+                  "0x%" PRIx8 ", 0x%" PRIx8 ", 0x%" PRIx8 ", 0x%" PRIx8 ", "
+                  "0x%" PRIx8 ", 0x%" PRIx8 ", 0x%" PRIx8 ", 0x%" PRIx8
+                  " }",
+                  xor[0], xor[1], xor[2], xor[3],
+                  xor[4], xor[5], xor[6], xor[7]);
+    break;
+  }
+  }
+  return 0;
+}
+
+/*-- For xor=VALUE this is where we do in-place XOR. --*/
 
 /* Break out the simple, aligned cases first to give GCC a good chance
  * of vectorizing.
@@ -175,7 +190,7 @@ do_aligned_xor8 (uint64_t *buf, uint32_t count, uint64_t c)
 }
 
 static void
-do_xor (void *bufv, uint32_t count, uint64_t offset)
+do_xor_value (void *bufv, uint32_t count, uint64_t offset)
 {
   uint8_t *buf = bufv;
   size_t i;
@@ -215,7 +230,7 @@ do_xor (void *bufv, uint32_t count, uint64_t offset)
   /* Do the aligned part quickly if we can. */
   if (xorlen == 2 || xorlen == 4 || xorlen == 8) {
     size_t n = ROUND_DOWN (count, xorlen);
-    do_xor (buf, n, offset);
+    do_xor_value (buf, n, offset);
     offset += n;
     count -= n;
     buf += n;
@@ -231,7 +246,19 @@ do_xor (void *bufv, uint32_t count, uint64_t offset)
   buf++;
 
   /* Recurse for the rest. */
-  do_xor (buf, count, offset);
+  do_xor_value (buf, count, offset);
+}
+
+static void
+do_xor (void *bufv, uint32_t count, uint64_t offset)
+{
+  switch (mode) {
+  case mode_not_set:
+    abort ();
+  case mode_value:
+    do_xor_value (bufv, count, offset);
+    return;
+  }
 }
 
 /* Read data. */
@@ -318,6 +345,7 @@ static struct nbdkit_filter filter = {
   .config            = xor_config,
   .config_complete   = xor_config_complete,
   .config_help       = xor_config_help,
+  .get_ready         = xor_get_ready,
   .pread             = xor_pread,
   .pwrite            = xor_pwrite,
   .trim              = xor_trim,
