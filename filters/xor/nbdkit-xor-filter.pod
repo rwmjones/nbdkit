@@ -6,6 +6,8 @@ nbdkit-xor-filter - obfuscate contents of a plugin with XOR
 
  nbdkit --filter=xor [PLUGIN ARGS ...] xor=VALUE xorlen=LENBYTES
 
+ nbdkit --filter=xor [PLUGIN ARGS ...] xor=rand[:SEED]
+
 =head1 DESCRIPTION
 
 C<nbdkit-xor-filter> is a filter for L<nbdkit(1)> which XORs
@@ -14,12 +16,20 @@ plugin.  This can be used to obfuscate the contents of a plugin or as
 a trivial, insecure, but fast type of encryption.  For proper
 encryption, see L<nbdkit-luks-filter(1)>.
 
+This filter has two modes.  You can XOR with a fixed repeating
+pattern:
+
  nbdkit file disk.img --filter=xor xor=0xDEADBEEF xorlen=4
+
+Or you can XOR with the output of a pseudo-random number generator
+(PRNG) with an optional seed by using C<xor=rand[:SEED]>.  The result
+is more obfuscated.  In this mode C<xorlen> is not used:
+
+ nbdkit file disk.img --filter=xor xor=rand:1984
 
 This filter does not currently support sparse plugins.  Trim
 operations will fill the backing plugin with XORed zeroes (which makes
-it trivial to read out the "key", another reason why this is not
-secure).
+it easy to read out the "key", another reason why this is not secure).
 
 =head1 PARAMETERS
 
@@ -39,14 +49,23 @@ XOR bytes as follows:
            ────────────────────
  result:   B2 95 F4 B1 90 F3 B4
 
-This parameter is required.
+=item B<xor=rand>
+
+=item B<xor=rand:>SEED
+
+XOR the underlying data with the output of a pseudo-random number
+generator (PRNG).  Optionally a seed for the PRNG may be given
+(otherwise the seed is 0).
+
+The C<xor> parameter is required.
 
 =item B<xorlen=>LENBYTES
 
 The length of the XOR value, in bytes.  Any length from 1 to 8 is
 supported.
 
-This parameter is required.
+This parameter is required when using C<xor=VALUE> and should not be
+set for C<xor=rand>.
 
 =back
 
@@ -73,6 +92,7 @@ L<nbdkit-file-plugin(1)>,
 L<nbdkit-luks-filter(1)>,
 L<nbdkit-map-filter(1)>,
 L<nbdkit-pattern-plugin(1)>,
+L<nbdkit-random-plugin(1)>,
 L<nbdkit-swab-filter(1)>,
 L<nbdkit-filter(3)>,
 L<nbdkit_parse_uint64_t(3)>.

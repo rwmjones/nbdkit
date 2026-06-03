@@ -38,16 +38,19 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <string.h>
+#include <assert.h>
 
 #include <nbdkit-filter.h>
 
 #include "isaligned.h"
 #include "minmax.h"
+#include "random.h"
 #include "rounding.h"
 
 enum mode {
   mode_not_set = 0,
   mode_value,                   /* xor=VALUE */
+  mode_rand,                    /* xor=rand[:SEED] */
 };
 static enum mode mode = mode_not_set;
 
@@ -62,6 +65,9 @@ static uint8_t xor[8];
 /* Length of value.  Valid lengths are [1..8], or 0 if not yet set. */
 static size_t xorlen = 0;
 
+/* In rand mode, the seed. */
+static uint64_t seed;
+
 static int
 xor_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
             const char *key, const char *value)
@@ -71,9 +77,30 @@ xor_config (nbdkit_next_config *next, nbdkit_backend *nxdata,
       nbdkit_error ("'xor' parameter must be set only once");
       return -1;
     }
-    mode = mode_value;
-    if (nbdkit_parse_uint64_t (key, value, &valueparam) == -1)
-      return -1;
+    if (strcmp (value, "rand") == 0) {
+      if (xorlen) {
+        nbdkit_error ("'xorlen' must not be used with 'xor=rand'");
+        return -1;
+      }
+      mode = mode_rand;
+      xorlen = 8;
+      seed = 0;
+    }
+    else if (strncmp (value, "rand:", 5) == 0) {
+      if (xorlen) {
+        nbdkit_error ("'xorlen' must not be used with 'xor=rand'");
+        return -1;
+      }
+      mode = mode_rand;
+      xorlen = 8;
+      if (nbdkit_parse_uint64_t (key, value + 5, &seed) == -1)
+        return -1;
+    }
+    else {
+      mode = mode_value;
+      if (nbdkit_parse_uint64_t (key, value, &valueparam) == -1)
+        return -1;
+    }
     return 0;
   }
   else if (strcmp (key, "xorlen") == 0) {
@@ -114,6 +141,7 @@ xor_config_complete (nbdkit_next_config_complete *next,
 
 #define xor_config_help \
   "xor=VALUE                  Value to be XORed with data, eg. 0x1234.\n" \
+  "xor=rand[:SEED]            XOR with pseudo-random numbers with optional seed.\n" \
   "xorlen=LENBYTES            Length of value in bytes (range [1..8])."
 
 static int
@@ -139,6 +167,8 @@ xor_get_ready (int final_thread_mode)
                   xor[4], xor[5], xor[6], xor[7]);
     break;
   }
+  case mode_rand:
+    break;
   }
   return 0;
 }
@@ -249,6 +279,82 @@ do_xor_value (void *bufv, uint32_t count, uint64_t offset)
   do_xor_value (buf, count, offset);
 }
 
+/*-- Do xor=rand.  Note that xorlen is always 8. --*/
+
+/* See also random.c:generate() */
+static uint64_t
+get_rand_at_offset (uint64_t offset)
+{
+  struct random_state state;
+  uint64_t r;
+
+  assert ((offset & 7) == 0);
+
+  xsrandom (seed + offset, &state);
+  r = xrandom (&state);
+  return r;
+}
+
+static void
+do_aligned_rand8 (uint64_t *buf, uint32_t count, uint64_t offset)
+{
+  size_t i;
+
+  for (i = 0; i < count; i += 8) {
+    uint64_t r = get_rand_at_offset (offset + i);
+    buf[i/8] ^= r;
+  }
+}
+
+static void
+do_xor_rand (void *bufv, uint32_t count, uint64_t offset)
+{
+  uint8_t *buf = bufv;
+  size_t i, n;
+  union {
+    uint64_t r;
+    uint8_t rand[8];
+  } u;
+
+  /* This check makes the recursion easier. */
+  if (count == 0) return;
+
+  if (IS_ALIGNED (offset, 8) && IS_ALIGNED (count, 8)) {
+    do_aligned_rand8 (bufv, count, offset);
+    return;
+  }
+
+  /* Align to the next boundary. */
+  while (count > 0 && (i = (offset % 8)) != 0) {
+    u.r = get_rand_at_offset (ROUND_DOWN (offset, 8));
+    *buf ^= u.rand[i];
+    offset++;
+    count--;
+    buf++;
+  }
+  if (count == 0) return;
+
+  /* Do the aligned part quickly if we can. */
+  n = ROUND_DOWN (count, 8);
+  do_xor_rand (buf, n, offset);
+  offset += n;
+  count -= n;
+  buf += n;
+  if (count == 0) return;
+
+  /* Do at least one byte so we make progress.
+   * We know we are aligned here.
+   */
+  u.r = get_rand_at_offset (offset);
+  *buf ^= u.rand[0];
+  offset++;
+  count--;
+  buf++;
+
+  /* Recurse for the rest. */
+  do_xor_rand (buf, count, offset);
+}
+
 static void
 do_xor (void *bufv, uint32_t count, uint64_t offset)
 {
@@ -257,6 +363,10 @@ do_xor (void *bufv, uint32_t count, uint64_t offset)
     abort ();
   case mode_value:
     do_xor_value (bufv, count, offset);
+    return;
+  case mode_rand:
+    assert (xorlen == 8);
+    do_xor_rand (bufv, count, offset);
     return;
   }
 }

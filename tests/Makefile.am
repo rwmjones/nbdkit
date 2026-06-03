@@ -2438,10 +2438,12 @@ EXTRA_DIST += \
 # xor filter test.
 TESTS += \
 	test-xor-filesystem.sh \
+	test-xor-rand.sh \
 	test-xor-zero.sh \
 	$(NULL)
 EXTRA_DIST += \
 	test-xor-filesystem.sh \
+	test-xor-rand.sh \
 	test-xor-zero.sh \
 	$(NULL)
 
