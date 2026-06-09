@@ -121,14 +121,14 @@ bench: all
 # generated files have been included in the tarball.  (Note you must
 # have done 'make dist')
 maintainer-check-extra-dist:
-	@tar ztf $(PACKAGE_NAME)-$(VERSION).tar.gz | sort | \
+	@tar ztf $(PACKAGE_NAME)-$(VERSION).tar.gz | LANG=C sort | \
 	    sed 's,^$(PACKAGE_NAME)-$(VERSION)/,,' > tarfiles
 	@git ls-files | \
       grep -v \
 	    -e '^\.gitlab-ci.yml' \
 	    -e '^ci/' | \
-	    sort > gitfiles
-	@comm -13 tarfiles gitfiles > comm-out
+	    LANG=C sort > gitfiles
+	@LANG=C comm -13 tarfiles gitfiles > comm-out
 	@echo Checking for differences between EXTRA_DIST and git ...
 	@cat comm-out
 	@[ ! -s comm-out ]
