@@ -125,7 +125,6 @@ maintainer-check-extra-dist:
 	    sed 's,^$(PACKAGE_NAME)-$(VERSION)/,,' > tarfiles
 	@git ls-files | \
       grep -v \
-	    -e '^\.cirrus.yml' \
 	    -e '^\.gitlab-ci.yml' \
 	    -e '^ci/' | \
 	    sort > gitfiles
