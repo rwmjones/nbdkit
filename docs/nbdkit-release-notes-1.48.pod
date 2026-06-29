@@ -1,0 +1,129 @@
+=head1 NAME
+
+nbdkit-release-notes-1.48 - release notes for nbdkit 1.48
+
+=head1 DESCRIPTION
+
+These are the release notes for nbdkit stable release 1.48.
+This describes the major changes since 1.44.
+
+nbdkit 1.48.0 was released on B<XXX July 2026>.
+
+=head2 Security
+
+Fix minor denial of service vulnerability in
+L<nbdkit-blocksize-policy-filter(1)> (Eric Blake).
+
+Fix a minor issue with concurrent connections in
+L<nbdkit-golang-plugin(3)> (AISLE AI security scanner).
+
+=head2 Plugins
+
+In L<nbdkit-file-plugin(1)> we no longer advertize minimum_io_size
+larger than 64K even for backing storage like LVM that could support
+it.  This is because the NBD protocol itself does not support larger
+sizes (thanks Nijin Ashok, Eric Blake, Mikulas Patocka).
+
+In L<nbdkit-sparse-random-plugin(1)> the block size is now
+configurable at run time.
+
+In L<nbdkit-vddk-plugin(1)> test against VDDK 9.0.1.0.
+
+=head2 Filters
+
+New L<nbdkit-xor-filter(1)> simply XORs a pattern or PRNG with the
+underlying data, providing simple obfuscation.
+
+L<nbdkit-cow-filter(1)> now supports arbitrarily large overlays, even
+when the filesystem used to store the overlay has file size
+limitations (eg. 16T on ext4)
+
+L<nbdkit-ip-filter(1)> now allows you to filter on loopback addresses.
+
+=head2 Language bindings
+
+In L<nbdkit-ocaml-plugin(3)> a new C<NBDKit.Error> exception can be
+used to throw a precise errno with error message.  Also C<Unix_error>
+exception is now translated to errno and error, and there are other
+improvements to C<Failure> and C<Invalid_argument> exceptions.
+
+In nbdkit-ocaml-plugin provide convenience functions for converting
+bytes and string types into C<NBDKit.buf>
+
+=head2 Server
+
+nbdkit I<--port=0> can be used to let the kernel pick a free listening
+port.
+
+C<LISTEN_FDNAMES> is now parsed for socket activation, although we do
+nothing aside from printing socket names.
+
+=head2 API
+
+New L<nbdkit_debug_hexdiff(3)> function which shows the differences
+between two binary buffers.
+
+New L<nbdkit_name(3)> function which returns the nbdkit I<--name>
+parameter to plugins and filters.
+
+New L<nbdkit_timestamp(3)> function which returns a timestamp suitable
+for log messages.
+
+When parsing human sizes (eg. in L<nbdkit_parse_size(3)>), allow hex
+and octal sizes, and allow C<_> before the scaling factor.  For
+example C<0x1_E> is parsed as 1 exabyte.
+
+L<nbdkit_read_password(3)> C<password=-> now reads the password from
+F</dev/tty> on operating systems that support this.
+
+=begin comment
+
+=head2 Bug fixes
+
+=end comment
+
+=head2 Documentation
+
+Document how to disable shadow stack support for loading plugins that
+were not compiled with this feature.
+
+=head2 Tests
+
+A new interoperability test with Digital Ocean's Go-NBD client library
+was added.
+
+Fix CI (Daniel Berrangé).
+
+=head2 Build
+
+Setting C<NBDKIT_VALGRIND_MASSIF=1> will run nbdkit under valgrind
+massif (for memory profiling).
+
+=begin comment
+
+=head2 Internals
+
+=end comment
+
+=head1 SEE ALSO
+
+L<nbdkit(1)>.
+
+=head1 AUTHORS
+
+Authors of nbdkit 1.48:
+
+=begin comment
+
+git shortlog -s v1.46.0..
+
+=end comment
+
+=over 4
+
+
+=back
+
+=head1 COPYRIGHT
+
+Copyright Red Hat
