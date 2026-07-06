@@ -826,12 +826,14 @@ This signal is ignored.
 
 =over 4
 
+=item C<LISTEN_FDNAMES>
+
 =item C<LISTEN_FDS>
 
 =item C<LISTEN_PID>
 
-If present in the environment when nbdkit starts up, these trigger
-L<nbdkit-service(1)/SOCKET ACTIVATION>.
+If present in the environment when nbdkit starts up, these are used
+for L<nbdkit-service(1)/SOCKET ACTIVATION>.
 
 =item C<GLIBC_TUNABLES=glibc.cpu.x86_shstk=off>
 
