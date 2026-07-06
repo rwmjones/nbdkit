@@ -833,6 +833,16 @@ This signal is ignored.
 If present in the environment when nbdkit starts up, these trigger
 L<nbdkit-service(1)/SOCKET ACTIVATION>.
 
+=item C<GLIBC_TUNABLES=glibc.cpu.x86_shstk=off>
+
+Set this environment variable if you see the error below when loading
+a plugin or filter:
+
+ error: dlopen: <plugin.so>: rebuild shared object with SHSTK support enabled
+
+or recompile the plugin/filter with shadow stack support enabled if
+you can.
+
 =back
 
 =head1 SEE ALSO
