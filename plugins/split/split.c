@@ -327,14 +327,14 @@ split_cache (void *handle, uint32_t count, uint64_t offset, uint32_t flags)
     if (max > count)
       max = count;
 
-    r = posix_fadvise (file->fd, offset, max, POSIX_FADV_WILLNEED);
+    r = posix_fadvise (file->fd, foffs, max, POSIX_FADV_WILLNEED);
     if (r) {
       errno = r;
       nbdkit_error ("posix_fadvise: %m");
       return -1;
     }
-    count -= r;
-    offset += r;
+    count -= max;
+    offset += max;
   }
 
   return 0;

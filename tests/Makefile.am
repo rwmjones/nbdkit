@@ -1314,8 +1314,14 @@ test_split_SOURCES = test-split.c
 test_split_CFLAGS = $(WARNINGS_CFLAGS) $(LIBNBD_CFLAGS)
 test_split_LDADD = $(LIBNBD_LIBS)
 
-TESTS += test-split-extents.sh
-EXTRA_DIST += test-split-extents.sh
+TESTS += \
+	test-split-cache.sh \
+	test-split-extents.sh \
+	$(NULL)
+EXTRA_DIST += \
+	test-split-cache.sh \
+	test-split-extents.sh \
+	$(NULL)
 
 # ssh plugin test.
 EXTRA_DIST += \
