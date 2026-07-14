@@ -224,8 +224,11 @@ cow_open (nbdkit_next_open *next, nbdkit_context *nxdata,
   }
 
   /* Always pass readonly=1 to the underlying plugin. */
-  if (next (nxdata, 1, exportname) == -1)
+  if (next (nxdata, 1, exportname) == -1) {
+    /* Don't free h->blk here.  It is freed in cow_unload. */
+    free (h);
     return NULL;
+  }
 
   return h;
 }

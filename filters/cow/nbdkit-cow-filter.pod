@@ -136,6 +136,13 @@ connection sees its own copy-on-write overlay and simply disconnecting
 the client throws that away.  It also allows us to create diffs as
 above.
 
+=head2 Client authentication is advisable
+
+When using this filter it is advisable to authenticate, filter, or use
+socket permissions, so only trusted clients can connect (see
+L<nbdkit-tls(1)>, L<nbdkit-ip-filter(1)>).  Clients could abuse this
+filter to allocate fairly arbitrary amounts of storage and RAM.
+
 =head1 ENVIRONMENT VARIABLES
 
 =over 4
