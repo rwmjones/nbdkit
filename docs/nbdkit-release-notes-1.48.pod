@@ -5,9 +5,9 @@ nbdkit-release-notes-1.48 - release notes for nbdkit 1.48
 =head1 DESCRIPTION
 
 These are the release notes for nbdkit stable release 1.48.
-This describes the major changes since 1.44.
+This describes the major changes since 1.46.
 
-nbdkit 1.48.0 was released on B<XXX July 2026>.
+nbdkit 1.48.0 was released on B<14 July 2026>.
 
 =head2 Security
 
@@ -16,6 +16,16 @@ L<nbdkit-blocksize-policy-filter(1)> (Eric Blake).
 
 Fix a minor issue with concurrent connections in
 L<nbdkit-golang-plugin(3)> (AISLE AI security scanner).
+
+Fix two minor denial of service vulnerabilities in
+L<nbdkit-split-plugin(1)> (AISLE AI security scanner).
+
+Fix a memory leak and document a potential denial of service
+vulnerability (although working by design) in L<nbdkit-cow-filter(1)>
+(AISLE AI security scanner).
+
+Fix a memory leak in server option parsing (AISLE AI security
+scanner).
 
 =head2 Plugins
 
@@ -121,6 +131,15 @@ git shortlog -s v1.46.0..
 
 =over 4
 
+=item Daniel P. Berrangé
+
+=item Eric Blake
+
+=item Christopher Byrne
+
+=item Richard W.M. Jones
+
+=item Alan Somers
 
 =back
 
