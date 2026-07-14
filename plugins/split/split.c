@@ -47,6 +47,7 @@
 #include <nbdkit-plugin.h>
 
 #include "cleanup.h"
+#include "minmax.h"
 #include "pread.h"
 #include "pwrite.h"
 #include "string-vector.h"
@@ -426,6 +427,12 @@ split_extents (void *handle, uint32_t count, uint64_t offset,
       r = do_extents (file, max, foffs, req_one, extents);
       if (r == -1)
         return -1;
+      /* do_extents might return a value smaller or larger than max.
+       * If smaller, we want to move only that far in the file.  If
+       * larger, clamp r so we don't decrement count by too much
+       * below.
+       */
+      r = MIN (r, max);
     }
     else {
       r = nbdkit_add_extent (extents, offset, max, 0 /* allocated data */);
