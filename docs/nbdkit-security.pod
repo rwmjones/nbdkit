@@ -53,6 +53,18 @@ See the patch here:
 L<https://lists.libguestfs.org/archives/list/guestfs@lists.libguestfs.org/thread/EQTMAKGDP53WYOUBCEKWLCWAJHVUNSXX/>
 Full announcement and links to mitigation coming.
 
+=head2 denial of service attacks in split plugin
+
+See the upstream commits:
+L<https://gitlab.com/nbdkit/nbdkit/-/commit/fc588a8af9316b187f87ea0dead0f3de644f3135>
+L<https://gitlab.com/nbdkit/nbdkit/-/commit/0a583bbda20b58c10173154cfb93a0e0cdf9fac8>
+
+=head2 denial of service attack in cow filter
+
+This filter is working as intended but we documented that you should
+only use this filter with trusted clients.  See:
+L<https://gitlab.com/nbdkit/nbdkit/-/commit/8d5e20b15f90438f8a565837fede4ca18da64d6d>
+
 =head1 SEE ALSO
 
 L<nbdkit(1)>.
