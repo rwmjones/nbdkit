@@ -1317,10 +1317,12 @@ test_split_LDADD = $(LIBNBD_LIBS)
 TESTS += \
 	test-split-cache.sh \
 	test-split-extents.sh \
+	test-split-extents-overread.sh \
 	$(NULL)
 EXTRA_DIST += \
 	test-split-cache.sh \
 	test-split-extents.sh \
+	test-split-extents-overread.sh \
 	$(NULL)
 
 # ssh plugin test.
