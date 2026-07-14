@@ -837,6 +837,7 @@ negotiate_handshake_newstyle_options (void)
          * returned here is not usable.
          */
         if (option == NBD_OPT_SET_META_CONTEXT) {
+          free (conn->exportname_from_set_meta_context);
           conn->exportname_from_set_meta_context =
             strndup (&data[4], exportnamelen);
           if (conn->exportname_from_set_meta_context == NULL) {
