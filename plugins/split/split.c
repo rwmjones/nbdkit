@@ -423,14 +423,18 @@ split_extents (void *handle, uint32_t count, uint64_t offset,
 
     if (file->can_extents) {
       ACQUIRE_LOCK_FOR_CURRENT_SCOPE (&lseek_lock);
-      max = r = do_extents (file, max, foffs, req_one, extents);
+      r = do_extents (file, max, foffs, req_one, extents);
+      if (r == -1)
+        return -1;
     }
-    else
+    else {
       r = nbdkit_add_extent (extents, offset, max, 0 /* allocated data */);
-    if (r == -1)
-      return -1;
-    count -= max;
-    offset += max;
+      if (r == -1)
+        return -1;
+      r = max;
+    }
+    count -= r;
+    offset += r;
     if (req_one)
       break;
   }
