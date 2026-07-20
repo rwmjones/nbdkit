@@ -242,23 +242,63 @@ ptrdiff_t ig_deflate_index_extract(nbdkit_next *next, void *handle, off_t offset
                  "point->bits=%d",
                  lo, (intmax_t) point->in, (intmax_t) point->out, point->bits);
 
-    // Initialize the input file and prime the inflate engine to start there.
+    // Initialize the compressed input and prime inflate at the access point.
+    //
+    // For a non-byte-aligned access point, point->in identifies the first
+    // complete byte following the partial byte. Read that preceding byte,
+    // use its high-order unused bits to prime zlib, and then continue normal
+    // compressed input at point->in.
     off_t start_byte = point->in - (point->bits ? 1 : 0);
-    int ch = 0;
+    unsigned char ch = 0;
+
     index->strm.avail_in = 0;
+
     int ret = inflateReset2(&index->strm, RAW);
-    index->strm.total_in = start_byte;
-    nbdkit_debug("ig_deflate_index_extract: "
-                 "inflateReset2 returned %d, start_byte=%jd",
-                 ret, (intmax_t) start_byte);
-    if (ret != Z_OK)
+    if (ret != Z_OK) {
+        nbdkit_debug("ig_deflate_index_extract: inflateReset2 returned %d",
+                     ret);
         return ret;
-    if (point->bits) {
-        nbdkit_debug("ig_deflate_index_extract: calling INFLATEPRIME with bits=%d", point->bits);
-        INFLATEPRIME(&index->strm, point->bits, ch >> (8 - point->bits));
     }
-    inflateSetDictionary(&index->strm, point->window, point->dict);
-    nbdkit_debug("ig_deflate_index_extract: dictionary set, dict size=%d", point->dict);
+
+    if (point->bits) {
+        if (next->pread(next, &ch, 1, start_byte, 0, err) == -1) {
+            nbdkit_debug("ig_deflate_index_extract: "
+                         "failed to read priming byte at offset %jd",
+                         (intmax_t) start_byte);
+            return Z_NBDKIT_ERROR;
+        }
+
+        nbdkit_debug("ig_deflate_index_extract: "
+                     "calling INFLATEPRIME with bits=%d, byte=0x%02x",
+                     point->bits, ch);
+
+        ret = INFLATEPRIME(&index->strm, point->bits,
+                           ch >> (8 - point->bits));
+        if (ret != Z_OK) {
+            nbdkit_debug("ig_deflate_index_extract: "
+                         "INFLATEPRIME returned %d",
+                         ret);
+            return ret;
+        }
+    }
+
+    // The priming byte, when present, has already been consumed above.
+    index->strm.total_in = point->in;
+
+    ret = inflateSetDictionary(&index->strm, point->window, point->dict);
+    if (ret != Z_OK) {
+        nbdkit_debug("ig_deflate_index_extract: "
+                     "inflateSetDictionary returned %d",
+                     ret);
+        return ret;
+    }
+
+    nbdkit_debug("ig_deflate_index_extract: "
+                 "restart prepared, start_byte=%jd, next_input=%jd, "
+                 "dict size=%d",
+                 (intmax_t) start_byte,
+                 (intmax_t) index->strm.total_in,
+                 point->dict);
 
     // Skip uncompressed bytes until offset reached, then satisfy request.
     unsigned char input[CHUNK];
