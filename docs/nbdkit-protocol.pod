@@ -278,10 +278,11 @@ filters do not work properly in this case.
    checkwrite              Yes
    count                   Yes
    cow                     Yes, since 1.44
+   ddrescue                No
    delay                   Yes
    error                   Yes
-   evil                    Yes
 
+   evil                    Yes
    exitlast                Yes
    exitwhen                Yes
    exportname              Yes
@@ -289,21 +290,23 @@ filters do not work properly in this case.
    extentlist              Not useful with exports
    fua                     Yes
    gzip                    No
+   indexed-gzip            No
    ip                      Yes
+
    limit                   Yes
    log                     Yes
-
    luks                    No
    lzip                    No
+   map                     No
    multi-conn              Yes
    nocache                 Yes
    noextents               Yes
    nofilter                Yes
    noparallel              Yes
+
    nozero                  Yes
    offset                  Yes, but unlikely to be useful
    openonce                Yes
-
    partition               No
    pause                   Yes
    protect                 Yes, but unlikely to be useful
@@ -311,10 +314,10 @@ filters do not work properly in this case.
    rate                    Yes
    readahead               Yes, since 1.32
    readonly                Yes
+
    retry                   Yes
    retry-request           Yes
    rotational              Yes
-
    scan                    Yes
    spinning                Yes
    stats                   Yes
@@ -322,6 +325,7 @@ filters do not work properly in this case.
    tar                     No
    time-limit              Yes
    tls-fallback            Yes
+
    truncate                Yes, but unlikely to be useful
    xor                     Yes
    xz                      No
