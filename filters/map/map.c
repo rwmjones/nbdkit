@@ -54,7 +54,7 @@ int64_t map_size = -1; /* map-size, -1 means use underlying plugin size */
  * A single struct range stores a range from start-end (inclusive).
  * end can be INT64_MAX to indicate the end of the file.
  *
- * 'range_list' stores the list of protected ranges, unsorted.
+ * 'range_list' stores the list of ranges, unsorted.
  */
 struct range {
   uint64_t start, end;
@@ -65,8 +65,8 @@ struct range {
 DEFINE_VECTOR_TYPE (ranges, struct range);
 static ranges range_list;
 
-/* region_list covers the whole address space with protected and
- * unprotected ranges.
+/* region_list covers the whole address space with ranges, with no
+ * overlaps or gaps.
  */
 static regions region_list;
 
