@@ -45,7 +45,7 @@
 #include "test.h"
 
 static const char *plugin =
-  "../plugins/golang/examples/disk/nbdkit-godisk-plugin.so";
+  "../plugins/golang/examples/ramdisk/nbdkit-goramdisk-plugin.so";
 
 int
 main (int argc, char *argv[])
@@ -57,7 +57,7 @@ main (int argc, char *argv[])
 
   requires_not_valgrind ("golang fails completely under valgrind");
 
-  /* Skip the test if the "disk" plugin/example wasn't built. */
+  /* Skip the test if the plugin/example wasn't built. */
   requires_exists (plugin);
 
   if (test_start_nbdkit (plugin, "size=1048576", NULL) == -1)
