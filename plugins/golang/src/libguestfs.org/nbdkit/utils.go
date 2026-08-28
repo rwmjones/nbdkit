@@ -35,6 +35,8 @@ package nbdkit
 /*
 #cgo pkg-config: nbdkit
 
+#include <stdlib.h>
+
 #define NBDKIT_API_VERSION 2
 #include <nbdkit-plugin.h>
 
@@ -53,7 +55,11 @@ _nbdkit_error (const char *s)
 }
 */
 import "C"
-import "syscall"
+
+import (
+	"syscall"
+	"unsafe"
+)
 
 // Utility functions.
 
@@ -72,4 +78,27 @@ func Error(s string) {
 // call this.
 func SetError(err syscall.Errno) {
 	C.nbdkit_set_error(C.int(err))
+}
+
+// ReadPassword wraps nbdkit_read_password (literal, +FILE, or -FD).
+func ReadPassword(value string) (string, error) {
+	cvalue := C.CString(value)
+	defer C.free(unsafe.Pointer(cvalue))
+	var cpass *C.char
+	if C.nbdkit_read_password(cvalue, &cpass) == -1 {
+		return "", PluginError{Errmsg: "unable to parse parameter as a password"}
+	}
+	defer C.free(unsafe.Pointer(cpass))
+	return C.GoString(cpass), nil
+}
+
+// ParseBool wraps nbdkit_parse_bool (true/false/on/off/yes/no/1/0).
+func ParseBool(value string) (bool, error) {
+	cvalue := C.CString(value)
+	defer C.free(unsafe.Pointer(cvalue))
+	r := C.nbdkit_parse_bool(cvalue)
+	if r == -1 {
+		return false, PluginError{Errmsg: "unable to parse string as boolean"}
+	}
+	return r != 0, nil
 }
