@@ -218,7 +218,20 @@ func (c *Connection) PWrite(buf []byte, offset uint64, flags uint32) error {
 }
 
 func (c *Connection) Flush(flags uint32) error {
-	panic("plugin CanFlush returns true, but no Flush() function")
+	// nbdkit can in fact call Flush even if CanFlush exists and
+	// returns false.  This is hinted in nbdkit-plugin(3) but not
+	// very clearly.  If the C callback .can_fua does not exist
+	// but .flush exists then nbdkit assumes NBDKIT_FUA_EMULATE
+	// mode, and PWrite + FUA calls Flush anyway.  In golang
+	// plugins we don't implement .can_fua yet and the .flush
+	// callback always exists (to nbdkit).
+	//
+	// The best we can do is ignore the "unexpected" Flush.
+	//
+	// We don't return an error because that would cause PWrite +
+	// FUA to fail, and we assume if the plugin didn't implement
+	// Flush then it's not needed.
+	return nil
 }
 
 func (c *Connection) Trim(count uint32, offset uint64, flags uint32) error {
