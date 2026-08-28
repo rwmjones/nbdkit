@@ -1670,11 +1670,19 @@ test_lua_LDADD = libtest.la $(LIBGUESTFS_LIBS)
 endif HAVE_LUA
 
 # Golang plugin test.
-EXTRA_DIST += test-golang-fork-warning.sh
+EXTRA_DIST += \
+	test-golang-fork-warning.sh \
+	test-golang-copy-out.sh \
+	test-golang-map.sh \
+	$(NULL)
 
 if HAVE_GOLANG
 
-TESTS += test-golang-fork-warning.sh
+TESTS += \
+	test-golang-fork-warning.sh \
+	test-golang-copy-out.sh \
+	test-golang-map.sh \
+	$(NULL)
 LIBGUESTFS_TESTS += test-golang
 
 test_golang_SOURCES = test-golang.c test.h requires.c requires.h

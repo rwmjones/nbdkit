@@ -31,6 +31,8 @@
  */
 
 // Example random sparse plugin.
+//
+// This is used in tests/test-golang-*.sh
 
 package main
 
