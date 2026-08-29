@@ -27,85 +27,93 @@ L<https://gitlab.com/nbdkit/nbdkit/-/issues/29#note_2370463738>
 For examples of plugins written in Go, see:
 L<https://gitlab.com/nbdkit/nbdkit/blob/master/plugins/golang/examples>
 
-The F<minimal/minimal.go> example is the smallest possible plugin,
-implementing only the required callbacks (C<Open>, C<GetSize> and
-C<PRead>).  Other examples show other nbdkit features.
+F<minimal/minimal.go> is the smallest possible plugin, implementing
+only the required callbacks (C<Open>, C<GetSize> and C<PRead>).  Other
+examples show other nbdkit features.
 
 Broadly speaking, Golang nbdkit plugins work like C ones, so you
 should read L<nbdkit-plugin(3)> first.
 
-To write a Golang nbdkit plugin, you must:
+Most Golang nbdkit plugins should start with:
 
-=over 4
+ package main
 
-=item *
+ import (
+ 	"C"
+ 	"libguestfs.org/nbdkit"
+ 	"unsafe"
+ )
 
-Set the package to C<main>
-
-Plugins should be main packages, because that's how Golang shared
+Plugins have to be main packages, because that's how Golang shared
 libraries work.
 
-=item *
+ var pluginName = "myname"
 
-Import C<"C">, C<"unsafe"> and C<"libguestfs.org/nbdkit">
-
-=item *
-
-Create plugin and connection structs
-
-Conventionally these are named after the plugin, but you can call them
-whatever you want.  They must derive from the C<nbdkit.Plugin> and
-C<nbdkit.Connection> structs respectively:
-
- type MyPlugin struct {
-         nbdkit.Plugin
- }
-
- type MyConnection struct {
-         nbdkit.Connection
+ type MyNamePlugin struct {
+ 	nbdkit.Plugin
  }
 
 The plugin struct is used to define the global callbacks, like
-C<Load>, C<Config> and C<GetReady>.  The connection struct represents
-a client connection and is used to define connection callbacks like
-C<GetSize> and C<PRead>.  What connects the two is the C<Open>
-callback which is called when the client has connected and where you
-should return a new instance of your connection struct.  For example:
+C<Load>, C<Config> and C<GetReady>.
 
- func (p *MyPlugin) Load() {
+ type MyNameConnection struct {
+ 	nbdkit.Connection
+ }
+
+The connection struct represents a client connection and is used to
+define connection callbacks like C<GetSize> and C<PRead>.
+
+What connects C<Plugin> and C<Connection> is the C<Open> callback
+which is called when the client has connected and where you should
+return a new instance of your connection struct.  For example:
+
+ func (p *MyNamePlugin) Load() {
          // global callback used for initializing the plugin
  }
 
- func (p *MyPlugin) Open(readonly bool) (nbdkit.ConnectionInterface, error) {
+ func (p *MyNamePlugin) Open(readonly bool) (nbdkit.ConnectionInterface, error) {
          // new client has connected
-         return &MyConnection{}, nil
+         return &MyNameConnection{}, nil
  }
 
- func (c *MyConnection) GetSize() (uint64, error) {
-         // called per-client
+ func (c *MyNameConnection) GetSize() (uint64, error) {
+         // called per-connection
          return virtual_size, nil
  }
 
-You can store per-client data in the connection struct.  Global data
-could be stored as global variables or kept in the plugin struct as
-you wish.
+ func (c *MyNameConnection) PRead(buf []byte, offset uint64,
+ 	flags uint32) error {
+ 	// copy data into buf here
+ 	return nil
+ }
 
-=item *
+You can store per-connection data in the connection struct.  Global
+data could be stored as global variables or kept in the plugin struct
+as you wish.
 
-Include the C<plugin_init> and C<main> boilerplate
+Most plugins should finish off with this boilerplate:
 
-See the example plugins for the correct boilerplate to include.
+ //export plugin_init
+ func plugin_init() unsafe.Pointer {
+ 	// If your plugin needs to do any initialization, you can
+ 	// either put it here or implement a Load() method.
+ 	// ...
 
-=item *
+ 	// Then you must call the following function.
+ 	return nbdkit.PluginInitialize(pluginName, &MyNamePlugin{})
+ }
 
-Compile the plugin to a shared library
+ // This is never(?) called, but must exist.
+ func main() {}
+
+=head2 Compiling the plugin
+
+Compile the plugin to a shared library:
 
  go build -o nbdkit-mygolang-plugin.so -buildmode=c-shared
 
 This builds the shared object (F<*.so>) which is the plugin, and also
 a header file (F<*.h>) which is irrelevant and you can delete.
-
-=back
 
 =head2 C<Can*> callbacks
 
@@ -123,7 +131,7 @@ C<Zero> (C<CanZero>) and C<Extents> (C<CanExtents>).
  func (c *MyConnection) PWrite(buf []byte, offset uint64,
         flags uint32) error {
          // ...
-}
+ }
 
 =head2 Missing callbacks
 
