@@ -103,6 +103,13 @@ const (
 	APIVersion = uint32(C.NBDKIT_API_VERSION)
 )
 
+// List of extents returned by Extents()
+type Extent struct {
+	Offset uint64
+	Length uint64
+	Type   uint32
+}
+
 // The plugin interface.
 type PluginInterface interface {
 	Load()
@@ -141,6 +148,10 @@ type ConnectionInterface interface {
 	// NB: Zero will NOT be called unless CanZero returns true.
 	CanZero() (bool, error)
 	Zero(count uint32, offset uint64, flags uint32) error
+
+	// NB: Extents will NOT be called unless CanExtents returns true.
+	CanExtents() (bool, error)
+	Extents(count uint32, offset uint64, flags uint32) ([]Extent, error)
 
 	Close()
 }
@@ -205,6 +216,10 @@ func (c *Connection) CanZero() (bool, error) {
 	return false, nil
 }
 
+func (c *Connection) CanExtents() (bool, error) {
+	return false, nil
+}
+
 func (c *Connection) CanMultiConn() (bool, error) {
 	return false, nil
 }
@@ -240,6 +255,10 @@ func (c *Connection) Trim(count uint32, offset uint64, flags uint32) error {
 
 func (c *Connection) Zero(count uint32, offset uint64, flags uint32) error {
 	panic("plugin CanZero returns true, but no Zero() function")
+}
+
+func (c *Connection) Extents(count uint32, offset uint64, flags uint32) ([]Extent, error) {
+	panic("plugin CanExtents returns true, but no Extents() function")
 }
 
 // The implementation of the user plugin.
@@ -447,6 +466,21 @@ func implCanZero(handle unsafe.Pointer) C.int {
 	}
 }
 
+//export implCanExtents
+func implCanExtents(handle unsafe.Pointer) C.int {
+	h := getConn(handle)
+	b, err := h.CanExtents()
+	if err != nil {
+		set_error(err)
+		return -1
+	}
+	if b {
+		return 1
+	} else {
+		return 0
+	}
+}
+
 //export implCanMultiConn
 func implCanMultiConn(handle unsafe.Pointer) C.int {
 	h := getConn(handle)
@@ -537,6 +571,27 @@ func implZero(handle unsafe.Pointer,
 	return 0
 }
 
+//export implExtents
+func implExtents(handle unsafe.Pointer,
+	count C.uint32_t, offset C.uint64_t, flags C.uint32_t,
+	extents *C.struct_nbdkit_extents) C.int {
+	h := getConn(handle)
+	elist, err := h.Extents(uint32(count), uint64(offset), uint32(flags))
+	if err != nil {
+		set_error(err)
+		return -1
+	}
+	for _, e := range elist {
+		if C.nbdkit_add_extent(extents,
+			C.uint64_t(e.Offset),
+			C.uint64_t(e.Length),
+			C.uint32_t(e.Type)) == -1 {
+			return -1
+		}
+	}
+	return 0
+}
+
 // Called from C plugin_init function.
 func PluginInitialize(name string, impl PluginInterface) unsafe.Pointer {
 	// Initialize the connection map.  Note that connection IDs
@@ -573,12 +628,14 @@ func PluginInitialize(name string, impl PluginInterface) unsafe.Pointer {
 	plugin.is_rotational = (*[0]byte)(C.wrapper_is_rotational)
 	plugin.can_trim = (*[0]byte)(C.wrapper_can_trim)
 	plugin.can_zero = (*[0]byte)(C.wrapper_can_zero)
+	plugin.can_extents = (*[0]byte)(C.wrapper_can_extents)
 	plugin.can_multi_conn = (*[0]byte)(C.wrapper_can_multi_conn)
 	plugin.pread = (*[0]byte)(C.wrapper_pread)
 	plugin.pwrite = (*[0]byte)(C.wrapper_pwrite)
 	plugin.flush = (*[0]byte)(C.wrapper_flush)
 	plugin.trim = (*[0]byte)(C.wrapper_trim)
 	plugin.zero = (*[0]byte)(C.wrapper_zero)
+	plugin.extents = (*[0]byte)(C.wrapper_extents)
 
 	// Golang plugins don't preserve errno correctly.
 	plugin.errno_is_preserved = 0

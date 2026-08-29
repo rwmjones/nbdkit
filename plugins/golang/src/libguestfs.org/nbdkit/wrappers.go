@@ -169,6 +169,13 @@ wrapper_can_zero (void *handle)
   return implCanZero (handle);
 }
 
+extern int implCanExtents (void *handle);
+int
+wrapper_can_extents (void *handle)
+{
+  return implCanExtents (handle);
+}
+
 extern int implCanMultiConn (void *handle);
 int
 wrapper_can_multi_conn (void *handle)
@@ -217,6 +224,17 @@ wrapper_zero (void *handle,
               uint32_t count, uint64_t offset, uint32_t flags)
 {
   return implZero (handle, count, offset, flags);
+}
+
+extern int implExtents (void *handle,
+                        uint32_t count, uint64_t offset, uint32_t flags,
+                        struct nbdkit_extents *extents);
+int
+wrapper_extents (void *handle,
+                 uint32_t count, uint64_t offset, uint32_t flags,
+                 struct nbdkit_extents *extents)
+{
+  return implExtents (handle, count, offset, flags, extents);
 }
 */
 import "C"

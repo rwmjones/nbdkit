@@ -113,8 +113,8 @@ B<Important:> If you implement C<PWrite> it will I<not> be called
 unless you also implement a C<CanWrite> callback that returns true.
 (This is different from plugins written in C or other languages).
 
-The same applies to C<Flush> (C<CanFlush>), C<Trim> (C<CanTrim>) and
-C<Zero> (C<CanZero>).
+The same applies to C<Flush> (C<CanFlush>), C<Trim> (C<CanTrim>),
+C<Zero> (C<CanZero>) and C<Extents> (C<CanExtents>).
 
  func (c *MyConnection) CanWrite() (bool, error) {
          return true, nil
@@ -148,13 +148,9 @@ C<NBDKIT_THREAD_MODEL_PARALLEL>.
 
 =item C<can_fast_zero>
 
-=item C<can_extents>
-
 =item C<can_fua>
 
 =item C<can_cache>
-
-=item C<extents>
 
 =item C<cache>
 
