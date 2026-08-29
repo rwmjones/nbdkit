@@ -329,9 +329,9 @@ func implOpen(c_readonly C.int) unsafe.Pointer {
 
 func getConn(handle unsafe.Pointer) ConnectionInterface {
 	id := uintptr(handle)
-	connectionMutex.Lock()
+	connectionMutex.RLock()
 	h, ok := connectionMap[id]
-	connectionMutex.Unlock()
+	connectionMutex.RUnlock()
 	if !ok {
 		panic(fmt.Sprintf("connection %d was not open", id))
 	}
