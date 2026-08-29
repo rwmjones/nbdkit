@@ -54,6 +54,8 @@ EXTRA_DIST = \
 	examples/sparse/sparse.go \
 	examples/sparse/go.mod \
 	nbdkit-golang-plugin.pod \
+	testplugins/extents/extents.go \
+	testplugins/extents/go.mod \
 	$(NULL)
 
 if HAVE_GOLANG
@@ -69,6 +71,7 @@ noinst_DATA = \
 	examples/minimal/nbdkit-gominimal-plugin.so \
 	examples/ramdisk/nbdkit-goramdisk-plugin.so \
 	examples/sparse/nbdkit-gosparse-plugin.so \
+	testplugins/extents/nbdkit-goextents-plugin.so \
 	$(NULL)
 
 examples/disk/nbdkit-godisk-plugin.so: \
@@ -101,12 +104,20 @@ examples/sparse/nbdkit-gosparse-plugin.so: \
 	PKG_CONFIG_PATH="$(abs_top_builddir)/server/local$${PKG_CONFIG_PATH:+:$$PKG_CONFIG_PATH}" \
 	$(GOLANG) build -o $(abs_builddir)/examples/sparse/nbdkit-gosparse-plugin.so -buildmode=c-shared
 
+testplugins/extents/nbdkit-goextents-plugin.so: \
+	    $(plugin_sources) testplugins/extents/extents.go
+	cd $(srcdir)/testplugins/extents && \
+	PKG_CONFIG_PATH="$(abs_top_builddir)/server/local$${PKG_CONFIG_PATH:+:$$PKG_CONFIG_PATH}" \
+	$(GOLANG) build -o $(abs_builddir)/testplugins/extents/nbdkit-goextents-plugin.so -buildmode=c-shared
+
 # Tests.
 TESTS = dump-plugin-examples.sh
 
 CLEANFILES += \
 	examples/*/nbdkit-*-plugin.h \
 	examples/*/nbdkit-*-plugin.so \
+	testplugins/*/nbdkit-*-plugin.h \
+	testplugins/*/nbdkit-*-plugin.so \
 	$(NULL)
 
 if HAVE_POD

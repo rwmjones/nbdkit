@@ -115,6 +115,8 @@ plugins/*/*.3
 /plugins/gcs/nbdkit-gcs-plugin
 /plugins/golang/examples/*/nbdkit-*-plugin.h
 /plugins/golang/examples/*/nbdkit-*-plugin.so
+/plugins/golang/testplugins/*/nbdkit-*-plugin.h
+/plugins/golang/testplugins/*/nbdkit-*-plugin.so
 /plugins/ocaml/nbdkit-ocamlexample-plugin.so
 /plugins/ondemand/default-command.c
 /plugins/rust/Cargo.lock

@@ -1671,16 +1671,18 @@ endif HAVE_LUA
 
 # Golang plugin test.
 EXTRA_DIST += \
-	test-golang-fork-warning.sh \
 	test-golang-copy-out.sh \
+	test-golang-extents.sh \
+	test-golang-fork-warning.sh \
 	test-golang-map.sh \
 	$(NULL)
 
 if HAVE_GOLANG
 
 TESTS += \
-	test-golang-fork-warning.sh \
 	test-golang-copy-out.sh \
+	test-golang-extents.sh \
+	test-golang-fork-warning.sh \
 	test-golang-map.sh \
 	$(NULL)
 LIBGUESTFS_TESTS += test-golang
