@@ -234,6 +234,23 @@ Python:
   output.  This requires changes to the core API so that config_help
   is a function rather than a variable (see V3 suggestions below).
 
+Golang:
+
+* Remove the requirement for `CanWrite` to be overridden before
+  `PWrite` is called (and the same for the other `Can*`).
+
+  - In theory this could be done by [using reflection to tell if
+    `PWrite` has been overridden in the
+    subclass](https://stackoverflow.com/a/55205550).
+
+  - I tried to implement this and the simple approach does not work.
+    We do not know the derived `Connection` class until `Open` is
+    called, which is far too late for registering callbacks.
+
+  - But we might be able to use this trick to have the `Can*`
+    functions in the base class simulate the internals of nbdkit,
+    similar to how cc plugin has to do things (commit a31efe3338).
+
 ## Suggestions for filters
 
 * Add shared filter.  Take advantage of filter context APIs to open a
