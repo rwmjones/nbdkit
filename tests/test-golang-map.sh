@@ -37,11 +37,6 @@ set -e
 set -x
 set -u
 
-if is_windows; then
-    echo "$0: this test needs to be revised to work on Windows"
-    exit 77
-fi
-
 skip_if_valgrind "because Golang code leaks memory"
 
 requires_nbdinfo
@@ -54,23 +49,7 @@ pid=golang-map.pid
 rm -f $pid
 cleanup_fn rm -f $pid $sock
 
-# We cannot use start_nbdkit (or run) here because golang requires us
-# to run nbdkit in the foreground.
-
-nbdkit --exit-with-parent -f -P $pid -U $sock $plugin &
-
-for i in {1..60}; do
-    if test -s "$pid"; then
-        break
-    fi
-    sleep 1
-done
-if ! test -s "$pid"; then
-    echo "$0: PID file $pid was not created"
-    exit 1
-fi
-
-# Kill nbdkit on exit.
-cleanup_fn kill "$(cat "$pid")"
+# Golang requires us to run nbdkit in the foreground.
+start_nbdkit_foreground -P $pid -U $sock $plugin
 
 nbdinfo --map "nbd+unix:///?socket=$sock"

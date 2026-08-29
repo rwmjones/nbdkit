@@ -206,6 +206,47 @@ _kill_nbdkit_windows ()
     wine taskkill /f /pid $1
 }
 
+# Variant of start_nbdkit which always runs nbdkit in the foreground.
+# The one significant use for this is with golang plugins.
+start_nbdkit_foreground ()
+{
+    local _is_windows _pidfile _i
+
+    # Save whether we are running on Windows.  We have to do this test
+    # here because 'is_windows' under valgrind doesn't always work
+    # when we are running cleanup functions.
+    if is_windows; then _is_windows=1; else _is_windows=; fi
+
+    # -P <pidfile> must be the first two parameters.
+    if [ "$1" != "-P" ]; then
+       echo "$0: start_nbdkit: -P <pidfile> option must be first"
+       exit 1
+    fi
+    _pidfile="$2"
+
+    # Run nbdkit in the foreground and background it ourselves.
+    nbdkit -f -v "$@" &
+
+    # Wait for the pidfile to appear.
+    for _i in {1..60}; do
+        if test -s "$_pidfile"; then
+            break
+        fi
+        sleep 1
+    done
+    if ! test -s "$_pidfile"; then
+        echo "$0: start_nbdkit: PID file $_pidfile was not created"
+        exit 1
+    fi
+
+    # Kill nbdkit on exit.
+    if ! test "$_is_windows"; then
+        cleanup_fn _kill_nbdkit_unix "$(cat "$_pidfile")"
+    else
+        cleanup_fn _kill_nbdkit_windows "$(cat "$_pidfile")"
+    fi
+}
+
 #----------------------------------------------------------------------
 # Safely prepend on a colon-separated path variable
 # eg:
