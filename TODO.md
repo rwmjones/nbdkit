@@ -226,6 +226,11 @@ nbdkit-vram-plugin:
   fully allocate a disk (without using the `size` parameter).
   Apparently this doesn't cause any issues, but why does it happen?
 
+nbdkit-nfs-plugin:
+
+* Implement extents and trim support.  See:
+  https://github.com/sahlberg/libnfs/commit/af3d4279cba07c2766a93fb618f7508f7c031684
+
 ## Suggestions for language plugins
 
 Python:
