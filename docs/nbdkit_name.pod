@@ -21,6 +21,11 @@ process, or C<NULL>.  Note that returning C<NULL> is not an error.
 
 =head1 LANGUAGE BINDINGS
 
+In L<nbdkit-golang-plugin(3)>:
+
+ import "libguestfs.org/nbdkit"
+ name, name_set := nbdkit.Name()
+
 In L<nbdkit-ocaml-plugin(3)>:
 
  NBDKit.name : unit -> string option

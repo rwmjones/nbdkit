@@ -108,6 +108,18 @@ func ExportName() (string, error) {
 	return C.GoString(cs), nil
 }
 
+// Name wraps nbdkit_name.
+// Note NULL is returned as "", false
+func Name() (string, bool) {
+	cs := C.nbdkit_name()
+	if cs == nil {
+		return "", false
+	} else {
+		// cs is a 'const char *' so does not need to be freed.
+		return C.GoString(cs), true
+	}
+}
+
 // ParseBool wraps nbdkit_parse_bool (true/false/on/off/yes/no/1/0).
 func ParseBool(value string) (bool, error) {
 	cvalue := C.CString(value)
