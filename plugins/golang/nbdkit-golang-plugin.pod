@@ -170,12 +170,20 @@ The following callbacks are not yet implemented:
 
 =over 4
 
+=item C<block_size>
+
+=item C<can_fast_zero>
+
+=item C<default_export>
+
+=item C<export_description>
+
+=item C<list_exports>
+
 =item C<thread_model>
 
 At the moment the thread model is always
 C<NBDKIT_THREAD_MODEL_PARALLEL>.
-
-=item C<can_fast_zero>
 
 =back
 
