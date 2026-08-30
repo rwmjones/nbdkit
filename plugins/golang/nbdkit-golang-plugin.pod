@@ -147,9 +147,9 @@ C<CanFUA>:
 
 =item *
 
-C<CanFUA> should return C<FUANative> if your C<PWrite> (and other
-write-like functions such as C<Trim>, C<Zero>) correctly implement the
-C<flags> parameter containing C<FlagFUA>.
+If your C<PWrite> (and other write-like functions such as C<Trim> and
+C<Zero>) correctly implement the C<flags> parameter C<FlagFUA>, then
+C<CanFUA> should return C<FUANative>.
 
 =item *
 
