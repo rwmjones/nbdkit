@@ -136,7 +136,8 @@ C<Zero> (C<CanZero>) and C<Extents> (C<CanExtents>).
 =head2 C<CanFUA> callback and writes
 
 If you do not define C<CanFUA> then the default mode will be
-C<FUANone> (C<NBDKIT_FUA_NONE>).  This means that FUA requests will
+C<FUANone> (C<NBDKIT_FUA_NONE>).  This means that
+L<FUA requests|https://en.wikipedia.org/wiki/Disk_buffer#FUA> will
 never be sent, nor emulated.
 
 Therefore if you are implementing writes you generally need to define
