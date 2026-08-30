@@ -201,6 +201,13 @@ plugin_dump_fields (struct backend *b)
   HAS (_zero_v1);
 #undef HAS
 
+  /* Golang and maybe other languages bypass libc stdout and so the
+   * custom fields might appear before the standard fields above.  To
+   * prevent this, and for general robustness, flush stdout here
+   * before calling into the plugin.
+   */
+  fflush (stdout);
+
   /* Custom fields. */
   if (p->plugin.dump_plugin)
     p->plugin.dump_plugin ();
