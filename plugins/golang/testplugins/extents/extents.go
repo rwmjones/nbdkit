@@ -53,24 +53,15 @@ type ExtentsConnection struct {
 var (
 	size    uint64 = 1024 * 1024
 	extents        = []nbdkit.Extent{
-		nbdkit.Extent{0, 1000,
-			0},
-		nbdkit.Extent{1000, 1000,
-			nbdkit.ExtentHole | nbdkit.ExtentZero},
-		nbdkit.Extent{2000, 1,
-			0},
-		nbdkit.Extent{2001, 999,
-			nbdkit.ExtentHole | nbdkit.ExtentZero},
-		nbdkit.Extent{3000, 1,
-			0},
-		nbdkit.Extent{3001, 1,
-			nbdkit.ExtentHole | nbdkit.ExtentZero},
-		nbdkit.Extent{3002, 1,
-			0},
-		nbdkit.Extent{3003, 1,
-			nbdkit.ExtentHole | nbdkit.ExtentZero},
-		nbdkit.Extent{3004, size - 3004,
-			0},
+		{0, 1000, 0},
+		{1000, 1000, nbdkit.ExtentHole | nbdkit.ExtentZero},
+		{2000, 1, 0},
+		{2001, 999, nbdkit.ExtentHole | nbdkit.ExtentZero},
+		{3000, 1, 0},
+		{3001, 1, nbdkit.ExtentHole | nbdkit.ExtentZero},
+		{3002, 1, 0},
+		{3003, 1, nbdkit.ExtentHole | nbdkit.ExtentZero},
+		{3004, size - 3004, 0},
 	}
 )
 
