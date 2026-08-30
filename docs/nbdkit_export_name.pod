@@ -33,6 +33,11 @@ If there is an error it calls L<nbdkit_error(3)> and returns C<NULL>.
 
 =head1 LANGUAGE BINDINGS
 
+In L<nbdkit-golang-plugin(3)>:
+
+ import "libguestfs.org/nbdkit"
+ exportName, err := nbdkit.ExportName()
+
 In L<nbdkit-ocaml-plugin(3)>:
 
  NBDKit.export_name : unit -> string

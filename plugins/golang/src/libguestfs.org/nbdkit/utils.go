@@ -92,6 +92,22 @@ func ReadPassword(value string) (string, error) {
 	return C.GoString(cpass), nil
 }
 
+// ExportName wraps nbdkit_export_name.
+//
+// XXX The C function uses thread-local storage to fetch the correct
+// export name.  It's not clear if we'll be called from the correct
+// thread here for this to work.  See the note at the bottom of this
+// post: https://groups.google.com/g/golang-nuts/c/j4LCNZrX61M
+// also: https://stackoverflow.com/a/61435758
+func ExportName() (string, error) {
+	cs := C.nbdkit_export_name()
+	if cs == nil {
+		return "", PluginError{Errmsg: "unable to get export name"}
+	}
+	// cs is a 'const char *' so does not need to be freed.
+	return C.GoString(cs), nil
+}
+
 // ParseBool wraps nbdkit_parse_bool (true/false/on/off/yes/no/1/0).
 func ParseBool(value string) (bool, error) {
 	cvalue := C.CString(value)

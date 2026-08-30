@@ -1672,6 +1672,7 @@ endif HAVE_LUA
 # Golang plugin test.
 EXTRA_DIST += \
 	test-golang-copy-out.sh \
+	test-golang-exports.sh \
 	test-golang-extents.sh \
 	test-golang-fork-warning.sh \
 	test-golang-magic.sh \
@@ -1683,6 +1684,7 @@ if HAVE_GOLANG
 
 TESTS += \
 	test-golang-copy-out.sh \
+	test-golang-exports.sh \
 	test-golang-extents.sh \
 	test-golang-fork-warning.sh \
 	test-golang-magic.sh \
