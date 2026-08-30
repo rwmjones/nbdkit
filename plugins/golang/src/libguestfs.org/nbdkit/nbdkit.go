@@ -130,6 +130,7 @@ type ConnectionInterface interface {
 	GetSize() (uint64, error) // required
 	IsRotational() (bool, error)
 	CanMultiConn() (bool, error)
+	CanFUA() (uint32, error)
 
 	PRead(buf []byte, offset uint64, flags uint32) error // required
 
@@ -224,6 +225,12 @@ func (c *Connection) CanMultiConn() (bool, error) {
 	return false, nil
 }
 
+func (c *Connection) CanFUA() (uint32, error) {
+	// XXX This is not a good default.  Ideally we would test if
+	// Flush is defined or not.
+	return FUANone, nil
+}
+
 func (c *Connection) PRead(buf []byte, offset uint64, flags uint32) error {
 	panic("plugin must implement PRead()")
 }
@@ -235,11 +242,9 @@ func (c *Connection) PWrite(buf []byte, offset uint64, flags uint32) error {
 func (c *Connection) Flush(flags uint32) error {
 	// nbdkit can in fact call Flush even if CanFlush exists and
 	// returns false.  This is hinted in nbdkit-plugin(3) but not
-	// very clearly.  If the C callback .can_fua does not exist
-	// but .flush exists then nbdkit assumes NBDKIT_FUA_EMULATE
-	// mode, and PWrite + FUA calls Flush anyway.  In golang
-	// plugins we don't implement .can_fua yet and the .flush
-	// callback always exists (to nbdkit).
+	// very clearly.  If CanFUA returns FUAEmulate, PWrite + FUA
+	// calls Flush, ignoring CanFlush.  If Flush was not defined
+	// then we end up here.
 	//
 	// The best we can do is ignore the "unexpected" Flush.
 	//
@@ -496,6 +501,17 @@ func implCanMultiConn(handle unsafe.Pointer) C.int {
 	}
 }
 
+//export implCanFUA
+func implCanFUA(handle unsafe.Pointer) C.int {
+	h := getConn(handle)
+	fuaMode, err := h.CanFUA()
+	if err != nil {
+		set_error(err)
+		return -1
+	}
+	return C.int(fuaMode)
+}
+
 //export implPRead
 func implPRead(handle unsafe.Pointer, c_buf unsafe.Pointer,
 	count C.uint32_t, offset C.uint64_t, flags C.uint32_t) C.int {
@@ -630,6 +646,7 @@ func PluginInitialize(name string, impl PluginInterface) unsafe.Pointer {
 	plugin.can_zero = (*[0]byte)(C.wrapper_can_zero)
 	plugin.can_extents = (*[0]byte)(C.wrapper_can_extents)
 	plugin.can_multi_conn = (*[0]byte)(C.wrapper_can_multi_conn)
+	plugin.can_fua = (*[0]byte)(C.wrapper_can_fua)
 	plugin.pread = (*[0]byte)(C.wrapper_pread)
 	plugin.pwrite = (*[0]byte)(C.wrapper_pwrite)
 	plugin.flush = (*[0]byte)(C.wrapper_flush)

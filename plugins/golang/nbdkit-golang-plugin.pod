@@ -133,6 +133,36 @@ C<Zero> (C<CanZero>) and C<Extents> (C<CanExtents>).
          // ...
  }
 
+=head2 C<CanFUA> callback and writes
+
+If you do not define C<CanFUA> then the default mode will be
+C<FUANone> (C<NBDKIT_FUA_NONE>).  This means that FUA requests will
+never be sent, nor emulated.
+
+Therefore if you are implementing writes you generally need to define
+C<CanFUA>:
+
+=over 4
+
+=item *
+
+C<CanFUA> should return C<FUANative> if your C<PWrite> (and other
+write-like functions such as C<Trim>, C<Zero>) correctly implement the
+C<flags> parameter containing C<FlagFUA>.
+
+=item *
+
+If they ignore C<flags> but you have defined a C<Flush> function, then
+C<CanFUA> should return C<FUAEmulate>.  This causes nbdkit to turn FUA
+requests into C<Flush>.
+
+=item *
+
+If your plugin does neither of the above, C<CanFUA> should return
+C<FUANone>.
+
+=back
+
 =head2 Missing callbacks
 
 The following callbacks are not yet implemented:
@@ -155,8 +185,6 @@ At the moment the thread model is always
 C<NBDKIT_THREAD_MODEL_PARALLEL>.
 
 =item C<can_fast_zero>
-
-=item C<can_fua>
 
 =item C<can_cache>
 

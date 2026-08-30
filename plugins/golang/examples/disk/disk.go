@@ -167,6 +167,12 @@ func (c *DiskConnection) Flush(flags uint32) error {
 	return c.fd.Sync()
 }
 
+// This will cause FUA requests to be turned into Flush.  See the note
+// about CanFUA in nbdkit-golang-plugin(3).
+func (c *DiskConnection) CanFUA() (uint32, error) {
+	return nbdkit.FUAEmulate, nil
+}
+
 //----------------------------------------------------------------------
 //
 // The boilerplate below this line is required by all golang plugins,

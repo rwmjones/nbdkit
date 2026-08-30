@@ -48,6 +48,7 @@ extern int     wrapper_can_trim (void *handle);
 extern int     wrapper_can_zero (void *handle);
 extern int     wrapper_can_extents (void *handle);
 extern int     wrapper_can_multi_conn (void *handle);
+extern int     wrapper_can_fua (void *handle);
 extern int     wrapper_pread (void *handle, void *buf,
                               uint32_t count, uint64_t offset, uint32_t flags);
 extern int     wrapper_pwrite (void *handle, const void *buf,

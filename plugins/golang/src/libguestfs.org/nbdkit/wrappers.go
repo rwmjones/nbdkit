@@ -183,6 +183,13 @@ wrapper_can_multi_conn (void *handle)
   return implCanMultiConn (handle);
 }
 
+extern int implCanFUA (void *handle);
+int
+wrapper_can_fua (void *handle)
+{
+  return implCanFUA (handle);
+}
+
 extern int implPRead (void *handle, void *buf,
                       uint32_t count, uint64_t offset, uint32_t flags);
 int
