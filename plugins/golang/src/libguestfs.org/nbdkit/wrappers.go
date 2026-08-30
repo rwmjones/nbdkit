@@ -176,6 +176,13 @@ wrapper_can_extents (void *handle)
   return implCanExtents (handle);
 }
 
+extern int implCanCache (void *handle);
+int
+wrapper_can_cache (void *handle)
+{
+  return implCanCache (handle);
+}
+
 extern int implCanMultiConn (void *handle);
 int
 wrapper_can_multi_conn (void *handle)
@@ -242,6 +249,15 @@ wrapper_extents (void *handle,
                  struct nbdkit_extents *extents)
 {
   return implExtents (handle, count, offset, flags, extents);
+}
+
+extern int implCache (void *handle,
+                      uint32_t count, uint64_t offset, uint32_t flags);
+int
+wrapper_cache (void *handle,
+               uint32_t count, uint64_t offset, uint32_t flags)
+{
+  return implCache (handle, count, offset, flags);
 }
 */
 import "C"

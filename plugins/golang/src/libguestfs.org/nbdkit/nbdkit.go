@@ -161,6 +161,10 @@ type ConnectionInterface interface {
 	CanExtents() (bool, error)
 	Extents(count uint32, offset uint64, flags uint32) ([]Extent, error)
 
+	// NB: Cache will NOT be called unless CanCache returns true.
+	CanCache() (bool, error)
+	Cache(count uint32, offset uint64, flags uint32) error
+
 	Close()
 }
 
@@ -248,6 +252,10 @@ func (c *Connection) CanExtents() (bool, error) {
 	return false, nil
 }
 
+func (c *Connection) CanCache() (bool, error) {
+	return false, nil
+}
+
 func (c *Connection) CanMultiConn() (bool, error) {
 	return false, nil
 }
@@ -291,6 +299,10 @@ func (c *Connection) Zero(count uint32, offset uint64, flags uint32) error {
 
 func (c *Connection) Extents(count uint32, offset uint64, flags uint32) ([]Extent, error) {
 	panic("plugin CanExtents returns true, but no Extents() function")
+}
+
+func (c *Connection) Cache(count uint32, offset uint64, flags uint32) error {
+	panic("plugin CanCache returns true, but no Cache() function")
 }
 
 // The implementation of the user plugin.
@@ -513,6 +525,21 @@ func implCanExtents(handle unsafe.Pointer) C.int {
 	}
 }
 
+//export implCanCache
+func implCanCache(handle unsafe.Pointer) C.int {
+	h := getConn(handle)
+	b, err := h.CanCache()
+	if err != nil {
+		set_error(err)
+		return -1
+	}
+	if b {
+		return 1
+	} else {
+		return 0
+	}
+}
+
 //export implCanMultiConn
 func implCanMultiConn(handle unsafe.Pointer) C.int {
 	h := getConn(handle)
@@ -635,6 +662,18 @@ func implExtents(handle unsafe.Pointer,
 	return 0
 }
 
+//export implCache
+func implCache(handle unsafe.Pointer,
+	count C.uint32_t, offset C.uint64_t, flags C.uint32_t) C.int {
+	h := getConn(handle)
+	err := h.Cache(uint32(count), uint64(offset), uint32(flags))
+	if err != nil {
+		set_error(err)
+		return -1
+	}
+	return 0
+}
+
 // Called from C plugin_init function.
 func PluginInitialize(name string, impl PluginInterface) unsafe.Pointer {
 	// Initialize the connection map.  Note that connection IDs
@@ -695,6 +734,7 @@ func PluginInitialize(name string, impl PluginInterface) unsafe.Pointer {
 	plugin.can_trim = (*[0]byte)(C.wrapper_can_trim)
 	plugin.can_zero = (*[0]byte)(C.wrapper_can_zero)
 	plugin.can_extents = (*[0]byte)(C.wrapper_can_extents)
+	plugin.can_cache = (*[0]byte)(C.wrapper_can_cache)
 	plugin.can_multi_conn = (*[0]byte)(C.wrapper_can_multi_conn)
 	plugin.can_fua = (*[0]byte)(C.wrapper_can_fua)
 	plugin.pread = (*[0]byte)(C.wrapper_pread)
@@ -703,6 +743,7 @@ func PluginInitialize(name string, impl PluginInterface) unsafe.Pointer {
 	plugin.trim = (*[0]byte)(C.wrapper_trim)
 	plugin.zero = (*[0]byte)(C.wrapper_zero)
 	plugin.extents = (*[0]byte)(C.wrapper_extents)
+	plugin.cache = (*[0]byte)(C.wrapper_cache)
 
 	// Golang plugins don't preserve errno correctly.
 	plugin.errno_is_preserved = 0

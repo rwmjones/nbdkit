@@ -177,10 +177,6 @@ C<NBDKIT_THREAD_MODEL_PARALLEL>.
 
 =item C<can_fast_zero>
 
-=item C<can_cache>
-
-=item C<cache>
-
 =back
 
 =head1 VERSION
