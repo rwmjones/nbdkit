@@ -23,6 +23,11 @@ If there is an error it calls L<nbdkit_error(3)> and returns C<-1>.
 
 =head1 LANGUAGE BINDINGS
 
+In L<nbdkit-golang-plugin(3)>:
+
+ import "libguestfs.org/nbdkit"
+ size, err := nbdkit.ParseSize(value)
+
 In L<nbdkit-ocaml-plugin(3)>:
 
  NBDKit.parse_size : string -> int64

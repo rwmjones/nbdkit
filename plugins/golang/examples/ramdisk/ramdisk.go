@@ -35,7 +35,6 @@ package main
 import (
 	"C"
 	"libguestfs.org/nbdkit"
-	"strconv"
 	"unsafe"
 )
 
@@ -75,7 +74,9 @@ func (p *RAMDiskPlugin) MagicConfigKey() string {
 func (p *RAMDiskPlugin) Config(key string, value string) error {
 	if key == "size" {
 		var err error
-		size, err = strconv.ParseUint(value, 0, 64)
+		// This calls nbdkit_parse_size so 'size=1M' and
+		// similar will work here.
+		size, err = nbdkit.ParseSize(value)
 		if err != nil {
 			return err
 		}

@@ -60,7 +60,7 @@ main (int argc, char *argv[])
   /* Skip the test if the plugin/example wasn't built. */
   requires_exists (plugin);
 
-  if (test_start_nbdkit (plugin, "size=1048576", NULL) == -1)
+  if (test_start_nbdkit (plugin, "1M", NULL) == -1)
     exit (EXIT_FAILURE);
 
   g = guestfs_create ();

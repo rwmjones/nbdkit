@@ -102,3 +102,14 @@ func ParseBool(value string) (bool, error) {
 	}
 	return r != 0, nil
 }
+
+// ParseSize wraps nbdkit_parse_size
+func ParseSize(value string) (uint64, error) {
+	cvalue := C.CString(value)
+	defer C.free(unsafe.Pointer(cvalue))
+	r := C.nbdkit_parse_size(cvalue)
+	if r == -1 {
+		return 0, PluginError{Errmsg: "unable to parse string as size"}
+	}
+	return uint64(r), nil
+}
