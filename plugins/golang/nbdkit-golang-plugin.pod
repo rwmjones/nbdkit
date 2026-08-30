@@ -124,11 +124,11 @@ unless you also implement a C<CanWrite> callback that returns true.
 The same applies to C<Flush> (C<CanFlush>), C<Trim> (C<CanTrim>),
 C<Zero> (C<CanZero>) and C<Extents> (C<CanExtents>).
 
- func (c *MyConnection) CanWrite() (bool, error) {
+ func (c *MyNameConnection) CanWrite() (bool, error) {
          return true, nil
  }
 
- func (c *MyConnection) PWrite(buf []byte, offset uint64,
+ func (c *MyNameConnection) PWrite(buf []byte, offset uint64,
         flags uint32) error {
          // ...
  }
