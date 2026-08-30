@@ -40,6 +40,8 @@ set -u
 skip_if_valgrind "because Golang code leaks memory"
 
 requires_nbdsh_uri
+# Requires explicit h.close() method, added in 1.16
+requires_libnbd_version 1.16
 
 plugin=../plugins/golang/testplugins/exports/nbdkit-goexports-plugin.so
 requires test -r $plugin
