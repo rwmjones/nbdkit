@@ -169,16 +169,6 @@ The following callbacks are not yet implemented:
 
 =over 4
 
-=item C<version>
-
-=item C<longname>
-
-=item C<description>
-
-=item C<magic_config_key>
-
-=item C<config_help>
-
 =item C<thread_model>
 
 At the moment the thread model is always

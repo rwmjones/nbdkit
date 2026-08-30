@@ -117,8 +117,15 @@ type PluginInterface interface {
 
 	DumpPlugin()
 
+	Version() string
+	LongName() string
+	Description() string
+	MagicConfigKey() string
+
 	Config(key string, value string) error
 	ConfigComplete() error
+	ConfigHelp() string
+
 	GetReady() error
 
 	PreConnect(readonly bool) error
@@ -170,12 +177,32 @@ func (p *Plugin) Unload() {
 func (p *Plugin) DumpPlugin() {
 }
 
+func (p *Plugin) Version() string {
+	return ""
+}
+
+func (p *Plugin) LongName() string {
+	return ""
+}
+
+func (p *Plugin) Description() string {
+	return ""
+}
+
+func (p *Plugin) MagicConfigKey() string {
+	return ""
+}
+
 func (p *Plugin) Config(key string, value string) error {
 	return nil
 }
 
 func (p *Plugin) ConfigComplete() error {
 	return nil
+}
+
+func (p *Plugin) ConfigHelp() string {
+	return ""
 }
 
 func (p *Plugin) GetReady() error {
@@ -626,8 +653,31 @@ func PluginInitialize(name string, impl PluginInterface) unsafe.Pointer {
 	plugin._api_version = C.NBDKIT_API_VERSION
 	plugin._thread_model = C.NBDKIT_THREAD_MODEL_PARALLEL
 
-	// Set up the other fields.
+	// Set up required name field.
 	plugin.name = C.CString(name)
+
+	// Set up optional string fields.
+	s := impl.Version()
+	if s != "" {
+		plugin.version = C.CString(s)
+	}
+	s = impl.LongName()
+	if s != "" {
+		plugin.longname = C.CString(s)
+	}
+	s = impl.Description()
+	if s != "" {
+		plugin.description = C.CString(s)
+	}
+	s = impl.MagicConfigKey()
+	if s != "" {
+		plugin.magic_config_key = C.CString(s)
+	}
+	s = impl.ConfigHelp()
+	if s != "" {
+		plugin.config_help = C.CString(s)
+	}
+	// Set up callback wrappers.
 	plugin.load = (*[0]byte)(C.wrapper_load)
 	plugin.unload = (*[0]byte)(C.wrapper_unload)
 	plugin.dump_plugin = (*[0]byte)(C.wrapper_dump_plugin)

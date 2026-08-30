@@ -1674,7 +1674,9 @@ EXTRA_DIST += \
 	test-golang-copy-out.sh \
 	test-golang-extents.sh \
 	test-golang-fork-warning.sh \
+	test-golang-magic.sh \
 	test-golang-map.sh \
+	test-golang-version.sh \
 	$(NULL)
 
 if HAVE_GOLANG
@@ -1683,7 +1685,9 @@ TESTS += \
 	test-golang-copy-out.sh \
 	test-golang-extents.sh \
 	test-golang-fork-warning.sh \
+	test-golang-magic.sh \
 	test-golang-map.sh \
+	test-golang-version.sh \
 	$(NULL)
 LIBGUESTFS_TESTS += test-golang
 

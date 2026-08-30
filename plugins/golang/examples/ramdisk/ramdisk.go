@@ -53,6 +53,25 @@ var size uint64
 var size_set = false
 var disk []byte
 
+// This is printed when you do:
+// nbdkit nbdkit-goramdisk-plugin.so --version
+func (p *RAMDiskPlugin) Version() string {
+	return "1.0"
+}
+
+// This is printed when you do:
+// nbdkit nbdkit-goramdisk-plugin.so --help
+func (p *RAMDiskPlugin) ConfigHelp() string {
+	return "size=SIZE   The size of the RAM disk in bytes"
+}
+
+// This means that instead of writing 'size=1024' on the nbdkit
+// command line, you can just write '1024'.  See "Magic parameters" in
+// nbdkit(1).
+func (p *RAMDiskPlugin) MagicConfigKey() string {
+	return "size"
+}
+
 func (p *RAMDiskPlugin) Config(key string, value string) error {
 	if key == "size" {
 		var err error
