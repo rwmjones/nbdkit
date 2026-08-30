@@ -1677,6 +1677,7 @@ EXTRA_DIST += \
 	test-golang-exports.sh \
 	test-golang-extents.sh \
 	test-golang-fork-warning.sh \
+	test-golang-list-exports.sh \
 	test-golang-magic.sh \
 	test-golang-map.sh \
 	test-golang-version.sh \
@@ -1691,6 +1692,7 @@ TESTS += \
 	test-golang-exports.sh \
 	test-golang-extents.sh \
 	test-golang-fork-warning.sh \
+	test-golang-list-exports.sh \
 	test-golang-magic.sh \
 	test-golang-map.sh \
 	test-golang-version.sh \

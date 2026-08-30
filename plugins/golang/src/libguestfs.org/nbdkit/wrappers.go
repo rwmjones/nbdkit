@@ -84,6 +84,22 @@ wrapper_config_complete (void)
   return implConfigComplete ();
 }
 
+extern const char *implDefaultExport (int readonly, int is_tls);
+const char *
+wrapper_default_export (int readonly, int is_tls)
+{
+  return implDefaultExport (readonly, is_tls);
+}
+
+extern int implListExports (int readonly, int is_tls,
+                            struct nbdkit_exports *exports);
+int
+wrapper_list_exports (int readonly, int is_tls,
+                      struct nbdkit_exports *exports)
+{
+  return implListExports (readonly, is_tls, exports);
+}
+
 extern int implGetReady (void);
 int
 wrapper_get_ready (void)
@@ -204,6 +220,13 @@ int
 wrapper_can_fua (void *handle)
 {
   return implCanFUA (handle);
+}
+
+extern const char *implExportDescription (void *handle);
+const char *
+wrapper_export_description (void *handle)
+{
+  return implExportDescription (handle);
 }
 
 extern int implPRead (void *handle, void *buf,

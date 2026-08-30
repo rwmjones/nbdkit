@@ -35,6 +35,9 @@ extern void    wrapper_unload (void);
 extern void    wrapper_dump_plugin (void);
 extern int     wrapper_config (const char *key, const char *value);
 extern int     wrapper_config_complete (void);
+extern const char *wrapper_default_export (int readonly, int is_tls);
+extern int     wrapper_list_exports (int readonly, int is_tls,
+                                     struct nbdkit_exports *exports);
 extern int     wrapper_get_ready (void);
 extern int     nonwrapper_after_fork (void);
 extern int     wrapper_preconnect (int readonly);
@@ -52,6 +55,7 @@ extern int     wrapper_can_extents (void *handle);
 extern int     wrapper_can_cache (void *handle);
 extern int     wrapper_can_multi_conn (void *handle);
 extern int     wrapper_can_fua (void *handle);
+extern const char *wrapper_export_description (void *handle);
 extern int     wrapper_pread (void *handle, void *buf,
                               uint32_t count, uint64_t offset, uint32_t flags);
 extern int     wrapper_pwrite (void *handle, const void *buf,

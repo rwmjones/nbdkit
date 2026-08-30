@@ -103,6 +103,12 @@ const (
 	APIVersion = uint32(C.NBDKIT_API_VERSION)
 )
 
+// List of exports returned by ListExports()
+type Export struct {
+	Name        string
+	Description string
+}
+
 // List of extents returned by Extents()
 type Extent struct {
 	Offset uint64
@@ -126,6 +132,9 @@ type PluginInterface interface {
 	ConfigComplete() error
 	ConfigHelp() string
 
+	DefaultExport(readonly bool, is_tls bool) (string, error)
+	ListExports(readonly bool, is_tls bool) ([]Export, error)
+
 	GetReady() error
 
 	PreConnect(readonly bool) error
@@ -139,6 +148,7 @@ type ConnectionInterface interface {
 	IsRotational() (bool, error)
 	CanMultiConn() (bool, error)
 	CanFUA() (uint32, error)
+	ExportDescription() (string, error)
 
 	PRead(buf []byte, offset uint64, flags uint32) error // required
 
@@ -206,6 +216,14 @@ func (p *Plugin) ConfigComplete() error {
 	return nil
 }
 
+func (p *Plugin) DefaultExport(readonly bool, is_tls bool) (string, error) {
+	return "", nil
+}
+
+func (p *Plugin) ListExports(readonly bool, is_tls bool) ([]Export, error) {
+	return nil, nil
+}
+
 func (p *Plugin) ConfigHelp() string {
 	return ""
 }
@@ -269,6 +287,10 @@ func (c *Connection) CanFUA() (uint32, error) {
 	// XXX This is not a good default.  Ideally we would test if
 	// Flush is defined or not.
 	return FUANone, nil
+}
+
+func (c *Connection) ExportDescription() (string, error) {
+	return "", nil
 }
 
 func (c *Connection) PRead(buf []byte, offset uint64, flags uint32) error {
@@ -361,6 +383,59 @@ func implConfigComplete() C.int {
 	if err != nil {
 		set_error(err)
 		return -1
+	}
+	return 0
+}
+
+//export implDefaultExport
+func implDefaultExport(creadonly C.int, cis_tls C.int) *C.char {
+	readonly := false
+	if creadonly != 0 {
+		readonly = true
+	}
+	is_tls := false
+	if cis_tls != 0 {
+		is_tls = true
+	}
+	s, err := pluginImpl.DefaultExport(readonly, is_tls)
+	if err != nil {
+		set_error(err)
+		return nil
+	}
+	// Avoid leaking the string by interning it.
+	cs := C.CString(s)
+	ccs := C.nbdkit_strdup_intern(cs)
+	C.free(unsafe.Pointer(cs))
+	return ccs
+}
+
+//export implListExports
+func implListExports(creadonly C.int, cis_tls C.int,
+	exports *C.struct_nbdkit_exports) C.int {
+	readonly := false
+	if creadonly != 0 {
+		readonly = true
+	}
+	is_tls := false
+	if cis_tls != 0 {
+		is_tls = true
+	}
+	elist, err := pluginImpl.ListExports(readonly, is_tls)
+	if err != nil {
+		set_error(err)
+		return -1
+	}
+	for _, e := range elist {
+		name := C.CString(e.Name)
+		defer C.free(unsafe.Pointer(name))
+		var description *C.char
+		if e.Description != "" {
+			description = C.CString(e.Description)
+		}
+		defer C.free(unsafe.Pointer(description))
+		if C.nbdkit_add_export(exports, name, description) == -1 {
+			return -1
+		}
 	}
 	return 0
 }
@@ -586,6 +661,23 @@ func implCanFUA(handle unsafe.Pointer) C.int {
 	return C.int(fuaMode)
 }
 
+//export implExportDescription
+func implExportDescription(handle unsafe.Pointer) *C.char {
+	h := getConn(handle)
+	s, err := h.ExportDescription()
+	// XXX We probably shouldn't allow errors here.  See the
+	// description in nbdkit-plugin(3).
+	if err != nil {
+		set_error(err)
+		return nil
+	}
+	// Avoid leaking the string by interning it.
+	cs := C.CString(s)
+	ccs := C.nbdkit_strdup_intern(cs)
+	C.free(unsafe.Pointer(cs))
+	return ccs
+}
+
 //export implPRead
 func implPRead(handle unsafe.Pointer, c_buf unsafe.Pointer,
 	count C.uint32_t, offset C.uint64_t, flags C.uint32_t) C.int {
@@ -742,6 +834,8 @@ func PluginInitialize(name string, impl PluginInterface) unsafe.Pointer {
 	plugin.dump_plugin = (*[0]byte)(C.wrapper_dump_plugin)
 	plugin.config = (*[0]byte)(C.wrapper_config)
 	plugin.config_complete = (*[0]byte)(C.wrapper_config_complete)
+	plugin.default_export = (*[0]byte)(C.wrapper_default_export)
+	plugin.list_exports = (*[0]byte)(C.wrapper_list_exports)
 	plugin.get_ready = (*[0]byte)(C.wrapper_get_ready)
 	plugin.after_fork = (*[0]byte)(C.nonwrapper_after_fork)
 	plugin.preconnect = (*[0]byte)(C.wrapper_preconnect)
@@ -758,6 +852,7 @@ func PluginInitialize(name string, impl PluginInterface) unsafe.Pointer {
 	plugin.can_cache = (*[0]byte)(C.wrapper_can_cache)
 	plugin.can_multi_conn = (*[0]byte)(C.wrapper_can_multi_conn)
 	plugin.can_fua = (*[0]byte)(C.wrapper_can_fua)
+	plugin.export_description = (*[0]byte)(C.wrapper_export_description)
 	plugin.pread = (*[0]byte)(C.wrapper_pread)
 	plugin.pwrite = (*[0]byte)(C.wrapper_pwrite)
 	plugin.flush = (*[0]byte)(C.wrapper_flush)
