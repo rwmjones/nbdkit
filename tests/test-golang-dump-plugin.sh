@@ -30,14 +30,33 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
+source ./functions.sh
 set -e
 set -x
+set -u
 
-# This test simply runs --dump-plugin on each example, which is enough
-# to check the plugin has been compiled properly and loads.
+skip_if_valgrind "because Golang code leaks memory"
 
-for f in examples/*/nbdkit-*-plugin.so; do
+# Run --dump-plugin on each example, which is enough to check the
+# plugin has been compiled properly and loads.
+
+for f in ../plugins/golang/examples/*/nbdkit-*-plugin.so; do
     if test -f $f; then
-        ../../nbdkit -f -v $f --dump-plugin
+        nbdkit -f -v $f --dump-plugin
     fi
 done
+
+# Check for the special output and other fields from dump-plugin.
+
+plugin=../plugins/golang/examples/dump-plugin/nbdkit-godump-plugin.so
+requires test -r $plugin
+
+out=golang-dump-plugin.out
+rm -f $out
+cleanup_fn rm -f $out
+
+nbdkit -f $plugin --dump-plugin > $out
+cat $out
+grep "^name=dumpplugin$" $out
+grep "^has_dump_plugin=1$" $out
+grep "^golang_dump_plugin=1$" $out

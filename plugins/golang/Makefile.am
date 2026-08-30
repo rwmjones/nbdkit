@@ -42,7 +42,6 @@ plugin_sources = \
 EXTRA_DIST = \
 	$(plugin_sources) \
 	config-test.go \
-	dump-plugin-examples.sh \
 	examples/disk/disk.go \
 	examples/disk/go.mod \
 	examples/dump-plugin/dumpplugin.go \
@@ -118,9 +117,6 @@ testplugins/extents/nbdkit-goextents-plugin.so: \
 	cd $(srcdir)/testplugins/extents && \
 	PKG_CONFIG_PATH="$(abs_top_builddir)/server/local$${PKG_CONFIG_PATH:+:$$PKG_CONFIG_PATH}" \
 	$(GOLANG) build -o $(abs_builddir)/testplugins/extents/nbdkit-goextents-plugin.so -buildmode=c-shared
-
-# Tests.
-TESTS = dump-plugin-examples.sh
 
 CLEANFILES += \
 	examples/*/nbdkit-*-plugin.h \

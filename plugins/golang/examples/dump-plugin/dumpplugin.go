@@ -51,6 +51,8 @@ type DumpConnection struct {
 
 var size uint64 = 1024 * 1024
 
+// This appears in the output when you run:
+// nbdkit nbdkit-godump-plugin.so --dump-plugin
 func (p *DumpPlugin) DumpPlugin() {
 	fmt.Println("golang_dump_plugin=1")
 }
