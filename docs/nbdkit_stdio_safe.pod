@@ -35,6 +35,11 @@ It cannot return an error.
 
 =head1 LANGUAGE BINDINGS
 
+In L<nbdkit-golang-plugin(3)>:
+
+ import "libguestfs.org/nbdkit"
+ isSafe := nbdkit.StdioSafe()
+
 In L<nbdkit-ocaml-plugin(3)>:
 
  NBDKit.stdio_safe : unit -> bool

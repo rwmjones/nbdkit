@@ -50,6 +50,12 @@ the next callback for the current connection should be C<.close>.
 
 =head1 LANGUAGE BINDINGS
 
+In L<nbdkit-golang-plugin(3)>:
+
+ import "libguestfs.org/nbdkit"
+ nbdkit.ShutDown()
+ nbdkit.Disconnect(force)
+
 In L<nbdkit-ocaml-plugin(3)>:
 
  NBDKit.shutdown : unit -> unit

@@ -61,7 +61,8 @@ import (
 	"unsafe"
 )
 
-// Utility functions.
+//----------------------------------------------------------------------
+// Debug and error.
 
 func Debug(s string) {
 	C._nbdkit_debug(C.CString(s))
@@ -80,16 +81,16 @@ func SetError(err syscall.Errno) {
 	C.nbdkit_set_error(C.int(err))
 }
 
-// ReadPassword wraps nbdkit_read_password (literal, +FILE, or -FD).
-func ReadPassword(value string) (string, error) {
-	cvalue := C.CString(value)
-	defer C.free(unsafe.Pointer(cvalue))
-	var cpass *C.char
-	if C.nbdkit_read_password(cvalue, &cpass) == -1 {
-		return "", PluginError{Errmsg: "unable to parse parameter as a password"}
+//----------------------------------------------------------------------
+// Other utility functions.
+
+// Disconnect wraps nbdkit_disconnect
+func Disconnect(force bool) {
+	cf := C.int(0)
+	if force {
+		cf = C.int(1)
 	}
-	defer C.free(unsafe.Pointer(cpass))
-	return C.GoString(cpass), nil
+	C.nbdkit_disconnect(cf)
 }
 
 // ExportName wraps nbdkit_export_name.
@@ -106,6 +107,15 @@ func ExportName() (string, error) {
 	}
 	// cs is a 'const char *' so does not need to be freed.
 	return C.GoString(cs), nil
+}
+
+// IsTLS wraps nbdkit_is_tls
+func IsTLS() (bool, error) {
+	r := C.nbdkit_is_tls()
+	if r == -1 {
+		return false, PluginError{Errmsg: "unable to get TLS status"}
+	}
+	return r != 0, nil
 }
 
 // Name wraps nbdkit_name.
@@ -140,4 +150,28 @@ func ParseSize(value string) (uint64, error) {
 		return 0, PluginError{Errmsg: "unable to parse string as size"}
 	}
 	return uint64(r), nil
+}
+
+// ReadPassword wraps nbdkit_read_password (literal, +FILE, or -FD).
+func ReadPassword(value string) (string, error) {
+	cvalue := C.CString(value)
+	defer C.free(unsafe.Pointer(cvalue))
+	var cpass *C.char
+	if C.nbdkit_read_password(cvalue, &cpass) == -1 {
+		return "", PluginError{Errmsg: "unable to parse parameter as a password"}
+	}
+	defer C.free(unsafe.Pointer(cpass))
+	return C.GoString(cpass), nil
+}
+
+// ShutDown wraps nbdkit_shutdown
+func ShutDown() {
+	C.nbdkit_shutdown()
+}
+
+// StdioSafe wraps nbdkit_stdio_safe
+// Note that errors are not possible.
+func StdioSafe() bool {
+	r := C.nbdkit_stdio_safe()
+	return r != 0
 }
