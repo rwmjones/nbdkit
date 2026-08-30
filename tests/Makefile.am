@@ -1671,6 +1671,7 @@ endif HAVE_LUA
 
 # Golang plugin test.
 EXTRA_DIST += \
+	test-golang-block-size.sh \
 	test-golang-copy-out.sh \
 	test-golang-dump-plugin.sh \
 	test-golang-exports.sh \
@@ -1684,6 +1685,7 @@ EXTRA_DIST += \
 if HAVE_GOLANG
 
 TESTS += \
+	test-golang-block-size.sh \
 	test-golang-copy-out.sh \
 	test-golang-dump-plugin.sh \
 	test-golang-exports.sh \

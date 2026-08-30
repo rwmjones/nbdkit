@@ -135,6 +135,7 @@ type PluginInterface interface {
 // The client connection interface.
 type ConnectionInterface interface {
 	GetSize() (uint64, error) // required
+	BlockSize() (uint32, uint32, uint32, error)
 	IsRotational() (bool, error)
 	CanMultiConn() (bool, error)
 	CanFUA() (uint32, error)
@@ -226,6 +227,10 @@ func (c *Connection) Close() {
 
 func (c *Connection) GetSize() (uint64, error) {
 	panic("plugin must implement GetSize()")
+}
+
+func (c *Connection) BlockSize() (uint32, uint32, uint32, error) {
+	return 1, 4096, 0xffffffff, nil
 }
 
 func (c *Connection) CanWrite() (bool, error) {
@@ -433,6 +438,21 @@ func implGetSize(handle unsafe.Pointer) C.int64_t {
 		return -1
 	}
 	return C.int64_t(size)
+}
+
+//export implBlockSize
+func implBlockSize(handle unsafe.Pointer, cminimum *C.uint32_t,
+	cpreferred *C.uint32_t, cmaximum *C.uint32_t) C.int {
+	h := getConn(handle)
+	minimum, preferred, maximum, err := h.BlockSize()
+	if err != nil {
+		set_error(err)
+		return -1
+	}
+	*cminimum = C.uint32_t(minimum)
+	*cpreferred = C.uint32_t(preferred)
+	*cmaximum = C.uint32_t(maximum)
+	return 0
 }
 
 //export implCanWrite
@@ -728,6 +748,7 @@ func PluginInitialize(name string, impl PluginInterface) unsafe.Pointer {
 	plugin.open = (*[0]byte)(C.wrapper_open)
 	plugin.close = (*[0]byte)(C.wrapper_close)
 	plugin.get_size = (*[0]byte)(C.wrapper_get_size)
+	plugin.block_size = (*[0]byte)(C.wrapper_block_size)
 	plugin.can_write = (*[0]byte)(C.wrapper_can_write)
 	plugin.can_flush = (*[0]byte)(C.wrapper_can_flush)
 	plugin.is_rotational = (*[0]byte)(C.wrapper_is_rotational)

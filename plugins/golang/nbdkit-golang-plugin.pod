@@ -170,8 +170,6 @@ The following callbacks are not yet implemented:
 
 =over 4
 
-=item C<block_size>
-
 =item C<can_fast_zero>
 
 =item C<default_export>

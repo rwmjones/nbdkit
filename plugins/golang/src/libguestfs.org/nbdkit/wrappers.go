@@ -134,6 +134,15 @@ wrapper_get_size (void *handle)
   return implGetSize (handle);
 }
 
+extern int64_t implBlockSize (void *handle, uint32_t *minimum,
+                              uint32_t *preferred, uint32_t *maximum);
+int
+wrapper_block_size (void *handle, uint32_t *minimum,
+                    uint32_t *preferred, uint32_t *maximum)
+{
+  return implBlockSize (handle, minimum, preferred, maximum);
+}
+
 extern int implCanWrite (void *handle);
 int
 wrapper_can_write (void *handle)

@@ -41,6 +41,8 @@ extern int     wrapper_preconnect (int readonly);
 extern void *  wrapper_open (int readonly);
 extern void    wrapper_close (void *handle);
 extern int64_t wrapper_get_size (void *handle);
+extern int     wrapper_block_size (void *handle, uint32_t *minimum,
+                                   uint32_t *preferred, uint32_t *maximum);
 extern int     wrapper_can_write (void *handle);
 extern int     wrapper_can_flush (void *handle);
 extern int     wrapper_is_rotational (void *handle);

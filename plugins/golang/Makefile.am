@@ -53,6 +53,8 @@ EXTRA_DIST = \
 	examples/sparse/sparse.go \
 	examples/sparse/go.mod \
 	nbdkit-golang-plugin.pod \
+	testplugins/blocksize/blocksize.go \
+	testplugins/blocksize/go.mod \
 	testplugins/exports/exports.go \
 	testplugins/exports/go.mod \
 	testplugins/extents/extents.go \
@@ -72,6 +74,7 @@ noinst_DATA = \
 	examples/minimal/nbdkit-gominimal-plugin.so \
 	examples/ramdisk/nbdkit-goramdisk-plugin.so \
 	examples/sparse/nbdkit-gosparse-plugin.so \
+	testplugins/blocksize/nbdkit-goblocksize-plugin.so \
 	testplugins/exports/nbdkit-goexports-plugin.so \
 	testplugins/extents/nbdkit-goextents-plugin.so \
 	$(NULL)
@@ -105,6 +108,12 @@ examples/sparse/nbdkit-gosparse-plugin.so: \
 	cd $(srcdir)/examples/sparse && \
 	PKG_CONFIG_PATH="$(abs_top_builddir)/server/local$${PKG_CONFIG_PATH:+:$$PKG_CONFIG_PATH}" \
 	$(GOLANG) build -o $(abs_builddir)/examples/sparse/nbdkit-gosparse-plugin.so -buildmode=c-shared
+
+testplugins/blocksize/nbdkit-goblocksize-plugin.so: \
+	    $(plugin_sources) testplugins/blocksize/blocksize.go
+	cd $(srcdir)/testplugins/blocksize && \
+	PKG_CONFIG_PATH="$(abs_top_builddir)/server/local$${PKG_CONFIG_PATH:+:$$PKG_CONFIG_PATH}" \
+	$(GOLANG) build -o $(abs_builddir)/testplugins/blocksize/nbdkit-goblocksize-plugin.so -buildmode=c-shared
 
 testplugins/exports/nbdkit-goexports-plugin.so: \
 	    $(plugin_sources) testplugins/exports/exports.go
