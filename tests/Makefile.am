@@ -1680,6 +1680,7 @@ EXTRA_DIST += \
 	test-golang-list-exports.sh \
 	test-golang-magic.sh \
 	test-golang-map.sh \
+	test-golang-name.sh \
 	test-golang-version.sh \
 	$(NULL)
 
@@ -1695,6 +1696,7 @@ TESTS += \
 	test-golang-list-exports.sh \
 	test-golang-magic.sh \
 	test-golang-map.sh \
+	test-golang-name.sh \
 	test-golang-version.sh \
 	$(NULL)
 LIBGUESTFS_TESTS += test-golang

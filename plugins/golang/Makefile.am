@@ -61,6 +61,8 @@ EXTRA_DIST = \
 	testplugins/extents/go.mod \
 	testplugins/listexports/listexports.go \
 	testplugins/listexports/go.mod \
+	testplugins/name/name.go \
+	testplugins/name/go.mod \
 	$(NULL)
 
 if HAVE_GOLANG
@@ -80,6 +82,7 @@ noinst_DATA = \
 	testplugins/exports/nbdkit-goexports-plugin.so \
 	testplugins/extents/nbdkit-goextents-plugin.so \
 	testplugins/listexports/nbdkit-golistexports-plugin.so \
+	testplugins/name/nbdkit-goname-plugin.so \
 	$(NULL)
 
 examples/disk/nbdkit-godisk-plugin.so: \
@@ -135,6 +138,12 @@ testplugins/listexports/nbdkit-golistexports-plugin.so: \
 	cd $(srcdir)/testplugins/listexports && \
 	PKG_CONFIG_PATH="$(abs_top_builddir)/server/local$${PKG_CONFIG_PATH:+:$$PKG_CONFIG_PATH}" \
 	$(GOLANG) build -o $(abs_builddir)/testplugins/listexports/nbdkit-golistexports-plugin.so -buildmode=c-shared
+
+testplugins/name/nbdkit-goname-plugin.so: \
+	    $(plugin_sources) testplugins/name/name.go
+	cd $(srcdir)/testplugins/name && \
+	PKG_CONFIG_PATH="$(abs_top_builddir)/server/local$${PKG_CONFIG_PATH:+:$$PKG_CONFIG_PATH}" \
+	$(GOLANG) build -o $(abs_builddir)/testplugins/name/nbdkit-goname-plugin.so -buildmode=c-shared
 
 CLEANFILES += \
 	examples/*/nbdkit-*-plugin.h \
