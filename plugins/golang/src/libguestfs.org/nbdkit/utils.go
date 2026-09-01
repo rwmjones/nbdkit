@@ -36,6 +36,7 @@ package nbdkit
 #cgo pkg-config: nbdkit
 
 #include <stdlib.h>
+#include <dlfcn.h>
 
 #define NBDKIT_API_VERSION 2
 #include <nbdkit-plugin.h>
@@ -52,6 +53,19 @@ void
 _nbdkit_error (const char *s)
 {
   nbdkit_error ("%s", s);
+}
+
+// nbdkit_name didn't exist in RHEL 9, so for people
+// mixing RHEL 9 nbdkit and later golang plugins, detect
+// if the symbol exists before calling it.
+const char *
+_nbdkit_name ()
+{
+  const char *(*f)(void) = dlsym (NULL, "nbdkit_name");
+  if (f)
+    return f ();
+  else
+    return NULL;
 }
 */
 import "C"
@@ -121,7 +135,7 @@ func IsTLS() (bool, error) {
 // Name wraps nbdkit_name.
 // Note NULL is returned as "", false
 func Name() (string, bool) {
-	cs := C.nbdkit_name()
+	cs := C._nbdkit_name()
 	if cs == nil {
 		return "", false
 	} else {
