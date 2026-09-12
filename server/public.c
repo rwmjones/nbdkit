@@ -406,28 +406,21 @@ nbdkit_name (void)
   return process_name;
 }
 
-NBDKIT_DLL_PUBLIC const char *
-nbdkit_timestamp (void)
+static void
+store_timestamp (char *timestamp, const size_t len)
 {
-  char *timestamp = NULL;
-  const size_t len = 64;
-
-  timestamp = malloc (len);
-  if (timestamp == NULL)
-    goto err;
-
 #ifndef WIN32
-  struct timeval tv;
+  struct timeval tv = { 0 };
   struct tm tm;
   size_t n;
 
-  if (gettimeofday (&tv, NULL) == -1)
-    goto err;
+  gettimeofday (&tv, NULL);
   gmtime_r (&tv.tv_sec, &tm);
 
   n = strftime (timestamp, len, "%F %T", &tm);
   if (n == 0)
-    goto err;
+    /* Backup in case strftime fails, just store the seconds field. */
+    snprintf (timestamp, len, "%lu", (unsigned long) tv.tv_sec);
   snprintf (timestamp + n, len - n, ".%06" PRIu64, (uint64_t) tv.tv_usec);
 #else /* WIN32 */
   /* Windows doesn't have thread-safe gmtime, or the strftime %F and
@@ -441,11 +434,23 @@ nbdkit_timestamp (void)
             st.wHour, st.wMinute, st.wSecond,
             st.wMilliseconds);
 #endif /* WIN32 */
+}
 
-  /* Store the timestamp in thread-local storage.  This passes
+NBDKIT_DLL_PUBLIC const char *
+nbdkit_timestamp (void)
+{
+  char *timestamp = NULL;
+  const size_t len = 64;
+
+  timestamp = malloc (len);
+  if (timestamp == NULL)
+    goto err;
+
+  store_timestamp (timestamp, len);
+
+  /* Keep the timestamp string in thread-local storage.  This passes
    * ownership to threadlocal which will free it either on the next
-   * call or if the thread exits.  This can fail (although it would be
-   * extremely unusual), and in that case we have to return something.
+   * call or if the thread exits.
    */
   if (threadlocal_set_timestamp (timestamp) == -1)
     goto err;
@@ -454,5 +459,12 @@ nbdkit_timestamp (void)
 
  err:
   free (timestamp);
-  return "!";
+
+  /* If allocating the timestamp in TLS fails, we need to return
+   * something, so use a static buffer instead.  This is not thread
+   * safe but it's the best we can do here.
+   */
+  static char static_timestamp[64];
+  store_timestamp (static_timestamp, sizeof static_timestamp);
+  return static_timestamp;
 }
