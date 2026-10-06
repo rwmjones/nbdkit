@@ -71,12 +71,8 @@ static long protocols = CURLPROTO_ALL;
 static const char *protocols = NULL;
 #endif
 static const char *proxy = NULL;
-#ifdef HAVE_CURLOPT_PROXY_CAINFO
 static const char *proxy_cainfo = NULL;
-#endif
-#ifdef HAVE_CURLOPT_PROXY_CAPATH
 static const char *proxy_capath = NULL;
-#endif
 static char *proxy_password = NULL;
 static const char *proxy_user = NULL;
 static struct curl_slist *resolves = NULL;
@@ -116,11 +112,9 @@ config_unload (void)
 void
 curl_dump_plugin (void)
 {
-#ifdef LIBCURL_VERSION
   /* The static version we were compiled against. */
   printf ("curl_version=%s\n", LIBCURL_VERSION);
-#endif
-#ifdef HAVE_CURL_VERSION_INFO
+
   const curl_version_info_data *ver = curl_version_info (CURLVERSION_NOW);
   const char *const *p;
   /* The dynamic version we are linked against. */
@@ -130,7 +124,6 @@ curl_dump_plugin (void)
   /* List of protocols supported. */
   for (p = ver->protocols; *p != NULL; p++)
     printf ("curl_protocol_%s=yes\n", *p);
-#endif
 }
 
 #ifndef HAVE_CURLOPT_PROTOCOLS_STR
@@ -367,23 +360,11 @@ curl_config (const char *key, const char *value)
   }
 
   else if (strcmp (key, "proxy-cainfo") == 0) {
-#ifdef HAVE_CURLOPT_PROXY_CAINFO
     proxy_cainfo = value;
-#else
-    nbdkit_error ("'%s' is not supported in this version of curl",
-                  "CURLOPT_PROXY_CAINFO");
-    return -1;
-#endif
   }
 
   else if (strcmp (key, "proxy-capath") == 0) {
-#ifdef HAVE_CURLOPT_PROXY_CAPATH
     proxy_capath = value;
-#else
-    nbdkit_error ("'%s' is not supported in this version of curl",
-                  "CURLOPT_PROXY_CAPATH");
-    return -1;
-#endif
   }
 
   else if (strcmp (key, "proxy-password") == 0) {
@@ -614,17 +595,12 @@ allocate_handle (void)
 
   curl_easy_setopt (ch->c, CURLOPT_ERRORBUFFER, ch->errbuf);
 
-  r = CURLE_OK;
   if (unix_socket_path) {
-#if HAVE_CURLOPT_UNIX_SOCKET_PATH
     r = curl_easy_setopt (ch->c, CURLOPT_UNIX_SOCKET_PATH, unix_socket_path);
-#else
-    r = CURLE_UNKNOWN_OPTION;
-#endif
-  }
-  if (r != CURLE_OK) {
-    display_curl_error (ch, r, "curl_easy_setopt: CURLOPT_UNIX_SOCKET_PATH");
-    goto err;
+    if (r != CURLE_OK) {
+      display_curl_error (ch, r, "curl_easy_setopt: CURLOPT_UNIX_SOCKET_PATH");
+      goto err;
+    }
   }
 
   /* Set the URL. */
@@ -685,18 +661,14 @@ allocate_handle (void)
 #endif /* HAVE_CURLOPT_PROTOCOLS_STR */
   if (proxy)
     curl_easy_setopt (ch->c, CURLOPT_PROXY, proxy);
-#ifdef HAVE_CURLOPT_PROXY_CAINFO
   if (proxy_cainfo) {
     if (strlen (proxy_cainfo) == 0)
       curl_easy_setopt (ch->c, CURLOPT_PROXY_CAINFO, NULL);
     else
       curl_easy_setopt (ch->c, CURLOPT_PROXY_CAINFO, proxy_cainfo);
   }
-#endif
-#ifdef HAVE_CURLOPT_PROXY_CAPATH
   if (proxy_capath)
     curl_easy_setopt (ch->c, CURLOPT_PROXY_CAPATH, proxy_capath);
-#endif
   if (proxy_password)
     curl_easy_setopt (ch->c, CURLOPT_PROXYPASSWORD, proxy_password);
   if (proxy_user)

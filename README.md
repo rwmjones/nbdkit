@@ -86,7 +86,7 @@ For the memory plugin with allocator=zstd, or for supporting compressed qcow2:
 
 For the curl (HTTP/FTP) plugin:
 
-* libcurl
+* curl >= 7.61.0
 
 For the ssh plugin:
 

@@ -177,11 +177,7 @@ curl_get_size (void *handle)
   struct curl_handle *ch;
   CURLcode r;
   long code;
-#ifdef HAVE_CURLINFO_CONTENT_LENGTH_DOWNLOAD_T
   curl_off_t o;
-#else
-  double d;
-#endif
   int64_t exportsize;
 
   /* Get a curl easy handle. */
@@ -230,7 +226,6 @@ curl_get_size (void *handle)
    * length as -1 which we check below (see also
    * curl:lib/http.c:Curl_http_size).
    */
-#ifdef HAVE_CURLINFO_CONTENT_LENGTH_DOWNLOAD_T
   r = curl_easy_getinfo (ch->c, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &o);
   if (r != CURLE_OK) {
     display_curl_error (ch, r,
@@ -245,22 +240,6 @@ curl_get_size (void *handle)
   }
 
   exportsize = o;
-#else
-  r = curl_easy_getinfo (ch->c, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &d);
-  if (r != CURLE_OK) {
-    display_curl_error (ch, r,
-                        "could not get length of remote file [%s]", url);
-    goto err;
-  }
-
-  if (d == -1) {
-    nbdkit_error ("could not get length of remote file [%s], "
-                  "is the URL correct?", url);
-    goto err;
-  }
-
-  exportsize = d;
-#endif
   nbdkit_debug ("content length: %" PRIi64, exportsize);
 
   /* If this is HTTP, check that byte ranges are supported. */

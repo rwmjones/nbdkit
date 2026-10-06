@@ -56,27 +56,13 @@ static struct {
   CURLINFO info;
   _Atomic curl_off_t t;
 } times[] = {
-#ifdef HAVE_CURLINFO_NAMELOOKUP_TIME_T
   { true, "name resolution", CURLINFO_NAMELOOKUP_TIME_T },
-#endif
-#ifdef HAVE_CURLINFO_CONNECT_TIME_T
   { true, "connection", CURLINFO_CONNECT_TIME_T },
-#endif
-#ifdef HAVE_CURLINFO_APPCONNECT_TIME_T
   { true, "SSL negotiation", CURLINFO_APPCONNECT_TIME_T },
-#endif
-#ifdef HAVE_CURLINFO_PRETRANSFER_TIME_T
   { true, "pretransfer", CURLINFO_PRETRANSFER_TIME_T },
-#endif
-#ifdef HAVE_CURLINFO_STARTTRANSFER_TIME_T
   { true, "first byte received", CURLINFO_STARTTRANSFER_TIME_T },
-#endif
-#ifdef HAVE_CURLINFO_TOTAL_TIME_T
   { true, "data transfer", CURLINFO_TOTAL_TIME_T },
-#endif
-#ifdef HAVE_CURLINFO_REDIRECT_TIME_T
   { false, "redirection time", CURLINFO_REDIRECT_TIME_T },
-#endif
 };
 
 /* This is called after every curl_easy_perform.  If -D curl.times=1
