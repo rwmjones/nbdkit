@@ -47,36 +47,15 @@
 
 #include "windows-compat.h"
 
-/* Macro CURL_AT_LEAST_VERSION was added in 2015 (Curl 7.43) so if the
- * macro isn't present then Curl is very old.
+/* Macro CURL_AT_LEAST_VERSION was added in 2015 (Curl 7.43) and we
+ * require a more recent version of curl.
  */
-#ifdef CURL_AT_LEAST_VERSION
-#if CURL_AT_LEAST_VERSION (7, 30, 0)
-#define HAVE_CURLMOPT_MAX_TOTAL_CONNECTIONS
-#endif
-#if CURL_AT_LEAST_VERSION (7, 52, 0)
-#define HAVE_CURLOPT_PROXY_CAINFO
-#define HAVE_CURLOPT_PROXY_CAPATH
-#endif
-#if CURL_AT_LEAST_VERSION (7, 55, 0)
-#define HAVE_CURLINFO_CONTENT_LENGTH_DOWNLOAD_T
-#endif
-#if CURL_AT_LEAST_VERSION (7, 61, 0)
-#define HAVE_CURLINFO_NAMELOOKUP_TIME_T
-#define HAVE_CURLINFO_CONNECT_TIME_T
-#define HAVE_CURLINFO_APPCONNECT_TIME_T
-#define HAVE_CURLINFO_PRETRANSFER_TIME_T
-#define HAVE_CURLINFO_STARTTRANSFER_TIME_T
-#define HAVE_CURLINFO_TOTAL_TIME_T
-#define HAVE_CURLINFO_REDIRECT_TIME_T
-#endif
 #if CURL_AT_LEAST_VERSION (7, 66, 0)
 #define HAVE_CURL_MULTI_POLL
 #endif
 #if CURL_AT_LEAST_VERSION (8, 2, 0)
 #define HAVE_CURLINFO_CONN_ID
 #define HAVE_CURLINFO_XFER_ID
-#endif
 #endif
 
 extern const char *url;

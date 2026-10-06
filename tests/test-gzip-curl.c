@@ -60,10 +60,6 @@ main (int argc, char *argv[])
 
   requires_exists (disk);
 
-#ifndef HAVE_CURLOPT_UNIX_SOCKET_PATH
-  skip_because ("curl does not support CURLOPT_UNIX_SOCKET_PATH");
-#endif
-
   sockpath = web_server (disk, NULL, false);
   if (sockpath == NULL) {
     fprintf (stderr, "test-gzip-curl: could not start web server thread\n");

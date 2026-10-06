@@ -94,9 +94,7 @@ worker_get_ready (void)
     return -1;
   }
 
-#ifdef HAVE_CURLMOPT_MAX_TOTAL_CONNECTIONS
   curl_multi_setopt(multi, CURLMOPT_MAX_TOTAL_CONNECTIONS, (long) connections);
-#endif
 
   return 0;
 }

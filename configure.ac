@@ -1341,17 +1341,14 @@ AC_ARG_WITH([curl],
     [],
     [with_curl=check])
 AS_IF([test "$with_curl" != "no"],[
-    PKG_CHECK_MODULES([CURL], [libcurl],[
+    PKG_CHECK_MODULES([CURL], [libcurl >= 7.61.0],[
         PRINT_PKG_VERSION(libcurl)
         AC_SUBST([CURL_CFLAGS])
         AC_SUBST([CURL_LIBS])
         AC_DEFINE([HAVE_CURL],[1],[curl found at compile time.])
         old_CFLAGS="$CFLAGS"
         CFLAGS="$CURL_CFLAGS $CFLAGS"
-        AC_CHECK_DECL([CURLOPT_UNIX_SOCKET_PATH], [
-            AC_DEFINE([HAVE_CURLOPT_UNIX_SOCKET_PATH],[1],
-                      [CURLOPT_UNIX_SOCKET_PATH found at compile time.])
-            ], [], [#include <curl/curl.h>])
+
         dnl Detect both CURLOPT_PROTOCOLS_STR and
         dnl CURLOPT_REDIR_PROTOCOLS_STR.  Both were added in curl
         dnl 7.85.0 so we assume if one exists then both do.
@@ -1386,12 +1383,10 @@ AS_IF([test "$with_curl" != "no"],[
         dnl feature in curl 8.3.1.
         dnl https://github.com/curl/curl/pull/11750
         dnl https://github.com/curl/curl/commit/9ffd4117357
-        dnl curl_version_info was added in 7.10
         old_LIBS="$LIBS"
         LIBS="$CURL_LIBS $LIBS"
         AC_CHECK_FUNCS([\
             curl_multi_get_handles \
-            curl_version_info \
         ])
         LIBS="$old_LIBS"
     ],

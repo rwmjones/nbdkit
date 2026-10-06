@@ -65,10 +65,6 @@ main (int argc, char *argv[])
   CLEANUP_FREE char *usp_param = NULL;
   int64_t size;
 
-#ifndef HAVE_CURLOPT_UNIX_SOCKET_PATH
-  skip_because ("curl does not support CURLOPT_UNIX_SOCKET_PATH");
-#endif
-
   requires_exists ("disk");
   if (stat ("disk", &statbuf) == -1) {
     perror ("disk");
