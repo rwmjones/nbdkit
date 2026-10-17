@@ -19,6 +19,13 @@ nbdkit-vddk-plugin - nbdkit VMware VDDK plugin
              [unbuffered=true] [user=USERNAME] [vm=moref=ID]
  nbdkit vddk --dump-plugin
 
+=head1 DEPRECATED
+
+B<The VDDK plugin is deprecated and will be removed in
+S<nbdkit 1.50>>.
+
+The VDDK library was withdrawn by VMware.
+
 =head1 DESCRIPTION
 
 C<nbdkit-vddk-plugin> is an L<nbdkit(1)> plugin that serves disks from
