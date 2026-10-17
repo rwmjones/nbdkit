@@ -709,7 +709,7 @@ zstd_compressed_cluster (void *buf,
   ZSTD_DCtx *ctx;
   ZSTD_outBuffer out = { .dst = buf, .size = cluster_size, .pos = 0 };
   ZSTD_inBuffer in =
-    { .src = compressed_cluster, .size = cluster_size, .pos = 0 };
+    { .src = compressed_cluster, .size = compressed_size, .pos = 0 };
 
   ctx = ZSTD_createDCtx();
   if (ctx == NULL) {

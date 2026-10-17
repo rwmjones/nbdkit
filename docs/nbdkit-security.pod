@@ -65,6 +65,12 @@ This filter is working as intended but we documented that you should
 only use this filter with trusted clients.  See:
 L<https://gitlab.com/nbdkit/nbdkit/-/commit/8d5e20b15f90438f8a565837fede4ca18da64d6d>
 
+=head2 possible denial of service in qcow2dec filter
+
+Qcow2 files using zstd compression could cause an overread in libzstd,
+resulting in a possible crash.  See:
+L<https://lists.libguestfs.org/archives/list/guestfs@lists.libguestfs.org/thread/LXZQCFZQQVSA2G47FMNQ3KJBMJBUVYJP/>
+
 =head1 SEE ALSO
 
 L<nbdkit(1)>.
