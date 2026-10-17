@@ -2293,10 +2293,12 @@ EXTRA_DIST += \
 TESTS += \
 	test-qcow2dec.sh \
 	test-qcow2dec-map.sh \
+	test-qcow2dec-zstd.sh \
 	$(NULL)
 EXTRA_DIST += \
 	test-qcow2dec.sh \
 	test-qcow2dec-map.sh \
+	test-qcow2dec-zstd.sh \
 	$(NULL)
 
 # rate filter test.

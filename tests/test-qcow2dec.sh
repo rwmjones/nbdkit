@@ -53,9 +53,8 @@ files="$qcow2 $raw $pid $sock"
 rm -f $files
 cleanup_fn rm -f $files
 
-# Create a qcow2 disk for testing.
+# Create a compressed qcow2 disk for testing.
 "$QEMU_IMG" convert -f raw disk -O qcow2 $qcow2 -c
-#"$QEMU_IMG" convert -f raw disk -O qcow2 $qcow2 -c -o compression_type=zstd
 
 # Start nbdkit.
 start_nbdkit -P $pid -U $sock \
