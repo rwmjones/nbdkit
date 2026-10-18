@@ -56,6 +56,17 @@ to be holes with that type:
 The extent list need not cover the whole disk, and does not need to be
 in ascending order, but it must I<not> contain overlapping extents.
 
+=head2 Using nbdinfo --map
+
+L<nbdinfo(1)> with the I<--map> option + L<nbdkit-file-plugin(1)> can
+create a map file in the same format from a local file, for example:
+
+ $ nbdinfo --map [ nbdkit file fedora-42.img ]
+         0       65536    0  data
+     65536      983040    3  hole,zero
+   1048576      131072    0  data
+   1179648      917504    3  hole,zero
+
 =head2 Parsing qemu-img map
 
 The output of L<qemu-img(1)> map is a list of allocated blocks like
@@ -110,7 +121,9 @@ C<nbdkit-extentlist-filter> first appeared in nbdkit 1.18.
 L<nbdkit(1)>,
 L<nbdkit-noextents-filter(1)>,
 L<nbdkit-filter(3)>,
-L<nbdkit-plugin(3)>.
+L<nbdkit-plugin(3)>,
+L<qemu-img(1)>,
+L<nbdinfo(1)>.
 
 =head1 AUTHORS
 
