@@ -41,7 +41,7 @@ copying it:
 
  nbdkit --filter=pause --filter=rate \
    file BIG_FILE.ISO rate=10M pause-control=sock \
-        --run 'qemu-img convert -p "$uri" /var/tmp/out'
+        --run 'nbdcopy -p "$uri" /var/tmp/out'
 
 To cause the copy to appear to hang, do:
 
