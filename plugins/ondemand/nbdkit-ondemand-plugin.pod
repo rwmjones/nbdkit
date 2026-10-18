@@ -112,7 +112,7 @@ commands such as these (note the different export names):
 
 =for paragraph
 
- qemu-img info nbd:localhost:10809:exportname=export2
+ nbdinfo nbd://localhost/export2
 
 On the server you would see two filesystems created:
 
