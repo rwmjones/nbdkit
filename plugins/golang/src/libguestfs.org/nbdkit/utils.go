@@ -79,14 +79,18 @@ import (
 // Debug and error.
 
 func Debug(s string) {
-	C._nbdkit_debug(C.CString(s))
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	C._nbdkit_debug(cs)
 }
 
 // This function is provided but plugins would rarely need to call
 // this explicitly since returning an error from a plugin callback
 // will call it implicitly.
 func Error(s string) {
-	C._nbdkit_error(C.CString(s))
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	C._nbdkit_error(cs)
 }
 
 // Same applies as for Error().  Callers should not usually need to
