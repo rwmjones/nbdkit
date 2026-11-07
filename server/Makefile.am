@@ -75,9 +75,6 @@ nbdkit_SOURCES = \
 	$(top_srcdir)/include/nbdkit-plugin.h \
 	$(top_srcdir)/include/nbdkit-filter.h \
 	$(NULL)
-if ENABLE_LIBFUZZER
-nbdkit_SOURCES += fuzzer.c
-endif
 
 nbdkit_CPPFLAGS = \
 	-Dbindir=\"$(bindir)\" \

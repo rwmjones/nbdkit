@@ -51,7 +51,7 @@ EXTRA_DIST = \
 
 CLEANFILES += html/*.html scripts/*~
 
-if !ENABLE_LIBFUZZER
+if !ENABLE_FUZZING
 # NB: This is not the real nbdkit binary.  It's a wrapper that allows
 # you to run nbdkit from the build directory before it is installed.
 noinst_PROGRAMS = nbdkit
@@ -71,7 +71,7 @@ nbdkit_LDADD = \
 	$(top_builddir)/common/replacements/libcompat.la \
 	$(NULL)
 EXTRA_nbdkit_DEPENDENCIES = config.status
-endif !ENABLE_LIBFUZZER
+endif !ENABLE_FUZZING
 
 SUBDIRS = \
 	bash-completion \

@@ -1,23 +1,26 @@
 To report security bugs, see ‘SECURITY.md’ in the top source directory.
 
 
-Fuzzing nbdkit using the American Fuzzy Lop (AFL) fuzzer
-========================================================
+Fuzzing nbdkit using the American Fuzzy Lop (AFL++) persistent mode fuzzer
+==========================================================================
 
-You can fuzz nbdkit with AFL or AFL++ (https://aflplus.plus/) using
-the -s (read from stdin) option.
+You can fuzz nbdkit with AFL++ (https://aflplus.plus/) persistent mode.
 
-You will need to recompile nbdkit with AFL instrumentation:
-
-  ./configure CC=/usr/bin/afl-gcc CXX=/usr/bin/afl-g++
-  make clean
-  make
-
-To use clang instead (recommended with AFL++):
+Using clang:
 
   export AFL_USE_ASAN=1
-  ./configure CC=/usr/bin/afl-clang-lto CXX=/usr/bin/afl-clang-lto++ \
-      --disable-linker-script
+  ./configure \
+     --enable-fuzzing \
+     --disable-linker-script \
+     CC=/usr/bin/afl-clang-fast \
+     CXX=/usr/bin/afl-clang-fast \
+     --disable-golang \
+     --disable-lua \
+     --disable-ocaml \
+     --disable-perl \
+     --disable-python \
+     --disable-rust \
+     --disable-tcl
   make clean
   make
 
@@ -32,7 +35,7 @@ Master:
   mkdir -p fuzzing/sync_dir
   export AFL_PRELOAD=./plugins/pattern/.libs/nbdkit-pattern-plugin.so
   afl-fuzz -i fuzzing/testcase_dir -o fuzzing/sync_dir -M fuzz01 \
-      ./server/nbdkit -s -t 1 \
+      ./server/nbdkit -t 1 \
           --filter=./filters/cow/.libs/nbdkit-cow-filter.so \
           ./plugins/pattern/.libs/nbdkit-pattern-plugin.so 1M
 
@@ -41,37 +44,9 @@ Slaves:
   # replace fuzzNN with fuzz02, fuzz03, etc.
   export AFL_PRELOAD=./plugins/pattern/.libs/nbdkit-pattern-plugin.so
   afl-fuzz -i fuzzing/testcase_dir -o fuzzing/sync_dir -S fuzzNN \
-      ./server/nbdkit -s -t 1 \
+      ./server/nbdkit -t 1 \
           --filter=./filters/cow/.libs/nbdkit-cow-filter.so \
           ./plugins/pattern/.libs/nbdkit-pattern-plugin.so 1M
-
-Test Coverage
--------------
-
-To find out if the fuzzing is covering all of the code, I used afl-cov
-(https://github.com/mrash/afl-cov).  Usage is rather complex, so
-consult the README of that project, but in brief:
-
-(1) Create a second copy of the nbdkit source, and compile it with
-profiling:
-
-  ./configure CFLAGS="-O2 -g -pg -fprofile-arcs -ftest-coverage"
-  make clean
-  make
-
-(2) Assuming ../nbdkit-afl is the nbdkit source compiled with AFL, and
-the current directory is nbdkit compiled with profiling, then run the
-command below.  You can run this even while afl-fuzz is running.
-
-  afl-cov -d ../nbdkit-afl/fuzzing/sync_dir \
-      --code-dir . \
-      --coverage-cmd "cat AFL_FILE | <<NBDKIT COMMAND>>"
-
-(replace <<NBDKIT COMMAND>> with the './server/nbdkit -s -t 1 ...'
-command that you are fuzzing).
-
-This will create an HTML test coverage report in
-../nbdkit-afl/fuzzing/sync_dir/cov/web/
 
 Notes
 -----
@@ -84,56 +59,3 @@ that.
 We have only fuzzed a handful of plugins.  Since plugins can have bugs
 as well as the core server, it may be productive to test other plugins
 and filters.
-
-
-Fuzzing nbdkit using honggfuzz
-==============================
-
-Recompile nbdkit with honggfuzz instrumentation:
-
-  ./configure CC=/path/to/hfuzz-clang CXX=/path/to/hfuzz-clang++
-  make clean
-  make
-
-Run honggfuzz using test cases:
-
-  honggfuzz -i fuzzing/testcase_dir -z -s -- \
-      ./server/nbdkit -s -t 1 ./plugins/memory/.libs/nbdkit-memory-plugin.so 1M
-
-
-Fuzzing nbdkit using Clang + libFuzzer
-======================================
-
-Recompile nbdkit with libFuzzer enabled and build the libFuzzer test
-binary:
-
-  ./configure \
-      CC=clang \
-      CFLAGS="-g -O1 -fPIC" \
-      --enable-libfuzzer \
-      --disable-perl
-  make clean
-  make CFLAGS="-g -O1 -fPIC -fsanitize=fuzzer,address"
-
-(The awkward CFLAGS on the make command line are necessary because
-./configure attempts to test that the compiler works, but this test
-fails when -fsanitize=fuzzer is used as that option adds an extra
-main() definition.)
-
-",address" enables the Clang Address Sanitizer, and can be omitted for
-faster fuzzing.
-
-This builds a specialized version of nbdkit which is the fuzzer test
-program (testing only nbdkit-memory-plugin unless you modify the
-source).  You can run it like this on the input corpus:
-
-  ./server/nbdkit fuzzing/testcase_dir
-
-New test inputs are written to fuzzing/testcase_dir and will be used
-on subsequent runs.  If this is undesirable then delete
-fuzzing/testcase_dir/[0-f]* before the run.
-
-There are various extra command line options supported by libFuzzer.
-For more details see:
-
-  https://llvm.org/docs/LibFuzzer.html

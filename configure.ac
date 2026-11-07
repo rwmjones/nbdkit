@@ -757,21 +757,17 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 AC_MSG_RESULT([$is_glibc_234])
 AM_CONDITIONAL([HAVE_GLIBC_234], [test "x$is_glibc_234" = "xyes"])
 
-dnl Build the special libFuzzer version of nbdkit.  DO NOT USE THIS for
-dnl normal builds.  See fuzzing/README.
-AC_ARG_ENABLE([libfuzzer],
-    [AS_HELP_STRING([--enable-libfuzzer],
-                    [build libFuzzer test binary (developers only)])],
+dnl Build the AFL++ persistent mode fuzzer version of nbdkit.  DO NOT
+dnl USE THIS for normal builds.  See fuzzing/README.
+AC_ARG_ENABLE([fuzzing],
+    [AS_HELP_STRING([--enable-fuzzing],
+                    [build AFL++ persistent mode fuzzer (developers only)])],
     [],
-    [enable_libfuzzer=no])
-AS_IF([test "x$enable_libfuzzer" = "xyes"],[
-    AC_DEFINE([ENABLE_LIBFUZZER],[1],[Enable special libFuzzer binary])
-    # We have to disable the linker script for libFuzzer because Clang
-    # adds loads of fuzzer and ASAN-related symbols that are required
-    # by the plugins but which our linker script tries to hide.
-    use_linker_script=no
+    [enable_fuzzingr=no])
+AS_IF([test "x$enable_fuzzing" = "xyes"],[
+    AC_DEFINE([ENABLE_FUZZING],[1],[Enable AFL++ persistent mode fuzzer])
 ])
-AM_CONDITIONAL([ENABLE_LIBFUZZER],[test "x$enable_libfuzzer" = "xyes"])
+AM_CONDITIONAL([ENABLE_FUZZING],[test "x$enable_fuzzing" = "xyes"])
 
 dnl Should we use the linker script (ld --version-script)?  Note
 dnl some tests above may set this variable.
@@ -1947,8 +1943,8 @@ feature ()
 echo "Optional server features:"
 echo
 feature "bash-completion"     test "x$HAVE_BASH_COMPLETION_TRUE" = "x"
-feature "libfuzzer (developers only)" \
-                              test "x$ENABLE_LIBFUZZER_TRUE" = "x"
+feature "fuzzing (maintainers only)" \
+                              test "x$ENABLE_FUZZING_TRUE" = "x"
 feature "linker script"       test "x$USE_LINKER_SCRIPT" = "x"
 feature "manual pages"        test "x$HAVE_POD_TRUE" = "x"
 feature "SELinux"             test "x$LIBSELINUX_LIBS" != "x"

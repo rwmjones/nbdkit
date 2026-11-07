@@ -72,6 +72,7 @@
 #include "nbdkit-string.h"
 #include "open_memstream.h"
 #include "realpath.h"
+#include "rounding.h"
 #include "strndup.h"
 #include "syslog.h"
 #include "utils.h"
@@ -79,10 +80,6 @@
 
 #include "internal.h"
 #include "options.h"
-
-#ifdef ENABLE_LIBFUZZER
-#define main fuzzer_main
-#endif
 
 static char *make_random_fifo (void);
 static void cleanup_random_fifo (void);
@@ -105,6 +102,9 @@ static bool is_config_key (const char *key, size_t len);
 static void error_if_stdio_closed (void);
 static void switch_stdio (void);
 static void winsock_init (void);
+#ifdef ENABLE_FUZZING
+static void start_fuzzing (void);
+#endif
 
 int tcpip_sock_af = AF_UNSPEC;  /* -4, -6 */
 struct debug_flag *debug_flags; /* -D */
@@ -160,6 +160,12 @@ struct backend *top;
 
 static char *random_fifo_dir = NULL;   /* Directory containing -U - */
 static char *random_fifo = NULL;       /* Path to -U - socket */
+
+#ifdef ENABLE_FUZZING
+#pragma clang optimize off
+#pragma GCC optimize("O0")
+__AFL_FUZZ_INIT();
+#endif
 
 static void
 usage (void)
@@ -301,15 +307,7 @@ main (int argc, char *argv[])
   error_if_stdio_closed ();
   winsock_init ();
 
-#if !ENABLE_LIBFUZZER
   threadlocal_init ();
-#else
-  static bool main_called = false;
-  if (!main_called) {
-    threadlocal_init ();
-    main_called = true;
-  }
-#endif
 
   /* The default setting for TLS depends on whether we were
    * compiled with GnuTLS.
@@ -956,10 +954,7 @@ main (int argc, char *argv[])
   free_socket_activation ();
   free_interns ();
 
-  /* Note: Don't exit here, otherwise this won't work when compiled
-   * for libFuzzer.
-   */
-  return EXIT_SUCCESS;
+  exit (EXIT_SUCCESS);
 }
 
 /* Implementation of '-U -' */
@@ -1325,9 +1320,7 @@ start_serving (void)
   size_t i;
 
   set_up_quit_pipe ();
-#if !ENABLE_LIBFUZZER
   set_up_signals ();
-#endif
 
   /* Lock the process into memory if requested. */
   if (swap) {
@@ -1344,6 +1337,7 @@ start_serving (void)
 #endif
   }
 
+#if !ENABLE_FUZZING
   switch (service_mode) {
   case SERVICE_MODE_SOCKET_ACTIVATION:
     /* Socket activation.  The socket_activation variable is a list of
@@ -1406,6 +1400,13 @@ start_serving (void)
   default:
     abort ();
   }
+#else /* ENABLE_FUZZING */
+  __AFL_INIT();
+  /* Fuzzing is a cut down version of the '-s' option. */
+  top->after_fork (top);
+  threadlocal_new_server_thread ();
+  start_fuzzing ();
+#endif /* ENABLE_FUZZING */
 }
 
 static void
@@ -1552,3 +1553,65 @@ winsock_init (void)
   }
 #endif
 }
+
+#ifdef ENABLE_FUZZING
+
+/* When --enable-fuzzing is used we build an nbdkit binary which
+ * behaves like an AFL++ persistent mode fuzzer.
+ */
+static void
+start_fuzzing (void)
+{
+  __AFL_INIT ();
+  unsigned char *fuzzbuf = __AFL_FUZZ_TESTCASE_BUF;
+  int fdout;
+  const long pagesize = sysconf (_SC_PAGESIZE);
+
+  /* Writes are always thrown away. */
+  fdout = open ("/dev/null", O_WRONLY);
+  if (fdout == -1) {
+    fprintf (stderr, "%s: open: /dev/null: %m\n", program_name);
+    exit (EXIT_FAILURE);
+  }
+
+  while (__AFL_LOOP (1000)) {
+    int fuzzlen = __AFL_FUZZ_TESTCASE_LEN;
+    int fdin;
+    void *copy = NULL;
+
+    /* Create a memfd with a copy of the fuzzing buffer.
+     * For the reason why we must copy, see (5) on:
+     * https://nullprogram.com/blog/2025/02/05/
+     */
+    fdin = memfd_create ("nbdkit", MFD_CLOEXEC);
+    if (fdin == -1) {
+      fprintf (stderr, "%s: memfd_create: %m\n", program_name);
+      exit (EXIT_FAILURE);
+    }
+    if (ftruncate (fdin, fuzzlen) == -1) {
+      fprintf (stderr, "%s: memfd: ftruncate: %m\n", program_name);
+      exit (EXIT_FAILURE);
+    }
+    if (fuzzlen > 0) {
+      copy = mmap (NULL, ROUND_UP (fuzzlen, pagesize),
+                   PROT_READ|PROT_WRITE, MAP_SHARED, fdin, 0);
+      if (copy == MAP_FAILED) {
+        fprintf (stderr, "%s: memfd: mmap: %m\n", program_name);
+        exit (EXIT_FAILURE);
+      }
+      memcpy (copy, fuzzbuf, fuzzlen);
+    }
+    close (fdin);
+
+    /* Perform the test. */
+    handle_single_connection (fdin, fdout);
+
+    if (copy)
+      munmap (copy, ROUND_UP (fuzzlen, pagesize));
+  }
+
+  close (fdout);
+  exit (EXIT_SUCCESS);
+}
+
+#endif /* ENABLE_FUZZING */
